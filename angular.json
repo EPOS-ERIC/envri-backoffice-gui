@@ -25,7 +25,7 @@
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
-            "assets": ["src/favicon.ico", "src/assets"],
+            "assets": ["src/favicon.ico", "src/assets", "src/silent-token-refresh.html"],
             "styles": [
               "src/styles.scss",
               "node_modules/jsondiffpatch/lib/formatters/styles/annotated.css",
@@ -49,15 +49,64 @@
                   "maximumError": "200kb"
                 }
               ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "baseHref": "/testpath/",
               "fileReplacements": [
                 {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.prod.ts"
+                  "replace": "src/environments/environment.mode.ts",
+                  "with": "src/environments/environment.dev.ts"
+                }
+              ],
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "ssr": false,
+              "prerender": false
+            },
+            "oss": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "5mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "200kb",
+                  "maximumError": "200kb"
+                }
+              ],
+              "index": {
+                "input": "src/index.oss.html",
+                "output": "index.html"
+              },
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.flavor.ts",
+                  "with": "src/environments/environment.oss.ts"
                 }
               ],
               "outputHashing": "all"
             },
-            "development": {
+            "oss-development": {
+              "baseHref": "/testpath/",
+              "index": {
+                "input": "src/index.oss.html",
+                "output": "index.html"
+              },
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.mode.ts",
+                  "with": "src/environments/environment.dev.ts"
+                },
+                {
+                  "replace": "src/environments/environment.flavor.ts",
+                  "with": "src/environments/environment.oss.ts"
+                }
+              ],
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
@@ -71,16 +120,24 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "servePath": "testpath",
+            "servePath": "/testpath",
             "proxyConfig": "src/proxy.conf.json",
-            "buildTarget": "epos:build"
+            "buildTarget": "epos-back-office:build:development"
           },
           "configurations": {
             "production": {
-              "buildTarget": "epos-back-office:build:production"
+              "buildTarget": "epos-back-office:build:production",
+              "servePath": "/"
             },
             "development": {
               "buildTarget": "epos-back-office:build:development"
+            },
+            "oss": {
+              "buildTarget": "epos-back-office:build:oss",
+              "servePath": "/"
+            },
+            "oss-development": {
+              "buildTarget": "epos-back-office:build:oss-development"
             }
           },
           "defaultConfiguration": "development"

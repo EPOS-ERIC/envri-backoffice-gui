@@ -21,6 +21,7 @@ import { Entity } from 'src/utility/enums/entity.enum';
 import { DialogService } from '../dialogs/dialog.service';
 import { DialogSelectGroupComponent } from '../dialogs/dialog-select-group/dialog-select-group.component';
 import { Group, User } from 'generated/backofficeSchemas';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-layout',
@@ -34,6 +35,7 @@ export class LayoutComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   private readonly subscriptions: Array<Subscription> = new Array<Subscription>();
   public dropdown = '';
+  public readonly environment = environment;
   public user: null | AAAIUser = null;
   public userInfo: User | null = null;
   public sidenavOpen = true;

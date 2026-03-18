@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "pnpm run codegen && ng serve",
-    "build": "ng build",
-    "lint": "eslint \"*/**/*.{ts,tsx}\"",
-    "lint:fix": "eslint \"*/**/*.{ts,tsx}\" --fix",
-    "watch": "ng build --watch --configuration development",
+    "dev": "pnpm run codegen && ng serve --configuration development",
+    "dev-oss": "pnpm run codegen && ng serve --configuration oss-development",
+    "build": "ng build --configuration production",
+    "build-oss": "ng build --configuration oss",
+    "lint": "ng lint",
     "codegen": "openapi-codegen gen backoffice"
   },
   "private": true,

@@ -23,7 +23,7 @@
       <img
         width="100"
         alt="EPOS Logo"
-        src="assets/EPOS_logo_white_orange.png"
+        [src]="environment.headerLogoPath"
       />
     </a>
     <a
@@ -31,7 +31,7 @@
       matTooltip="Home"
       (click)="handleClick()"
     >
-      <h1>METADATA Backoffice</h1>
+      <h1>{{ environment.headerTitle }}</h1>
     </a>
     <span class="navbar-spacer"></span>
     <div

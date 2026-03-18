@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { AaaiService } from 'src/aaai/aaai.service';
 import { AAAIUser } from 'src/aaai/aaaiUser.interface';
+import { environment } from 'src/environments/environment';
 import { ActiveUserService } from 'src/services/activeUser.service';
 
 /**
@@ -16,6 +17,7 @@ import { ActiveUserService } from 'src/services/activeUser.service';
 export class LoginComponent {
   @Output() closeDropdown: EventEmitter<void> = new EventEmitter<void>();
   @Input() public user!: null | AAAIUser;
+  public readonly environment = environment;
   public manageUrl: string;
 
   constructor(

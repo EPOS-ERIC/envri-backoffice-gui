@@ -1,14 +1,14 @@
 <div class="content">
   <img
-    [src]="imgUrl"
+    [src]="environment.brandLogoPath"
     alt="EPOS Logo"
     class="epos-logo"
   />
-  <h1>EPOS Backoffice</h1>
+  <h1>{{ environment.loginTitle }}</h1>
   <div class="content-wrapper">
     <div class="main">
       <div class="login-disclaimer">
-        <p>By using EPOS ICS portal you accept the EPOS terms and conditions.</p>
+        <p>{{ environment.termsAndConditionsText }}</p>
         <a appShowDisclaimerDirective>More Details</a>
       </div>
       <div class="button-wrapper">

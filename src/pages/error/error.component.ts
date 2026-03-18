@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { environment } from 'src/environments/environment';
 import { RouteService } from 'src/services/route.service';
 
 @Component({
@@ -8,6 +9,8 @@ import { RouteService } from 'src/services/route.service';
   styleUrls: ['./error.component.scss'],
 })
 export class ErrorComponent implements OnInit {
+  public readonly environment = environment;
+
   constructor(private routeService: RouteService, private router: Router) {
     this.router.routerState.root.queryParams.subscribe((params) => {
       this.type = params['type'];

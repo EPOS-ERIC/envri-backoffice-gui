@@ -6,6 +6,7 @@ import { ActionsService } from 'src/services/actions.service';
 import { RouteService } from 'src/services/route.service';
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
 import { Subscription } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { LoadingService } from 'src/services/loading.service';
 
 @Component({
@@ -57,6 +58,7 @@ argument. This triggers the @BackButtonComponent to return a user to either @Bro
   }
 
   ngOnInit() {
+    this.updateBranding();
     Chart.register(BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
     this.subscriptions.add(
       this.loadingService.showSpinnerObs.subscribe((show: boolean) => {
@@ -68,5 +70,14 @@ by manually triggering change detection.
         this.cdr.detectChanges();
       }),
     );
+  }
+
+  private updateBranding(): void {
+    document.title = environment.browserTitle;
+
+    const favicon = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
+    if (favicon !== null) {
+      favicon.href = environment.faviconPath;
+    }
   }
 }

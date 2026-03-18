@@ -8,14 +8,14 @@ import { AAAIUser } from '../aaaiUser.interface';
 import { BasicUser } from './basicUser';
 import { Injector, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
 import { LogService } from 'src/services/log.service';
 
 /** OAuth provider implementation */
 export class OAuthAuthenticationProvider implements AuthenticationProvider {
-  private static readonly EPOS_CLIENT = 'eposICS';
-  private static readonly CYFRONET_ROOT = 'https://aaai.epos-eu.org';
-  private static readonly CYFRONET_ISSUER = OAuthAuthenticationProvider.CYFRONET_ROOT + '/oauth2';
-  private static readonly REVOKE_ENDPOINT = OAuthAuthenticationProvider.CYFRONET_ISSUER + '/revoke';
+  private static readonly AUTH_ROOT = environment.authRootUrl;
+  private static readonly AUTH_ISSUER = OAuthAuthenticationProvider.AUTH_ROOT + '/oauth2';
+  private static readonly AUTH_REVOKE_ENDPOINT = OAuthAuthenticationProvider.AUTH_ISSUER + '/revoke';
   private static readonly REDIRECTION_PAGE = '/last-page-redirect';
 
   private readonly router: Router;
@@ -57,13 +57,13 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
   }
 
   public getManageUrl(): string {
-    return OAuthAuthenticationProvider.CYFRONET_ROOT;
+    return OAuthAuthenticationProvider.AUTH_ROOT;
   }
 
   private makeAuthConfig(router: Router): AuthConfig {
     const authConfig: AuthConfig = {
       // Url of the Identity Provider
-      issuer: OAuthAuthenticationProvider.CYFRONET_ISSUER,
+      issuer: OAuthAuthenticationProvider.AUTH_ISSUER,
 
       // URL of the SPA to redirect the user to after login
       // redirectUri: this.redirectionUri(),
@@ -85,7 +85,7 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
       },
 
       // The SPA's id. The SPA is registerd with this id at the auth-server
-      clientId: OAuthAuthenticationProvider.EPOS_CLIENT,
+      clientId: environment.authClientId,
 
       // URL of the SPA to redirect the user after silent refresh
       silentRefreshRedirectUri: window.location.origin + '/silent-token-refresh.html',
@@ -94,7 +94,7 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
 
       // set the scope for the permissions the client should request
       // The first three are defined by OIDC. The 4th is a usecase-specific one
-      scope: ['openid', 'profile', 'single-logout'].join(' '),
+      scope: environment.authScope,
 
       disableAtHashCheck: true,
       // showDebugInformation: true,
@@ -180,7 +180,7 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
     // console.debug('authorizationHeader', this.oAuthService.authorizationHeader());
     return lastValueFrom(
       this.http.post(
-        OAuthAuthenticationProvider.REVOKE_ENDPOINT,
+        OAuthAuthenticationProvider.AUTH_REVOKE_ENDPOINT,
         `token=${this.oAuthService.getAccessToken()}` +
           `&client_id=${this.oAuthService.clientId}` +
           '&token_type_hint=access_token' +
