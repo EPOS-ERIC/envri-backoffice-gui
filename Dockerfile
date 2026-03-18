@@ -1,16 +1,14 @@
-FROM nginx:latest
+FROM nginx:stable-alpine
 
-ENV BASE_URL /
-ENV API_HOST https://epos.cineca.it/
+ENV SERVER_NAME=_ \
+    BASE_URL=/ \
+    API_HOST=http://gateway:5000
 
-COPY dist/browser/ /usr/share/nginx/html
+COPY dist/browser/ /opt/epos-backoffice-gui/
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Fix base url paths
-CMD sed -i 's|<base href="/testpath/">|<base href="'$BASE_URL'"/>|g' /usr/share/nginx/html/index.html && \
-    sed -i 's|^\(\s*\)rewrite ^/(.*)$ /$1 last;|\1rewrite ^'$BASE_URL'(.*)$ /$1 last;|g' /etc/nginx/conf.d/default.conf && \
-    sed -i 's|https://epos.cineca.it/|'$API_HOST'|g' /etc/nginx/conf.d/default.conf && \
-    nginx -g "daemon off;"
+WORKDIR /opt/epos-backoffice-gui/
 
+CMD ["sh", "-c", "sed -Ei 's|<base href=\"[^\"]*\"[[:space:]]*/?>|<base href=\"'$BASE_URL'\">|g' /opt/epos-backoffice-gui/index.html && sed -i 's|SERVER_NAME|'$SERVER_NAME'|g' /etc/nginx/conf.d/default.conf && sed -i 's|BASE_URL|'$BASE_URL'|g' /etc/nginx/conf.d/default.conf && sed -i 's|API_HOST|'$API_HOST'|g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
 
 EXPOSE 80
