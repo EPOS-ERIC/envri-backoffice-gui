@@ -1,4 +1,4 @@
-import { Group, UserGroup } from 'generated/backofficeSchemas';
+import { Group } from 'generated/backofficeSchemas';
 import { UserGroupRequestStatus } from 'src/utility/enums/userGroupRequestStatus.enum';
 import { UserRole } from 'src/utility/enums/UserRole.enum';
 

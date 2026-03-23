@@ -18,8 +18,6 @@ import { LoadingService } from 'src/services/loading.service';
 import { DialogChangeCommentComponent } from './dialog-change-comment/dialog-change-comment.component';
 import { DialogSpatialCoverageHelpComponent } from './dialog-spatial-coverage-help/dialog-spatial-coverage-help.component';
 import { LinkedEntity, User, Operation, Group } from 'generated/backofficeSchemas';
-import { LinkedEntity as LinkedEntityModel } from 'src/apiAndObjects/objects/entities/linkedEntity.model';
-import { Entity } from 'src/utility/enums/entity.enum';
 import { DialogUserStatusComponent } from './dialog-user-status/dialog-user-status.component';
 
 @Injectable({

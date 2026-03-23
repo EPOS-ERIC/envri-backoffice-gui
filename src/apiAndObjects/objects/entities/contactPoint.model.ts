@@ -1,4 +1,4 @@
-import { LinkedEntity, ContactPoint as ContactPointType, Group } from 'generated/backofficeSchemas';
+import { LinkedEntity, ContactPoint as ContactPointType } from 'generated/backofficeSchemas';
 
 export class ContactPoint implements ContactPointType {
   constructor(

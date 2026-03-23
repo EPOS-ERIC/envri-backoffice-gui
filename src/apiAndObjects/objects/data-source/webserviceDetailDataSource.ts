@@ -1,5 +1,5 @@
 import { BaseObject } from 'src/apiAndObjects/_lib_code/objects/baseObject';
-import { DataProduct, Group, LinkedEntity, WebService as WebServiceType } from 'generated/backofficeSchemas';
+import { DataProduct, LinkedEntity, WebService as WebServiceType } from 'generated/backofficeSchemas';
 
 export class WebserviceDetailDataSource extends BaseObject implements WebServiceType {
   public static readonly KEYS = {

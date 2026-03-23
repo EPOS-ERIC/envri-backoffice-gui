@@ -1,6 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { lastValueFrom } from 'rxjs';
-import { DistributionDetailDataSource } from 'src/apiAndObjects/objects/data-source/distributionDetailDataSource';
+import { HttpHeaders } from '@angular/common/http';
 import { CacheableEndpoint } from 'src/apiAndObjects/_lib_code/api/cacheableEndpoint.abstract';
 import { RequestMethod } from 'src/apiAndObjects/_lib_code/api/requestMethod.enum';
 import { PersistorService, StorageType } from 'src/services/persistor.service';
@@ -34,7 +32,6 @@ export class GetSoftwareDetail extends CacheableEndpoint<
         headers,
       )
       .then((data: unknown) => this.processResponseData(data, params));
-    const builtResponseObject = this.buildObjectFromResponse(SoftwareDetailDataSource, callResponsePromise);
     return this.buildObjectsFromResponse(SoftwareDetailDataSource, callResponsePromise);
   }
 

@@ -1,4 +1,4 @@
-import { Group, CategoryScheme as CategorySchemeType, LinkedEntity } from 'generated/backofficeSchemas';
+import { CategoryScheme as CategorySchemeType, LinkedEntity } from 'generated/backofficeSchemas';
 import { BaseObject } from 'src/apiAndObjects/_lib_code/objects/baseObject';
 import { Status } from 'src/utility/enums/status.enum';
 

@@ -1,15 +1,14 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
-import { Category } from 'generated/backofficeSchemas';
+import { Category, CategoryScheme } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { DialogService } from 'src/components/dialogs/dialog.service';
 import { DialogNewCategoryComponent } from 'src/components/dialogs/dialog-new-category/dialog-new-category.component';
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
 import { Status } from 'src/utility/enums/status.enum';
-import { CategoryScheme } from 'generated/backofficeSchemas';
 
 // interface fo hierarchical representation of categories
 export interface CategoryNode extends Category {
@@ -179,7 +178,7 @@ export class CategoryTreeDetailsComponent implements OnInit {
               this.insertRootNodeIntoTree(response, category);
             }
           })
-          .catch((error) => {
+          .catch(() => {
             this.snackbarService.openSnackbar(
               `Error: failed to create new Category`,
               'close',
@@ -279,19 +278,6 @@ export class CategoryTreeDetailsComponent implements OnInit {
           if (node.children && node.children.length > 0) {
             node.children.forEach((child) => {
               // Create a payload to update the child's broader property
-              const childPayload: Category = {
-                ...child,
-                broader: newBroader,
-              };
-              const cleanPayload: Category = {
-                uid: child.uid,
-                name: child.name,
-                description: child.description,
-                status: child.status,
-                inScheme: child.inScheme,
-                broader: newBroader,
-                // Add other properties if necessary, checking the schema
-              };
               // It's safer to use the spread and remove `children` if it exists to keep all other props
               const payloadToSend = { ...child };
               delete (payloadToSend as any).children;
@@ -377,7 +363,11 @@ export class CategoryTreeDetailsComponent implements OnInit {
   @Input() entityStatus: string | undefined;
 
   public canAddSubCategory(node: CategoryNode): boolean {
-    return (this.canManageCategories && node.status === Status.DRAFT) || this.entityStatus === Status.DRAFT || this.entityStatus === Status.SUBMITTED;
+    return (
+      (this.canManageCategories && node.status === Status.DRAFT) ||
+      this.entityStatus === Status.DRAFT ||
+      this.entityStatus === Status.SUBMITTED
+    );
   }
 
   public onEditCategory(node: CategoryNode): void {
@@ -391,7 +381,7 @@ export class CategoryTreeDetailsComponent implements OnInit {
 
         this.apiService.endpoints.Category.update
           .call(payloadToSend)
-          .then((response) => {
+          .then(() => {
             this.snackbarService.openSnackbar('Category updated successfully', 'update', SnackbarType.SUCCESS);
             this.snackbarService.openSnackbar(
               `Success: Category "${dialogData.dataOut.categoryName}" updated`,
@@ -400,19 +390,19 @@ export class CategoryTreeDetailsComponent implements OnInit {
               6000,
               ['snackbar', 'mat-toolbar', 'snackbar-success'],
             );
-            
+
             // Update local state
             this._categories = this._categories.map((c) => {
               if (c.uid === node.uid) {
                 return {
                   ...c,
                   name: dialogData.dataOut.categoryName,
-                  description: dialogData.dataOut.categoryDescription || undefined
+                  description: dialogData.dataOut.categoryDescription || undefined,
                 };
               }
               return c;
             });
-            
+
             this.treeData = this.buildCategoryTree(this._categories);
             this.dataSource.data = this.treeData;
             this.treeControl.dataNodes = this.treeData;
@@ -421,25 +411,28 @@ export class CategoryTreeDetailsComponent implements OnInit {
           })
           .catch((error) => {
             console.error('Error updating category:', error);
-            this.snackbarService.openSnackbar(
-              `Error: failed to update Category`,
-              'close',
-              SnackbarType.ERROR,
-              6000,
-              ['snackbar', 'mat-toolbar', 'snackbar-error'],
-            );
+            this.snackbarService.openSnackbar(`Error: failed to update Category`, 'close', SnackbarType.ERROR, 6000, [
+              'snackbar',
+              'mat-toolbar',
+              'snackbar-error',
+            ]);
           });
       }
     });
   }
   public checkStatus(): boolean {
-  if (this.entityStatus === Status.DRAFT || this.entityStatus === Status.SUBMITTED) {
-    return false;
+    if (this.entityStatus === Status.DRAFT || this.entityStatus === Status.SUBMITTED) {
+      return false;
+    }
+    return true;
   }
-  return true;
-}
   public canEditCategory(node: CategoryNode): boolean {
-    return (node.status === Status.DRAFT || this.entityStatus === Status.DRAFT || this.entityStatus === Status.SUBMITTED || node.status === Status.SUBMITTED);
+    return (
+      node.status === Status.DRAFT ||
+      this.entityStatus === Status.DRAFT ||
+      this.entityStatus === Status.SUBMITTED ||
+      node.status === Status.SUBMITTED
+    );
   }
 
   public canAddRootCategory(): boolean {
@@ -457,4 +450,3 @@ export class CategoryTreeDetailsComponent implements OnInit {
     return this.canManageCategories && (node.status === Status.DRAFT || this.entityStatus === Status.DRAFT);
   }
 }
-

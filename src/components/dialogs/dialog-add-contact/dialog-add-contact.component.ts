@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { ContactPoint } from 'src/apiAndObjects/objects/entities/contactPoint.model';
 // import { initEmptyContactObj } from 'src/helpers/contact';
 
 @Component({

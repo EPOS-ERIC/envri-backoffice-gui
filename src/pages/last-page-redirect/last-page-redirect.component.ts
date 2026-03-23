@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, filter, firstValueFrom, lastValueFrom, of, Subscription, take, timeout } from 'rxjs';
+import { catchError, filter, lastValueFrom, of, Subscription, take, timeout } from 'rxjs';
 import { AaaiService } from 'src/aaai/aaai.service';
 
 @Component({
@@ -11,7 +11,7 @@ import { AaaiService } from 'src/aaai/aaai.service';
   styleUrl: './last-page-redirect.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LastPageRedirectComponent {
+export class LastPageRedirectComponent implements OnInit, OnDestroy {
   private authSubscription!: Subscription;
   private readonly authTimeoutms = 15000;
 

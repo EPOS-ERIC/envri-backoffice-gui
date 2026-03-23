@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Input, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormArray,
   FormGroup,
@@ -10,7 +10,6 @@ import {
   UntypedFormArray,
 } from '@angular/forms';
 import { Identifier, LinkedEntity } from 'generated/backofficeSchemas';
-import { SoftwareApplication } from 'src/apiAndObjects/objects/entities/softwareApplication.model';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 import { Status } from 'src/utility/enums/status.enum';
 import { SoftwareSourceCodeService } from '../../softwareSourceCode.service';
@@ -19,7 +18,6 @@ import { GetIdentifierDetailsParams } from 'src/apiAndObjects/api/identifier/get
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
 import { LoadingService } from 'src/services/loading.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
-import { debounceTime } from 'rxjs';
 import { SoftwareSourceCode } from 'src/apiAndObjects/objects/entities/softwareSourceCode.model';
 
 @Component({

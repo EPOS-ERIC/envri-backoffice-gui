@@ -56,7 +56,6 @@ export class BrowseRevisionsComponent implements OnInit {
     const parsed = JSON.parse(this._getCachedRevisions() as string);
 
     if (Array.isArray(parsed) && parsed.length > 0) {
-      const activeEntity = this.helpersService.activeEntityType.value ?? null;
       this.revisions = JSON.parse(this._getCachedRevisions() as string);
       this._mapResponse(this.revisions);
       this.visualDiff = this._getVisualDiff();

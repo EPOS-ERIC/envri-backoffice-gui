@@ -1,4 +1,4 @@
-import { Group, Location as LocationType } from 'generated/backofficeSchemas';
+import { Location as LocationType } from 'generated/backofficeSchemas';
 import { Status } from 'src/utility/enums/status.enum';
 
 export class LocationModel implements LocationType {

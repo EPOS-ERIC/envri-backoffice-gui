@@ -240,7 +240,7 @@ export class BrowseGroupsComponent implements OnInit {
               groupid: parentElement.nativeElement.innerText,
               userid: userId,
             })
-            .then((response) => {
+            .then(() => {
               this.snackbarService.openSnackbar(
                 'Successfully removed user from group.',
                 'Close',

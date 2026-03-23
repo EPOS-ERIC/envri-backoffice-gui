@@ -4,7 +4,7 @@ import { formatRangeText } from 'src/helpers/strings';
 
 @Pipe({ name: 'formatRange' })
 export class FormatRangePipe implements PipeTransform {
-  transform(value: any, ...args: any) {
+  transform(value: any) {
     return formatRangeText(value);
   }
 }

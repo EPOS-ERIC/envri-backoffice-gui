@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataProduct, Group, LinkedEntity } from 'generated/backofficeSchemas';
+import { DataProduct, Group } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { DialogNewEntityComponent } from 'src/components/dialogs/dialog-new-entity/dialog-new-entity.component';
 import { DialogService } from 'src/components/dialogs/dialog.service';

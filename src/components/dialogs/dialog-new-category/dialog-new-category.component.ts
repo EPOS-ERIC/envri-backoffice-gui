@@ -2,7 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DialogData } from '../baseDialogService.abstract';
 import { ActiveUserService } from 'src/services/activeUser.service';
-import { Category, Group } from 'generated/backofficeSchemas';
+import { Group } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { CategoryNode } from 'src/components/categoryTree/categoryTree.component';
 
@@ -31,10 +31,6 @@ export class DialogNewCategoryComponent {
     private activeUserService: ActiveUserService,
     private apiService: ApiService,
   ) {
-    const userIds = this.activeUserService
-      .getActiveUser()
-      ?.groups?.map((group) => (group.groupId ? group.groupId : ''));
-      
     if (this.data.dataIn?.isEditMode) {
       this.isEditMode = true;
       this.categoryName = this.data.dataIn.name || '';

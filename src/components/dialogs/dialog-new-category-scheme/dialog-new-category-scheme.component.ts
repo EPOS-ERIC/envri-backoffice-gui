@@ -55,7 +55,7 @@ export class DialogNewCategorySchemeComponent implements OnInit {
   }
   onColorChange(event: Event): void {
     const input = event.target as HTMLInputElement;
-    let value = input.value;
+    const value = input.value;
 
     // If input comes from color picker, it's always valid hex
     if (input.type === 'color') {
@@ -126,10 +126,10 @@ export class DialogNewCategorySchemeComponent implements OnInit {
       reader.readAsDataURL(file);
     }
   } */
- //to find orderitemnumber for the new category scheme
+  //to find orderitemnumber for the new category scheme
   private calculateMaxOrderItemNumber(schemes: CategoryScheme[]): void {
     this.maxOrderItemNumber = 0;
-    
+
     schemes.forEach((scheme) => {
       if (scheme.orderitemnumber) {
         const orderNum = parseInt(scheme.orderitemnumber, 10);

@@ -1,4 +1,4 @@
-import { DataProduct, Group, LinkedEntity, Operation as OperationType } from 'generated/backofficeSchemas';
+import { DataProduct, LinkedEntity, Operation as OperationType } from 'generated/backofficeSchemas';
 
 export class Operation implements OperationType {
   constructor(

@@ -4,10 +4,8 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
-import { Entity } from 'src/utility/enums/entity.enum';
 import { UserRole } from 'src/utility/enums/UserRole.enum';
 import { DialogData } from '../baseDialogService.abstract';
-import { SetUserRoleParams } from 'src/apiAndObjects/api/user/putUserDetail';
 import { Group, User, UserGroup } from 'generated/backofficeSchemas';
 
 @Component({

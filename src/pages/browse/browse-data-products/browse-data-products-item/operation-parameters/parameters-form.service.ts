@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Mapping } from 'generated/backofficeSchemas';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { BehaviorSubject } from 'rxjs';
-import { formatRangeText } from 'src/helpers/strings';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 
 @Injectable({

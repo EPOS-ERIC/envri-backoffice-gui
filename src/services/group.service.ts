@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Group } from 'generated/backofficeSchemas';
 import { BehaviorSubject } from 'rxjs';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 

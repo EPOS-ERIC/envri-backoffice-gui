@@ -1,5 +1,5 @@
 import { BaseObject } from 'src/apiAndObjects/_lib_code/objects/baseObject';
-import { Group, LinkedEntity, Organization } from 'generated/backofficeSchemas';
+import { LinkedEntity, Organization } from 'generated/backofficeSchemas';
 
 export class OrganizationDataSource extends BaseObject implements Organization {
   public static readonly KEYS = {

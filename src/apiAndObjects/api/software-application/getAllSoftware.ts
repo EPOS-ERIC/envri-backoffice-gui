@@ -1,9 +1,7 @@
 import { HttpHeaders } from '@angular/common/http';
-import { DistributionDetailDataSource } from 'src/apiAndObjects/objects/data-source/distributionDetailDataSource';
 import { RequestMethod } from 'src/apiAndObjects/_lib_code/api/requestMethod.enum';
 import { PersistorService, StorageType } from 'src/services/persistor.service';
 import { StorageKey } from 'src/utility/enums/storageKey.enum';
-import { GetAllDataProductsParams } from '../data-products/getAllDataProducts';
 import { Endpoint } from 'src/apiAndObjects/_lib_code/api/endpoint.abstract';
 import { SoftwareDetailDataSource } from 'src/apiAndObjects/objects/data-source/softwareDetailDataSource';
 

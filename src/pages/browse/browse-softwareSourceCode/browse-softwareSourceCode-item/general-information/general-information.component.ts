@@ -1,14 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Input, OnInit, Component } from '@angular/core';
-import {
-  AbstractControl,
-  FormControl,
-  FormGroup,
-  Validators,
-  UntypedFormControl,
-  UntypedFormBuilder,
-  FormArray,
-} from '@angular/forms';
+import { OnInit, Component } from '@angular/core';
+import { FormControl, FormGroup, Validators, UntypedFormControl, UntypedFormBuilder, FormArray } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 import { HelpersService } from 'src/services/helpers.service';
@@ -19,7 +11,6 @@ import { DialogService } from 'src/components/dialogs/dialog.service';
 import { DialogRevisionsComponent } from 'src/components/dialogs/dialog-revisions/dialog-revisions.component';
 import { Entity } from 'src/utility/enums/entity.enum';
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
-import { SoftwareApplication } from 'src/apiAndObjects/objects/entities/softwareApplication.model';
 import { SoftwareSourceCode } from 'src/apiAndObjects/objects/entities/softwareSourceCode.model';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { ApiService } from 'src/apiAndObjects/api/api.service';

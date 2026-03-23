@@ -1,4 +1,4 @@
-import { Group, LinkedEntity, ContactPoint as ContactPointType } from 'generated/backofficeSchemas';
+import { LinkedEntity, ContactPoint as ContactPointType } from 'generated/backofficeSchemas';
 import { Status } from 'src/utility/enums/status.enum';
 import { BaseObject } from '../../_lib_code/objects/baseObject';
 

@@ -15,6 +15,8 @@ export class PermissionsService {
   ) {}
 
   public canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
+    void next;
+    void state;
     const activeUser = inject(ActiveUserService).getActiveUser();
     if (activeUser?.groups?.length === 0) {
       this.router.navigate(['groups']);

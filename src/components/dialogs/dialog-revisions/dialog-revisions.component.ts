@@ -11,7 +11,6 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
 import { CUSTOM_DATE_FORMAT } from 'src/utility/config/date';
 import moment from 'moment';
-import { compareVersions } from 'compare-versions';
 import { HelpersService } from 'src/services/helpers.service';
 import { DataProduct, SoftwareApplication, SoftwareSourceCode } from 'generated/backofficeSchemas';
 import { TableItem, TableItems } from 'src/utility/objects/table/items';

@@ -198,6 +198,7 @@ export class SupportedOperationComponent implements OnInit {
   }
 
   public supportedOperationSearch(event: any): void {
+    void event;
     // const value = event.target.value;
     // if (value.length > 1) {
     //   const supportedOperation = this.webservice?.supportedOperation ?? [];

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Input, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormArray,
   FormGroup,
@@ -19,7 +19,6 @@ import { GetIdentifierDetailsParams } from 'src/apiAndObjects/api/identifier/get
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
 import { LoadingService } from 'src/services/loading.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
-import { debounceTime } from 'rxjs';
 
 @Component({
   selector: 'app-persistent-identifier-softApp',

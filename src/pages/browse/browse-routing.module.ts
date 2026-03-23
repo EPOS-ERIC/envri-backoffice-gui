@@ -7,9 +7,7 @@ import { BrowseWebServicesComponent } from './browse-web-services/browse-web-ser
 import { BrowseDataProductsItemComponent } from './browse-data-products/browse-data-products-item/browse-data-products-item.component';
 import { BrowseGroupsComponent } from './browse-groups/browse-groups.component';
 import { BrowseDistributionComponent } from './browse-distribution/browse-distribution.component';
-import { CreateDataProductItemComponent } from './browse-data-products/create-data-product-item/create-data-product-item.component';
 import { BrowseDistributionItemComponent } from './browse-distribution/browse-distribution-item/browse-distribution-item.component';
-import { CreateWebServiceItemComponent } from './browse-web-services/create-web-service-item/create-web-service-item.component';
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
 import { BrowseRevisionsComponent } from './browse-revisions/browse-revisions.component';
 import { BrowseApplicationSoftwareComponent } from './browse-applicationSoftware/browse-applicationSoftware.component';

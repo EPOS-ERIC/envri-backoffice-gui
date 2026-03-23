@@ -1,5 +1,5 @@
 import { BaseObject } from 'src/apiAndObjects/_lib_code/objects/baseObject';
-import { Distribution, Group, LinkedEntity } from 'generated/backofficeSchemas';
+import { Distribution, LinkedEntity } from 'generated/backofficeSchemas';
 import { Status } from 'src/utility/enums/status.enum';
 
 export class DistributionDetailDataSource extends BaseObject implements Distribution {

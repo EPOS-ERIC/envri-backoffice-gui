@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Input, OnInit, Component } from '@angular/core';
+import { OnInit, Component } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, Validators, UntypedFormControl } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 import { DataProduct } from 'src/apiAndObjects/objects/entities/dataProduct.model';

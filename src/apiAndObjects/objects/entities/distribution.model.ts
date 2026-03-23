@@ -1,4 +1,4 @@
-import { Distribution as DistributionType, Group, LinkedEntity } from 'generated/backofficeSchemas';
+import { Distribution as DistributionType, LinkedEntity } from 'generated/backofficeSchemas';
 
 export class Distribution implements DistributionType {
   constructor(

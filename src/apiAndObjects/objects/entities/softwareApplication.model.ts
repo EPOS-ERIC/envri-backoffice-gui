@@ -1,4 +1,4 @@
-import { SoftwareApplication as SoftwareApplicationType, Group, LinkedEntity } from 'generated/backofficeSchemas';
+import { SoftwareApplication as SoftwareApplicationType, LinkedEntity } from 'generated/backofficeSchemas';
 
 export class SoftwareApplication implements SoftwareApplicationType {
   constructor(

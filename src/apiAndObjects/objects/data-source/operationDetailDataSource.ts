@@ -1,5 +1,5 @@
 import { BaseObject } from 'src/apiAndObjects/_lib_code/objects/baseObject';
-import { Group, LinkedEntity, Operation } from 'generated/backofficeSchemas';
+import { LinkedEntity, Operation } from 'generated/backofficeSchemas';
 import { Status } from 'src/utility/enums/status.enum';
 
 export class OperationDetailDataSource extends BaseObject implements Operation {

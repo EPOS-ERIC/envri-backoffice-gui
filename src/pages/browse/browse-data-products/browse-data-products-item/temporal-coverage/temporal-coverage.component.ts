@@ -5,7 +5,6 @@ import { DataProduct, LinkedEntity, PeriodOfTime, WebService } from 'generated/b
 // eslint-disable-next-line import/named
 import moment, { Moment } from 'moment';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
-import { DataproductService } from '../../dataproduct.service';
 import { debounceTime } from 'rxjs';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { GetPeriodOfTimeParams } from 'src/apiAndObjects/api/periodOfTime/getPeriodOfTime';

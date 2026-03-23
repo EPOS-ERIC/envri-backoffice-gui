@@ -16,7 +16,6 @@ import { DistributionDetailDataSource } from 'src/apiAndObjects/objects/data-sou
 import { SoftwareDetailDataSource } from 'src/apiAndObjects/objects/data-source/softwareDetailDataSource';
 import { SourceCodeDetailDataSource } from 'src/apiAndObjects/objects/data-source/sourceCodeDetailDataSource';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
-import { DataProduct, SoftwareApplication, SoftwareSourceCode } from 'generated/backofficeSchemas';
 
 @Component({
   selector: 'app-table',
