@@ -18,4 +18,6 @@ export interface AuthenticationProvider {
   getUser(): null | AAAIUser;
 
   getManageUrl(): string;
+
+  isAuthenticated(): boolean;
 }

@@ -83,7 +83,8 @@ export class LayoutComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.user = user;
         if (
           null != this.persistorService.getValueFromStorage(StorageType.SESSION_STORAGE, StorageKey.ACCESS_TOKEN) &&
-          this.userInfo == null
+          this.userInfo == null &&
+          user !== null
         ) {
           this.getLoginData();
         }

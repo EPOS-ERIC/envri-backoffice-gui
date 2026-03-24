@@ -59,9 +59,10 @@ export class AaaiService {
   }
 
   public isAuthenticated(): boolean {
-    const accessToken = this.persistorService.getValueFromStorage(StorageType.SESSION_STORAGE, StorageKey.ACCESS_TOKEN);
-    console.log(accessToken);
-    return accessToken != null;
+    // const accessToken = this.persistorService.getValueFromStorage(StorageType.SESSION_STORAGE, StorageKey.ACCESS_TOKEN);
+    // console.log(accessToken);
+    // return accessToken != null;
+    return this.authProvider.isAuthenticated();
   }
 
   public checkForAuth(): boolean {
@@ -91,7 +92,9 @@ export class AaaiService {
  * @param oAuthService
  */
 export const aaaiServiceFactory = (injector: Injector, oAuthService: OAuthService): AaaiService => {
-  const authProvider: AuthenticationProvider = new OAuthAuthenticationProvider(injector, oAuthService);
+  // const authProvider: AuthenticationProvider = new OAuthAuthenticationProvider(injector, oAuthService);
+  // return AaaiService.make(authProvider);
+  const authProvider = injector.get(OAuthAuthenticationProvider);
   return AaaiService.make(authProvider);
 };
 

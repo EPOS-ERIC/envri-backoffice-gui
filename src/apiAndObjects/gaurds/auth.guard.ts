@@ -12,7 +12,7 @@ export class PermissionsService {
     private readonly router: Router,
     private readonly activeUserService: ActiveUserService,
     private readonly snackbarService: SnackbarService,
-  ) {}
+  ) { }
 
   public canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
     void next;
@@ -31,19 +31,39 @@ export class PermissionsService {
   }
 }
 
-export const ActiveGroupMember: CanActivateFn = (next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean => {
-  return inject(PermissionsService).canActivate(next, state);
-};
-
+// export const ActiveGroupMember: CanActivateFn = (next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean => {
+//   return inject(PermissionsService).canActivate(next, state);
+// };
+//
+// export const AuthenticatedUser: CanActivateFn = (next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean => {
+//   if (state.url.startsWith('/last-page-redirect')) {
+//     return true; // Allow access to last-page-redirect for auth callback
+//   }
+//
+//   if (inject(AaaiService).isAuthenticated()) {
+//     return true;
+//   } else {
+//     inject(Router).navigate(['/login']);
+//     return false;
+//   }
 export const AuthenticatedUser: CanActivateFn = (next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean => {
-  if (state.url.startsWith('/last-page-redirect')) {
-    return true; // Allow access to last-page-redirect for auth callback
+  const router = inject(Router);
+  const auth = inject(AaaiService);
+
+  // ✅ Always allow the OAuth callback route
+  if (next.routeConfig?.path === 'last-page-redirect') {
+    return true;
   }
 
-  if (inject(AaaiService).isAuthenticated()) {
+  // ✅ User already authenticated
+  if (auth.isAuthenticated()) {
     return true;
-  } else {
-    inject(Router).navigate(['/login']);
-    return false;
   }
+
+  // ❌ Not authenticated → redirect to login,
+  // and keep the returnUrl so we can restore after login
+  router.navigate(['/login'], {
+    queryParams: { returnUrl: state.url },
+  });
+  return false;
 };

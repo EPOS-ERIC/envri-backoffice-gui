@@ -13,16 +13,16 @@ const resolveApiBaseUrl = (): string => {
 
 export const environmentBase = {
   apiBaseUrl: resolveApiBaseUrl(),
-  authClientId: 'eposICS',
-  authRootUrl: 'https://aaai.epos-eu.org',
-  authScope: ['openid', 'profile', 'single-logout'].join(' '),
-  brandLogoPath: 'assets/img/logo.svg',
+  authClientId: '2d7f667e-9d6c-4c09-ad15-ceec571ae554',
+  authRootUrl: 'https://login.staging.envri.eu/auth/realms/envri',
+  authScope: ['openid', 'profile', 'email', 'offline_access'].join(' '),
+  brandLogoPath: 'assets/img/logo-envri-hub-centered-color.png',
   browserTitle: 'EPOS Backoffice',
   faviconPath: 'assets/favicon.ico',
-  headerLogoPath: 'assets/EPOS_logo_white_orange.png',
+  headerLogoPath: 'assets/ENVRI-Hub-logo-white.svg',
   headerTitle: 'METADATA Backoffice',
-  loginTitle: 'EPOS Backoffice',
-  termsAndConditionsText: 'By using EPOS ICS portal you accept the EPOS terms and conditions.',
+  loginTitle: 'ENVRI Backoffice',
+  termsAndConditionsText: 'By using ENVRI portal you accept the ENVRI-Hub-Next terms and conditions.',
   useLiveApi: true,
   logLevel: LogLevel.info,
 };

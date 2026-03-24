@@ -20,7 +20,7 @@ export class GetUserInfo extends CacheableEndpoint<UserInfoDataSource, GetUserIn
       return authHeader;
     };
     const callResponsePromise = this.apiCaller.doCall(
-      ['user/self'],
+      ['/user/self'],
       RequestMethod.GET,
       {
         available_section: String(params.available_section),

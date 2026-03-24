@@ -5,7 +5,7 @@ export default defineConfig({
   backoffice: {
     from: {
       source: 'url',
-      url: 'https://ics-c.epos-ip.org/development/k8s-epos-deploy/latest/api/v1/openapi.json',
+      url: 'https://catalogue.staging.envri.eu/api/v1/openapi.json',
     },
     outputDir: 'generated',
     to: async (context) => {
