@@ -54,9 +54,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build default app
-        run: pnpm run build
-
       - name: Build OSS app
         run: pnpm run build-oss
 
