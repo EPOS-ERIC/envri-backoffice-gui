@@ -16,10 +16,6 @@ on:
         description: Build and push image to GHCR
         type: boolean
         default: false
-      run_mirror:
-        description: Run GitLab mirror job
-        type: boolean
-        default: false
   pull_request:
     branches:
       - main
@@ -56,9 +52,6 @@ jobs:
 
       - name: Build default app
         run: pnpm run build
-
-      - name: Build OSS app
-        run: pnpm run build-oss
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -155,24 +148,3 @@ jobs:
           provenance: mode=max
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  mirror:
-    runs-on: ubuntu-latest
-    if: ${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref_type == 'tag')) || (github.event_name == 'workflow_dispatch' && inputs.run_mirror) }}
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Mirror to GitLab
-        run: |
-          git remote add gitlab https://github:${{ secrets.GITLAB }}@epos-ci.brgm.fr/epos/epos-backoffice-gui.git
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            git push gitlab "${{ github.ref }}:${{ github.ref }}"
-          elif [ "${{ github.ref_name }}" = "main" ]; then
-            git push --force gitlab "${{ github.ref }}:refs/heads/opensource"
-          else
-            git push --force gitlab "${{ github.ref }}:${{ github.ref }}"
-          fi
