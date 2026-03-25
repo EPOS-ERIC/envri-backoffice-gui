@@ -31,10 +31,10 @@ export class PermissionsService {
   }
 }
 
-// export const ActiveGroupMember: CanActivateFn = (next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean => {
-//   return inject(PermissionsService).canActivate(next, state);
-// };
-//
+export const ActiveGroupMember: CanActivateFn = (next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean => {
+  return inject(PermissionsService).canActivate(next, state);
+};
+
 // export const AuthenticatedUser: CanActivateFn = (next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean => {
 //   if (state.url.startsWith('/last-page-redirect')) {
 //     return true; // Allow access to last-page-redirect for auth callback

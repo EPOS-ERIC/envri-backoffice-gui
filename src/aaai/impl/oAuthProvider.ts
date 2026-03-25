@@ -5,11 +5,12 @@ import { AuthenticationProvider } from '../authProvider.interface';
 import { BehaviorSubject, lastValueFrom, Observable } from 'rxjs';
 import { AAAIUser } from '../aaaiUser.interface';
 import { BasicUser } from './basicUser';
-import { Injector } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 
 /** OAuth provider implementation */
+@Injectable()
 export class OAuthAuthenticationProvider implements AuthenticationProvider {
   private static readonly AUTH_ROOT = environment.authRootUrl;
   private static readonly AUTH_ISSUER = OAuthAuthenticationProvider.AUTH_ROOT + '';
