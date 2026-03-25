@@ -1,11 +1,14 @@
 import { LogLevel } from 'src/utility/enums/log.enum';
 
 const BACKOFFICE_HOME_PATH = '/backoffice/home';
+const BACKOFFICE_LAST_PAGE_REDIRECT = '/backoffice/last-page-redirect';
 const API_PATH = '/api/v1';
 
 const resolveApiBaseUrl = (): string => {
-  if (window.location.href.includes(BACKOFFICE_HOME_PATH)) {
-    return window.location.href.replace(BACKOFFICE_HOME_PATH, '') + API_PATH;
+  if (window.location.href.includes(BACKOFFICE_HOME_PATH) || window.location.href.includes(BACKOFFICE_LAST_PAGE_REDIRECT)) {
+    let path = window.location.href.replace(BACKOFFICE_HOME_PATH, '');
+    path = path.replace(BACKOFFICE_LAST_PAGE_REDIRECT, '');
+    return path + API_PATH;
   }
 
   return window.location.href + API_PATH;
@@ -26,3 +29,4 @@ export const environmentBase = {
   useLiveApi: true,
   logLevel: LogLevel.info,
 };
+
