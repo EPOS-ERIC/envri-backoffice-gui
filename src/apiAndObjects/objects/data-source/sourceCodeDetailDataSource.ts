@@ -97,6 +97,7 @@ export class SourceCodeDetailDataSource extends BaseObject implements SoftwareSo
     this.identifier = this._getArray(SourceCodeDetailDataSource.KEYS.identifier);
     this.category = this._getArray(SourceCodeDetailDataSource.KEYS.category);
     this.changeTimestamp = this._getString(SourceCodeDetailDataSource.KEYS.changeTimestamp);
+    this.codeRepository = this._getString(SourceCodeDetailDataSource.KEYS.codeRepository);
     this.fileProvenance = this._getString(SourceCodeDetailDataSource.KEYS.fileProvenance);
     this.contactPoint = this._getArray(SourceCodeDetailDataSource.KEYS.contactPoint);
     this.description = this._getString(SourceCodeDetailDataSource.KEYS.description);

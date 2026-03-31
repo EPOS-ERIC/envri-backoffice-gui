@@ -67,7 +67,7 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
         mainEntityofPage: new FormControl(this.softwareSourceCode?.mainEntityofPage),
         licenseURL: new FormControl(this.softwareSourceCode?.licenseURL),
         softwareVersion: new FormControl(this.softwareSourceCode?.softwareVersion),
-        downloadURL: new FormControl(this.softwareSourceCode?.downloadURL),
+        downloadURL: new FormControl(this.softwareSourceCode?.codeRepository),
         programmingLanguage: this.formBuilder.array(
           (this.softwareSourceCode?.programmingLanguage ?? []).map((lang) => this.formBuilder.control(lang)),
         ),
@@ -86,7 +86,6 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
           const groupMatch = activeUserGroups.find(group => group.groupId === this.softwareSourceCode?.groups?.find(entityGroup => entityGroup === group.groupId));
           if(groupMatch){
             const userRole = groupMatch.role;
-            console.warn('userRole', userRole);
             if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
               userHasEditPermissionsForSubmitted = true;
             }
