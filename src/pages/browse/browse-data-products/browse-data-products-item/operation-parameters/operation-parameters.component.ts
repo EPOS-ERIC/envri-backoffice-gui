@@ -231,7 +231,9 @@ export class OperationParametersComponent implements OnInit {
 
   public handleDeleteOperation(instanceId: string | undefined): void {
     if (instanceId) {
-      this.dialogService.handleDelete(instanceId, EntityEndpointValue.OPERATION, false).then((toDelete: boolean) => {
+      const instanceToDelete = new Map<string, EntityEndpointValue>();
+      instanceToDelete.set(instanceId, EntityEndpointValue.OPERATION);
+      this.dialogService.handleDelete(instanceToDelete, false).then((toDelete: boolean) => {
         if (toDelete) {
           const activeWebservice = this.entityExecutionService.getActiveWebServiceValue();
           if (null != activeWebservice) {
@@ -257,7 +259,9 @@ export class OperationParametersComponent implements OnInit {
 
   public handleDeleteParam(instanceId: string) {
     if (instanceId) {
-      this.dialogService.handleDelete(instanceId, EntityEndpointValue.MAPPING, false).then((toDelete: boolean) => {
+      const instanceToDelete = new Map<string, EntityEndpointValue>();
+      instanceToDelete.set(instanceId, EntityEndpointValue.MAPPING);
+      this.dialogService.handleDelete(instanceToDelete, false).then((toDelete: boolean) => {
         if (toDelete) {
           const activeOperation = this.entityExecutionService.getActiveOperationValue();
           if (null != activeOperation) {

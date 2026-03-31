@@ -28,7 +28,7 @@ export class WebserviceDetailDataSource extends BaseObject implements WebService
     PROVIDER: 'provider',
     RELATION: 'relation',
     SPATIAL_EXTENT: 'spatialExtent',
-    STATE: 'state',
+    STATUS: 'status',
     SUPPORTED_OPERATION: 'supportedOperation',
     TEMPORAL_EXTENT: 'temporalExtent',
     TO_BE_DELETE: 'toBeDelete',
@@ -98,7 +98,7 @@ export class WebserviceDetailDataSource extends BaseObject implements WebService
     this.provider = this._getValue(WebserviceDetailDataSource.KEYS.PROVIDER) as LinkedEntity;
     this.relation = this._getArray(WebserviceDetailDataSource.KEYS.RELATION);
     this.spatialExtent = this._getArray(WebserviceDetailDataSource.KEYS.SPATIAL_EXTENT);
-    this.status = this._getValue(WebserviceDetailDataSource.KEYS.STATE) as DataProduct['status'];
+    this.status = this._getValue(WebserviceDetailDataSource.KEYS.STATUS) as DataProduct['status'];
     this.supportedOperation = this._getArray(WebserviceDetailDataSource.KEYS.SUPPORTED_OPERATION);
     this.temporalExtent = this._getArray(WebserviceDetailDataSource.KEYS.TEMPORAL_EXTENT);
     this.toBeDelete = this._getString(WebserviceDetailDataSource.KEYS.TO_BE_DELETE);

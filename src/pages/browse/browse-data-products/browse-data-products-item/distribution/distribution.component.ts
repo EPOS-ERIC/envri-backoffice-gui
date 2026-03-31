@@ -188,8 +188,10 @@ export class DistributionComponent implements OnInit {
   public handleDelete(index: number): void {
     const distToDelete = this.distributionDetails[index];
     if (null != distToDelete) {
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(distToDelete.instanceId! as string, EntityEndpointValue.DISTRIBUTION);
       this.dialogService
-        .handleDelete(distToDelete.instanceId!, EntityEndpointValue.DISTRIBUTION, false)
+        .handleDelete(toDelete, false)
         .then((deleteDistribution: boolean) => {
           if (deleteDistribution) {
             this.distributionDetails.splice(index, 1);

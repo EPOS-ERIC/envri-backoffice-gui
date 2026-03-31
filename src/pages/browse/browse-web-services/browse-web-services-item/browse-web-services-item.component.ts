@@ -135,7 +135,9 @@ export class BrowseWebServicesItemComponent implements OnInit, OnDestroy {
 
   public handleDelete(): void {
     if (this.webservice?.instanceId) {
-      this.dialogService.handleDelete(this.webservice.instanceId, EntityEndpointValue.WEBSERVICE);
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(this.webservice.instanceId, EntityEndpointValue.WEBSERVICE);
+      this.dialogService.handleDelete(toDelete);
     }
   }
 

@@ -16,8 +16,9 @@ import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum'
 import { SoftwareApplication } from 'src/apiAndObjects/objects/entities/softwareApplication.model';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
-import { LinkedEntity, Organization } from 'generated/backofficeSchemas';
+import { Identifier, LinkedEntity, Organization } from 'generated/backofficeSchemas';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
+import { LoadingService } from 'src/services/loading.service';
 
 @Component({
   selector: 'app-general-information-appSoft',
@@ -52,6 +53,7 @@ export class GeneralInformationAppSoftComponent implements OnInit {
     private readonly formBuilder: FormBuilder,
     private readonly apiService: ApiService,
     private readonly snackbarService: SnackbarService,
+    private readonly loadingService: LoadingService,
   ) {
     this.softwareApplication = this.entityExecutionService.getActiveSoftwareApplicationValue() as SoftwareApplication;
   }
@@ -157,11 +159,35 @@ export class GeneralInformationAppSoftComponent implements OnInit {
     );
   }
 
-  public handleDeleteSoftwareApplication(): void {
-    this.dialogService.handleDelete(
-      this.softwareApplication?.instanceId as string,
-      EntityEndpointValue.APPLICATION_SOFTWARE,
-    );
+  public async handleDeleteSoftwareApplication(): Promise<void> {
+    this.loadingService.setShowSpinner(true);
+
+    const entitiesToDelete = new Map<string, EntityEndpointValue>();
+    // set the softwareSourceCode to be deleted
+    entitiesToDelete.set(this.softwareApplication?.instanceId as string, EntityEndpointValue.APPLICATION_SOFTWARE);
+    
+    const identifiers = this.softwareApplication?.identifier || [];
+    const identifiersProm: Promise<unknown>[] = [];
+    identifiers.forEach((identifier)=>{
+      identifiersProm.push(
+        this.apiService.endpoints.Identifier.get
+        .call({
+          metaId: identifier.metaId as string,
+          instanceId: identifier.instanceId as string,
+        })
+        .then((identResp: Identifier[])=>{
+          const filteredIdentifiers = identResp.filter((id) => id.status?.toUpperCase() === 'DRAFT');
+          // set Identifier to be deleted
+          filteredIdentifiers.forEach((identifier) => {
+            entitiesToDelete.set(identifier.instanceId as string, EntityEndpointValue.IDENTIFIER);
+          });
+        })
+      );
+    })
+
+    await Promise.allSettled(identifiersProm);
+    this.loadingService.setShowSpinner(false);
+    this.dialogService.handleDelete(entitiesToDelete);
   }
 
   public handleUpdateCreator(): void {
