@@ -13,6 +13,7 @@ import { OperationParamsRange } from 'src/utility/enums/operationParamsRange.enu
 import { Status } from 'src/utility/enums/status.enum';
 import { ParametersFormService } from './parameters-form.service';
 import { DialogData } from 'src/components/dialogs/baseDialogService.abstract';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-operation-parameters',
@@ -41,9 +42,10 @@ export class OperationParametersComponent implements OnInit {
     private readonly dialogService: DialogService,
     private readonly stateChangeService: StateChangeService,
     private readonly formService: ParametersFormService,
+    private readonly activeUserService: ActiveUserService,
   ) {
     this.stateChangeService.currentDataProductStateObs.subscribe((state: DataProduct['status'] | null) => {
-      if (state == null || state === Status.PUBLISHED || state === Status.ARCHIVED || state === Status.DISCARDED) {
+      if (state == null || (state === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted()) || state === Status.PUBLISHED || state === Status.ARCHIVED || state === Status.DISCARDED) {
         this.disabled = true;
       } else {
         this.disabled = false;
@@ -62,6 +64,37 @@ export class OperationParametersComponent implements OnInit {
   public loading = false;
 
   public disabled = false;
+
+  public userHasEditPermissionsForSubmitted(): boolean{
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const dataProduct = this.entityExecutionService.getActiveDataProductValue();
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            return true;
+          }
+          else{
+            return false;
+          }
+        }
+        else{
+          return false;
+        }
+      }
+      else{
+        return false;
+      }
+    }
+    else{
+      return false;
+    }
+  }
 
   public updateMappingArr(map: Mapping) {
     const indexofExistingItem = this.paramsToUpdate.findIndex((val) => val.instanceId === map.instanceId);

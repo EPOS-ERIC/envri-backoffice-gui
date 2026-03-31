@@ -13,6 +13,7 @@ import { DialogService } from 'src/components/dialogs/dialog.service';
 import { DialogRevisionsComponent } from 'src/components/dialogs/dialog-revisions/dialog-revisions.component';
 import { Entity } from 'src/utility/enums/entity.enum';
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
+import { ActiveUserService } from 'src/services/activeUser.service';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { DistributionDetailDataSource } from 'src/apiAndObjects/objects/data-source/distributionDetailDataSource';
 import { WebserviceDetailDataSource } from 'src/apiAndObjects/objects/data-source/webserviceDetailDataSource';
@@ -36,11 +37,14 @@ export class GeneralInformationComponent implements OnInit {
 
   public typeOptions: Array<{ id: string; name: string }> = [];
 
+  public userHasEditPermissionsForSubmitted: boolean | undefined = undefined;
+
   constructor(
     private readonly helpersService: HelpersService,
     private readonly entityExecutionService: EntityExecutionService,
     private readonly dataProductService: DataproductService,
     private readonly dialogService: DialogService,
+    private readonly activeUserService: ActiveUserService,
     private readonly apiService: ApiService,
     private readonly loadingService: LoadingService,
 
@@ -74,7 +78,25 @@ export class GeneralInformationComponent implements OnInit {
           },
         ]),
       });
-      if (this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED) {
+      // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+      const activeUser = this.activeUserService.getActiveUser();
+      if(activeUser){
+        const activeUserGroups = activeUser.groups;
+        if(activeUserGroups){
+          // find group in UserGroups matching with current active loaded Entity
+          const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+          if(groupMatch){
+            const userRole = groupMatch.role;
+            if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+              this.userHasEditPermissionsForSubmitted = true;
+            }
+            else{
+              this.userHasEditPermissionsForSubmitted = false;
+            }
+          }
+        }
+      }
+      if ((this.dataProduct?.status === Status.SUBMITTED && this.userHasEditPermissionsForSubmitted === false) || this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED) {
         this.form.disable();
       }
     }

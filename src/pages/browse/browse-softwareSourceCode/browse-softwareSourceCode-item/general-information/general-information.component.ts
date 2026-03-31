@@ -16,6 +16,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { Identifier, LinkedEntity, Organization } from 'generated/backofficeSchemas';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 import { LoadingService } from 'src/services/loading.service';
 
 @Component({
@@ -50,12 +51,14 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
     private readonly formBuilder: UntypedFormBuilder,
     private readonly apiService: ApiService,
     private readonly snackbarService: SnackbarService,
+    private readonly activeUserService: ActiveUserService,
     private readonly loadingService: LoadingService,
   ) {
     this.softwareSourceCode = this.entityExecutionService.getActiveSoftwareSourceCodeValue() as SoftwareSourceCode;
   }
 
   private initForm(): void {
+    let userHasEditPermissionsForSubmitted: boolean | undefined = false;
     if (this.softwareSourceCode) {
       this.form = new FormGroup({
         name: new FormControl(this.softwareSourceCode?.name, [Validators.required]),
@@ -74,7 +77,26 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
           (this.softwareSourceCode?.creator ?? []).map((creator) => this.formBuilder.control(creator)),
         ),
       });
-      if (this.softwareSourceCode?.status === Status.PUBLISHED || this.softwareSourceCode?.status === Status.ARCHIVED) {
+      // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+      const activeUser = this.activeUserService.getActiveUser();
+      if(activeUser){
+        const activeUserGroups = activeUser.groups;
+        if(activeUserGroups){
+          // find group in UserGroups matching with current active loaded Entity
+          const groupMatch = activeUserGroups.find(group => group.groupId === this.softwareSourceCode?.groups?.find(entityGroup => entityGroup === group.groupId));
+          if(groupMatch){
+            const userRole = groupMatch.role;
+            console.warn('userRole', userRole);
+            if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+              userHasEditPermissionsForSubmitted = true;
+            }
+            else{
+              userHasEditPermissionsForSubmitted = false;
+            }
+          }
+        }
+      }
+      if ((this.softwareSourceCode?.status === Status.SUBMITTED && userHasEditPermissionsForSubmitted === false) || this.softwareSourceCode?.status === Status.PUBLISHED || this.softwareSourceCode?.status === Status.ARCHIVED) {
         this.form.disable();
       }
     }

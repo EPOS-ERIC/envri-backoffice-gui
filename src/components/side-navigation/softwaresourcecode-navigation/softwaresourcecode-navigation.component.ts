@@ -30,7 +30,6 @@ export class SoftwareSourceCodeNavigationComponent implements OnInit {
   public activeListItem: string = '';
 
   private initSubscriptions(): void {
-    // CHNAGE TO SOFTWARE; NOT DATA PRODUCT
     this.navigationService.softwareSourceCodeActiveItemObs.subscribe((id: string) => {
       this.activeListItem = id;
     });

@@ -5,6 +5,7 @@ import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { GetDocumentationParams } from 'src/apiAndObjects/api/documentation/getDocumentation';
 import { DocumentationDataSource } from 'src/apiAndObjects/objects/data-source/documentationDetailDataSource';
 import { DialogService } from 'src/components/dialogs/dialog.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 import { HelpersService } from 'src/services/helpers.service';
 import { LoadingService } from 'src/services/loading.service';
@@ -43,10 +44,37 @@ export class DocumentationComponent implements OnInit {
     private readonly snackbarService: SnackbarService,
     private readonly entityExecutionService: EntityExecutionService,
     private readonly dialogService: DialogService,
+    private readonly activeUserService: ActiveUserService,
   ) {}
 
   public ngOnInit(): void {
-    this.disabled = this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED;
+    this.disabled = (this.dataProduct?.status === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted())  ||  this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED;
+  }
+
+  public userHasEditPermissionsForSubmitted(): boolean{
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            return true;
+          }else{
+            return false;
+          }
+        }else{
+          return false;
+        }
+      }else{
+        return false;
+      }
+    }else{
+      return false;
+    }
   }
 
   private initDocumentations(documentationLinkedEntities: Array<LinkedEntity>) {

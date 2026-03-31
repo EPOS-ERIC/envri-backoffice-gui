@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 import { StateChangeService } from 'src/services/stateChange.service';
 import { HelpersService } from 'src/services/helpers.service';
 import { DataProduct, SoftwareApplication, SoftwareSourceCode } from 'generated/backofficeSchemas';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-edit-navigation',
@@ -34,6 +35,7 @@ export class EditNavigationComponent implements OnInit, OnDestroy {
     private router: Router,
     private stateChangeService: StateChangeService,
     private helpersService: HelpersService,
+    private activeUserService: ActiveUserService,
   ) {}
 
   public ngOnInit(): void {
@@ -131,6 +133,19 @@ export class EditNavigationComponent implements OnInit, OnDestroy {
     this.router.navigate([`/browse/${route}/details`, id]);
   }
 
+  get activeEntityGroups(): Array<string> | undefined {
+    switch (this.activeEntity) {
+      case Entity.DATA_PRODUCT:
+        return this.activeDataProduct?.groups;
+      case Entity.SOFTWARE_APPLICATION:
+        return this.activeSoftwareApplication?.groups;
+      case Entity.SOFTWARE_SOURCE_CODE:
+        return this.activeSoftwareSourceCode?.groups;
+      default:
+        return undefined;
+    }
+  }
+  
   // just to mention it out: 'Entity' here referring to "SoftwareApplication", "SoftwareSourceCode" or "DataProduct"
   get activeEntityStatus(): string | undefined {
     switch (this.activeEntity) {
@@ -142,6 +157,40 @@ export class EditNavigationComponent implements OnInit, OnDestroy {
         return this.activeSoftwareSourceCode?.status;
       default:
         return undefined;
+    }
+  }
+
+  get userCanPublish(): boolean {
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      // if user is a "SuperAdmin", allow, no need for further check on role
+      if(activeUser.isAdmin){
+        return true;
+      }
+
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.activeEntityGroups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole === 'ADMIN' || userRole === 'REVIEWER'){
+            return true;
+          }
+          else{
+            return false
+          }
+        }
+        else{
+          return false;
+        }
+      }
+      else{
+        return false;
+      } 
+    }
+    else{
+      return false;
     }
   }
 

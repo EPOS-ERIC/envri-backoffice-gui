@@ -23,7 +23,7 @@
       Version History
     </button>
     <button
-      *ngIf="this.softwareSourceCode.status !== stateEnum.PUBLISHED"
+      *ngIf="this.softwareSourceCode.status !== stateEnum.PUBLISHED && this.softwareSourceCode.status !== stateEnum.SUBMITTED"
       mat-mini-fab
       color="warn"
       matTooltip="Permanently Delete Software Source Code"

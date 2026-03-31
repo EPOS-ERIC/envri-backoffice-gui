@@ -12,7 +12,7 @@ const resolveApiBaseUrl = (): string => {
 };
 
 export const environmentBase = {
-  apiBaseUrl: resolveApiBaseUrl(),
+  apiBaseUrl: "https://ics-c.epos-ip.org/development/k8s-epos-deploy/latest/api/v1",
   authClientId: 'eposICS',
   authRootUrl: 'https://aaai.epos-eu.org',
   authScope: ['openid', 'profile', 'single-logout'].join(' '),
