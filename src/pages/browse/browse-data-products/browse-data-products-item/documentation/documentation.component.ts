@@ -183,8 +183,10 @@ export class DocumentationComponent implements OnInit {
   public handleDelete(i: number) {
     const docToRemove = this.documentationEntities[i];
     if (docToRemove.instanceId) {
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(docToRemove.instanceId, EntityEndpointValue.DOCUMENTATION);
       this.dialogService
-        .handleDelete(docToRemove.instanceId, EntityEndpointValue.DOCUMENTATION, false)
+        .handleDelete(toDelete, false)
         .then(() => {
           this.documentationEntities.splice(i, 1);
           const activeWebService = this.activeWebservice;

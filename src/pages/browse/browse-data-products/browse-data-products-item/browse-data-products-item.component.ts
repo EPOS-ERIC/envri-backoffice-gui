@@ -231,7 +231,9 @@ export class BrowseDataProductsItemComponent extends WithSubscription implements
 
   public handleDelete(): void {
     if (this.dataProduct?.instanceId) {
-      this.dialogService.handleDelete(this.dataProduct?.instanceId, EntityEndpointValue.DATA_PRODUCT);
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(this.dataProduct?.instanceId as string, EntityEndpointValue.DATA_PRODUCT);
+      this.dialogService.handleDelete(toDelete);
     }
   }
 

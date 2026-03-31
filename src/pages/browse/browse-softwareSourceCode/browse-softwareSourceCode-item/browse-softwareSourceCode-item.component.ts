@@ -234,7 +234,9 @@ export class BrowseSoftwareSourceCodeItemComponent extends WithSubscription impl
 
   public handleDelete(): void {
     if (this.softwareSourceCode?.instanceId) {
-      this.dialogService.handleDelete(this.softwareSourceCode?.instanceId, EntityEndpointValue.SOFTWARE_SOURCE_CODE);
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(this.softwareSourceCode?.instanceId, EntityEndpointValue.SOFTWARE_SOURCE_CODE);
+      this.dialogService.handleDelete(toDelete);
     }
   }
 

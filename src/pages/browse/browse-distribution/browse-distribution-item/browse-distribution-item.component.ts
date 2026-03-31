@@ -116,7 +116,9 @@ export class BrowseDistributionItemComponent implements OnInit, OnDestroy {
   public handleDelete(): void {
     // Todo: delete item from DB
     if (this.distributionDetail?.instanceId) {
-      this.dialogService.handleDelete(this.distributionDetail?.instanceId, EntityEndpointValue.DISTRIBUTION);
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(this.distributionDetail.instanceId, EntityEndpointValue.DISTRIBUTION);
+      this.dialogService.handleDelete(toDelete);
     }
   }
 }

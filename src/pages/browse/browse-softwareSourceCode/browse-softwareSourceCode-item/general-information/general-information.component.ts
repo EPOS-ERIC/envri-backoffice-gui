@@ -14,9 +14,10 @@ import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum'
 import { SoftwareSourceCode } from 'src/apiAndObjects/objects/entities/softwareSourceCode.model';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
-import { LinkedEntity, Organization } from 'generated/backofficeSchemas';
+import { Identifier, LinkedEntity, Organization } from 'generated/backofficeSchemas';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { ActiveUserService } from 'src/services/activeUser.service';
+import { LoadingService } from 'src/services/loading.service';
 
 @Component({
   selector: 'app-general-information-sourceCode',
@@ -51,6 +52,7 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
     private readonly apiService: ApiService,
     private readonly snackbarService: SnackbarService,
     private readonly activeUserService: ActiveUserService,
+    private readonly loadingService: LoadingService,
   ) {
     this.softwareSourceCode = this.entityExecutionService.getActiveSoftwareSourceCodeValue() as SoftwareSourceCode;
   }
@@ -196,11 +198,35 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
     );
   }
 
-  public handleDeleteSoftwareSourceCodeDelete(): void {
-    this.dialogService.handleDelete(
-      this.softwareSourceCode?.instanceId as string,
-      EntityEndpointValue.SOFTWARE_SOURCE_CODE,
-    );
+  public async handleDeleteSoftwareSourceCode(): Promise<void> {
+    this.loadingService.setShowSpinner(true);
+
+    const entitiesToDelete = new Map<string, EntityEndpointValue>();
+    // set the softwareSourceCode to be deleted
+    entitiesToDelete.set(this.softwareSourceCode?.instanceId as string, EntityEndpointValue.SOFTWARE_SOURCE_CODE);
+    
+    const identifiers = this.softwareSourceCode?.identifier || [];
+    const identifiersProm: Promise<unknown>[] = [];
+    identifiers.forEach((identifier)=>{
+      identifiersProm.push(
+        this.apiService.endpoints.Identifier.get
+        .call({
+          metaId: identifier.metaId as string,
+          instanceId: identifier.instanceId as string,
+        })
+        .then((identResp: Identifier[])=>{
+          const filteredIdentifiers = identResp.filter((id) => id.status?.toUpperCase() === 'DRAFT');
+          // set Identifier to be deleted
+          filteredIdentifiers.forEach((identifier) => {
+            entitiesToDelete.set(identifier.instanceId as string, EntityEndpointValue.IDENTIFIER);
+          });
+        })
+      );
+    })
+
+    await Promise.allSettled(identifiersProm);
+    this.loadingService.setShowSpinner(false);
+    this.dialogService.handleDelete(entitiesToDelete);
   }
 
   public handleUpdateCreator(): void {

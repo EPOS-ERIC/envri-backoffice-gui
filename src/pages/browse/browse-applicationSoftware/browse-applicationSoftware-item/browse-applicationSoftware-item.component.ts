@@ -235,7 +235,9 @@ export class BrowseSoftwareApplicationItemComponent extends WithSubscription imp
 
   public handleDelete(): void {
     if (this.softwareApplication?.instanceId) {
-      this.dialogService.handleDelete(this.softwareApplication?.instanceId, EntityEndpointValue.APPLICATION_SOFTWARE);
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(this.softwareApplication.instanceId, EntityEndpointValue.APPLICATION_SOFTWARE);
+      this.dialogService.handleDelete(toDelete);
     }
   }
 
