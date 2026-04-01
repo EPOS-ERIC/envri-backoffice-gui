@@ -166,46 +166,6 @@
       <span class="dist-field-value" [innerHTML]="getDiff(item?.licence, other?.licence, side)"></span>
     </div>
 
-    <div class="dist-section-spacer"></div>
-    <div class="dist-section-title">DATA ACCESS</div>
-
-    <div *ngIf="item?.downloadURL" class="dist-access-badge badge-download">DOWNLOADABLE FILE</div>
-    <div *ngIf="item?.downloadURL" class="dist-field">
-      <span class="dist-field-label">URL:</span>
-      <span class="dist-field-value" [innerHTML]="getDiff(item?.downloadURL, other?.downloadURL, side)"></span>
-    </div>
-
-    <div *ngIf="item?.accessService?.length > 0">
-      <div class="dist-access-badge badge-webservice">WEBSERVICE</div>
-      <div *ngFor="let acc of item.accessService; let i = index" class="dist-sub-item">
-        <div *ngIf="i > 0" class="dist-inner-sep"></div>
-        <div class="dist-sub-item-title"
-          [innerHTML]="getDiff(acc.name || acc.uid, findMatch(acc, other?.accessService)?.name || findMatch(acc, other?.accessService)?.uid, side)">
-        </div>
-        <div *ngIf="acc.description" class="dist-field">
-          <span class="dist-field-value"
-            [innerHTML]="getDiff(acc.description, findMatch(acc, other?.accessService)?.description, side)"></span>
-        </div>
-
-        <div *ngIf="acc.documentation?.length > 0">
-          <div class="dist-sub-label">DOCUMENTATION</div>
-          <div *ngFor="let doc of acc.documentation; let j = index" class="dist-list-item">
-            <ng-container
-              *ngTemplateOutlet="docCard; context: { item: doc, other: findMatch(doc, findMatch(acc, other?.accessService)?.documentation), side: side, parentId: acc.instanceId }"></ng-container>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- DOCUMENTATION (Directly on distribution) -->
-    <div *ngIf="item?.documentation?.length > 0">
-      <div class="dist-section-spacer"></div>
-      <div class="dist-section-title">DOCUMENTATION</div>
-      <div *ngFor="let doc of item.documentation; let i = index" class="dist-list-item">
-        <ng-container
-          *ngTemplateOutlet="docCard; context: { item: doc, other: findMatch(doc, other?.documentation), side: side, parentId: item.instanceId }"></ng-container>
-      </div>
-    </div>
   </div>
 </ng-template>
 

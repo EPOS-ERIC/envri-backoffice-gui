@@ -149,12 +149,12 @@ const SECTION_CONFIG: Array<{ label: string; fields: string[] }> = [
     fields: ['category', 'categories'],
   },
   {
-    label: 'Distributions',
-    fields: ['distribution', 'downloadURL', 'installURL', 'licenseURL'],
-  },
-  {
     label: 'Parameters',
     fields: ['inputParameter', 'outputParameter', 'parameter'],
+  },
+  {
+    label: 'Distributions',
+    fields: ['distribution'],
   },
 ];
 
@@ -167,7 +167,7 @@ export interface TypeOfField {
   newValue: any;
   oldHtml?: string;
   newHtml?: string;
-  fieldType?: 'distribution' | 'webservice' | 'documentation' | 'generic';
+  fieldType?: 'documentation' | 'distribution' | 'webservice' | 'generic';
 }
 
 export interface DiffSection {
@@ -350,10 +350,9 @@ export class BrowseRevisionsComponent implements OnInit {
         else status = 'modified';
       }
 
-      let fieldType: 'distribution' | 'webservice' | 'documentation' | 'generic' = 'generic';
-      if (field === 'distribution') fieldType = 'distribution';
-      else if (field === 'accessService') fieldType = 'webservice';
-      else if (field === 'documentation') fieldType = 'documentation';
+      let fieldType: 'documentation' | 'distribution' | 'webservice' | 'generic' = 'generic';
+      if (field === 'documentation') fieldType = 'documentation';
+      else if (field === 'distribution') fieldType = 'distribution';
 
       friendlyFields.push({
         label: FIELD_LABELS[field] || this.camelCaseToTitle(field),
@@ -447,7 +446,7 @@ export class BrowseRevisionsComponent implements OnInit {
     }
 
     // The following entities are now handled by templates in the HTML file
-    if (obj['entityType'] === 'DISTRIBUTION' || obj['entityType'] === 'WEBSERVICE' || obj['entityType'] === 'DOCUMENTATION' || (obj['uri'] && obj['title'])) {
+    if (obj['entityType'] === 'DOCUMENTATION' || (obj['uri'] && obj['title'])) {
       return ''; // Placeholder, template will use its own logic
     }
 
@@ -542,8 +541,12 @@ export class BrowseRevisionsComponent implements OnInit {
    * Returns word-diffed HTML for a specific property. Used in the template.
    */
   public getDiff(v1: any, v2: any, side: 'old' | 'new'): string {
-    const s1 = this.formatFriendlyValue(v1);
-    const s2 = this.formatFriendlyValue(v2);
+    // Normalize order: s1 must be OLD, s2 must be NEW for the diff logic to work.
+    // Side 'old': v1 is old, v2 is new.
+    // Side 'new': v1 is new, v2 is old.
+    const s1 = (side === 'old') ? this.formatFriendlyValue(v1) : this.formatFriendlyValue(v2);
+    const s2 = (side === 'old') ? this.formatFriendlyValue(v2) : this.formatFriendlyValue(v1);
+
     if (s1 === s2) return s1;
     const { oldHtml, newHtml } = this.computeWordDiff(s1, s2);
     return side === 'old' ? oldHtml : newHtml;
@@ -553,7 +556,16 @@ export class BrowseRevisionsComponent implements OnInit {
   public findMatch(item: any, list: any[]): any {
     if (!item || !list || !Array.isArray(list)) return null;
     const items = Array.isArray(list) ? list : [list];
-    return items.find(it => it && (it.instanceId === item.instanceId || it.uid === item.uid || it.metaId === item.metaId));
+    return items.find(it => {
+      if (!it) return false;
+      if (it.instanceId && item.instanceId && it.instanceId === item.instanceId) return true;
+      if (it.uid && item.uid && it.uid === item.uid) return true;
+      if (it.metaId && item.metaId && it.metaId === item.metaId) return true;
+      // relations / plugins
+      if (it.relation && item.relation && it.relation.id === item.relation.id) return true;
+      if (it.plugin && item.plugin && it.plugin.id === item.plugin.id) return true;
+      return false;
+    });
   }
 
   /** Helper for template loops */
@@ -631,15 +643,24 @@ export class BrowseRevisionsComponent implements OnInit {
 
   private async fetchRelatedEntities(): Promise<void> {
     const promises: Promise<void>[] = [];
-    const providerFields = ['publisher', 'provider', 'contributor', 'creator', 'funder', 'author', 'maintainer'];
+    const providerFields = [
+      'publisher',
+      'provider',
+      'contributor',
+      'creator',
+      'funder',
+      'author',
+      'maintainer',
+    ];
     const categoryFields = ['category', 'categories'];
-    const distributionFields = ['distribution'];
 
     // Pre-fetch all Organizations if any provider field references one (since Organization has no single GET endpoint)
     let allOrgs: any[] = [];
     const needsOrgs = this.revisions.some((rev) => {
       const r = rev as any;
-      return providerFields.some((f) => Array.isArray(r[f]) && r[f].some((i: any) => i.entityType === 'ORGANIZATION'));
+      return providerFields.some(
+        (f) => Array.isArray(r[f]) && r[f].some((i: any) => i.entityType === 'ORGANIZATION'),
+      );
     });
 
     if (needsOrgs) {
@@ -700,7 +721,13 @@ export class BrowseRevisionsComponent implements OnInit {
 
       if (revision.contactPoint && Array.isArray(revision.contactPoint)) {
         for (const item of revision.contactPoint) {
-          if (item.instanceId && item.metaId && !(item as any).email && !(item as any).telephone && !(item as any).role) {
+          if (
+            item.instanceId &&
+            item.metaId &&
+            !(item as any).email &&
+            !(item as any).telephone &&
+            !(item as any).role
+          ) {
             promises.push(
               this.apiService.endpoints.ContactPoint.get
                 .call({ instanceId: item.instanceId, metaId: item.metaId })
@@ -725,7 +752,7 @@ export class BrowseRevisionsComponent implements OnInit {
             }
           }
 
-          if (item.instanceId && item.metaId && (!(item as any).title || !(item as any).description || !(item as any).uri)) {
+          if (item.instanceId && item.metaId && !(item as any).title && !(item as any).uri) {
             promises.push(
               this.apiService.endpoints.Documentation.get
                 .call({ instanceId: item.instanceId, metaId: item.metaId })
@@ -733,6 +760,72 @@ export class BrowseRevisionsComponent implements OnInit {
                   if (res && res.length > 0) Object.assign(item, res[0]);
                 })
                 .catch((e: any) => console.warn('Failed to fetch documentation', e)),
+            );
+          }
+        }
+      }
+
+      // distribution hydration: fetch distribution details, then webservice from accessService, then plugin
+      if (revision.distribution && Array.isArray(revision.distribution)) {
+        for (const item of revision.distribution) {
+          if (!item.instanceId && item.uid) {
+            const otherRev = this.revisions.find((r) => r !== rev);
+            const match = this.findNestedMatch(item.uid, otherRev, 'distribution');
+            if (match) {
+              item.instanceId = match.instanceId;
+              item.metaId = match.metaId;
+            }
+          }
+
+          if (item.instanceId && item.metaId && !(item as any).title && !(item as any).description) {
+            // 1. Fetch distribution details
+            promises.push(
+              this.apiService.endpoints.Distribution.get
+                .call({ instanceId: item.instanceId, metaId: item.metaId })
+                .then(async (res: any) => {
+                  if (res && res.length > 0) {
+                    Object.assign(item, res[0]);
+                    // 2. Normalize accessService to array and fetch the webservice details
+                    const accList = Array.isArray(item.accessService)
+                      ? item.accessService
+                      : item.accessService ? [item.accessService] : [];
+                    const hydratedAcc: any[] = [];
+                    for (const acc of accList) {
+                      if (acc && acc.instanceId && acc.metaId) {
+                        try {
+                          const wsRes = await this.apiService.endpoints.WebService.get.call({
+                            instanceId: acc.instanceId,
+                            metaId: acc.metaId,
+                          });
+                          if (wsRes && wsRes.length > 0) {
+                            hydratedAcc.push(wsRes[0]);
+                          } else {
+                            hydratedAcc.push(acc);
+                          }
+                        } catch (e) {
+                          console.warn('Failed to fetch webservice for distribution', e);
+                          hydratedAcc.push(acc);
+                        }
+                      } else {
+                        hydratedAcc.push(acc);
+                      }
+                    }
+                    item.accessService = hydratedAcc;
+                  }
+                })
+                .catch((e: any) => console.warn('Failed to fetch distribution', e)),
+            );
+
+            // 3. Fetch distribution-plugin info
+            promises.push(
+              this.apiService.endpoints.DistributionPlugin.getAll
+                .call({ instanceId: item.instanceId, metaId: item.metaId })
+                .then((res: any) => {
+                  if (res && res.length > 0) {
+                    item.pluginDetail = res[0];
+                  }
+                })
+                .catch((e: any) => console.warn('Failed to fetch distribution plugin', e)),
             );
           }
         }
@@ -752,10 +845,14 @@ export class BrowseRevisionsComponent implements OnInit {
                     })
                     .catch((e: any) => console.warn(`Failed to fetch person for ${field}`, e)),
                 );
-              } else if (item.entityType === 'ORGANIZATION' && (!item.legalName || item.legalName.length === 0)) {
+              } else if (
+                item.entityType === 'ORGANIZATION' &&
+                (!item.legalName || item.legalName.length === 0)
+              ) {
                 const found = allOrgs.find(
                   (org) =>
-                    org.uid === item.uid || (org.instanceId === item.instanceId && org.metaId === item.metaId),
+                    org.uid === item.uid ||
+                    (org.instanceId === item.instanceId && org.metaId === item.metaId),
                 );
                 if (found) {
                   Object.assign(item, found);
@@ -778,171 +875,6 @@ export class BrowseRevisionsComponent implements OnInit {
                     if (res && res.length > 0) Object.assign(item, res[0]);
                   })
                   .catch((e: any) => console.warn(`Failed to fetch category for ${field}`, e)),
-              );
-            }
-          });
-        }
-      });
-
-      // distribution fields
-      distributionFields.forEach((field) => {
-        if (revision[field] && Array.isArray(revision[field])) {
-          revision[field].forEach((item: any) => {
-            if (item.instanceId && item.metaId && !item.title && !item.name) {
-              const endpoint = item.entityType === 'WEBSERVICE'
-                ? this.apiService.endpoints.WebService.get
-                : this.apiService.endpoints.Distribution.get;
-
-              promises.push(
-                endpoint
-                  .call({ instanceId: item.instanceId, metaId: item.metaId })
-                  .then(async (res: any) => {
-                    if (res && res.length > 0) {
-                      const originalItem = JSON.parse(JSON.stringify(item));
-                      Object.assign(item, res[0]);
-                      this.deepRestoreIds(item, originalItem);
-
-                      // Deep Hydration for nested fields within distributions and webservices
-                      const innerPromises: Promise<any>[] = [];
-                      if (item.accessService && Array.isArray(item.accessService)) {
-                        item.accessService.forEach((acc: any) => {
-                          if (acc.instanceId && acc.metaId && acc.entityType === 'WEBSERVICE' && !acc.name) {
-                            innerPromises.push(
-                              this.apiService.endpoints.WebService.get
-                                .call({ instanceId: acc.instanceId, metaId: acc.metaId })
-                                .then((r: any) => { if (r && r.length > 0) Object.assign(acc, r[0]); })
-                                .catch((e: any) => console.warn('Failed to fetch accessService', e))
-                            );
-                          }
-                        });
-                      }
-                      if (item.contactPoint && Array.isArray(item.contactPoint)) {
-                        item.contactPoint.forEach((cp: any) => {
-                          if (cp.instanceId && cp.metaId && !cp.email && !cp.telephone) {
-                            innerPromises.push(
-                              this.apiService.endpoints.ContactPoint.get
-                                .call({ instanceId: cp.instanceId, metaId: cp.metaId })
-                                .then((r: any) => { if (r && r.length > 0) Object.assign(cp, r[0]); })
-                                .catch((e: any) => console.warn('Failed to fetch contactPoint', e))
-                            );
-                          }
-                        });
-                      }
-                      if (item.supportedOperation && Array.isArray(item.supportedOperation)) {
-                        item.supportedOperation.forEach((op: any) => {
-                          if (op.instanceId && op.metaId && !op.name) {
-                            innerPromises.push(
-                              this.apiService.endpoints.Operation.get
-                                .call({ instanceId: op.instanceId, metaId: op.metaId })
-                                .then((r: any) => { if (r && r.length > 0) Object.assign(op, r[0]); })
-                                .catch((e: any) => console.warn('Failed to fetch supportedOperation', e))
-                            );
-                          }
-                        });
-                      }
-                      if (item.provider) {
-                        const provs = Array.isArray(item.provider) ? item.provider : [item.provider];
-                        provs.forEach((p: any) => {
-                          if (p.instanceId && p.metaId && p.entityType === 'ORGANIZATION') {
-                            const found = allOrgs.find((org) => org.uid === p.uid || (org.instanceId === p.instanceId && org.metaId === p.metaId));
-                            if (found) Object.assign(p, found);
-                          }
-                        });
-                      }
-                      if (item.spatialExtent && Array.isArray(item.spatialExtent)) {
-                        item.spatialExtent.forEach((loc: any) => {
-                          if (loc.instanceId && loc.metaId && !loc.location && !loc.coordinates) {
-                            innerPromises.push(
-                              this.apiService.endpoints.Location.get
-                                .call({ instanceId: loc.instanceId, metaId: loc.metaId })
-                                .then((r: any) => { if (r && r.length > 0) Object.assign(loc, r[0]); })
-                                .catch((e: any) => console.warn('Failed to fetch spatial location', e))
-                            );
-                          }
-                        });
-                      }
-                      if (item.temporalExtent && Array.isArray(item.temporalExtent)) {
-                        item.temporalExtent.forEach((t: any) => {
-                          if (t.instanceId && t.metaId && !t.startDate && !t.endDate) {
-                            innerPromises.push(
-                              this.apiService.endpoints.PeriodOfTime.get
-                                .call({ singleOptionOnly: true, instanceId: t.instanceId, metaId: t.metaId } as any)
-                                .then((r: any) => { if (r && r.length > 0) Object.assign(t, r[0]); })
-                                .catch((e: any) => console.warn('Failed to fetch temporal period', e))
-                            );
-                          }
-                        });
-                      }
-
-                      // documentation inside webservice (nested in accessService)
-                      if (item.accessService && Array.isArray(item.accessService)) {
-                        item.accessService.forEach((acc: any) => {
-                          if (acc.documentation && Array.isArray(acc.documentation)) {
-                            acc.documentation.forEach((doc: any) => {
-                              // Borrow IDs if missing
-                              if (!doc.instanceId && doc.uid) {
-                                const otherRev = this.revisions.find((r) => r !== rev);
-                                const otherDist = this.findMatch(item, (otherRev as any)?.distribution);
-                                const otherAcc = this.findMatch(acc, otherDist?.accessService);
-                                const match = otherAcc?.documentation?.find((d: any) => d.uid === doc.uid);
-                                if (match) {
-                                  doc.instanceId = match.instanceId;
-                                  doc.metaId = match.metaId;
-                                }
-                              }
-                              if (doc.instanceId && doc.metaId && (!doc.title || !doc.description || !doc.uri)) {
-                                innerPromises.push(
-                                  this.apiService.endpoints.Documentation.get
-                                    .call({ instanceId: doc.instanceId, metaId: doc.metaId })
-                                    .then((r: any) => { if (r && r.length > 0) Object.assign(doc, r[0]); })
-                                    .catch((e: any) => console.warn('Failed to fetch documentation', e))
-                                );
-                              }
-                            });
-                          }
-                        });
-                      }
-
-                      // documentation directly on the distribution
-                      if (item.documentation && Array.isArray(item.documentation)) {
-                        item.documentation.forEach((doc: any) => {
-                          // Borrow IDs if missing
-                          if (!doc.instanceId && doc.uid) {
-                            const otherRev = this.revisions.find((r) => r !== rev);
-                            const otherDist = this.findMatch(item, (otherRev as any)?.distribution);
-                            const match = otherDist?.documentation?.find((d: any) => d.uid === doc.uid);
-                            if (match) {
-                              doc.instanceId = match.instanceId;
-                              doc.metaId = match.metaId;
-                            }
-                          }
-                          if (doc.instanceId && doc.metaId && (!doc.title || !doc.description || !doc.uri)) {
-                            innerPromises.push(
-                              this.apiService.endpoints.Documentation.get
-                                .call({ instanceId: doc.instanceId, metaId: doc.metaId })
-                                .then((r: any) => { if (r && r.length > 0) Object.assign(doc, r[0]); })
-                                .catch((e: any) => console.warn('Failed to fetch documentation', e))
-                            );
-                          }
-                        });
-                      }
-
-                      await Promise.all(innerPromises);
-
-                      // Fetch plugins for this distribution (after all other hydration)
-                      if (item.metaId && item.instanceId) {
-                        try {
-                          const pluginInfo = await this.apiService.endpoints.DistributionPlugin.getAll
-                            .call({ metaId: item.metaId, instanceId: item.instanceId });
-                          item._plugins = pluginInfo?.[0]?.relations ?? [];
-                        } catch (e) {
-                          console.warn('Failed to fetch distribution plugins', e);
-                          item._plugins = [];
-                        }
-                      }
-                    }
-                  })
-                  .catch((e: any) => console.warn(`Failed to fetch ${field}`, e)),
               );
             }
           });
