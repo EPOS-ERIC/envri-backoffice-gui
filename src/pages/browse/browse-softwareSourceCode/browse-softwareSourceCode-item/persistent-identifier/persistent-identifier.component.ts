@@ -176,9 +176,10 @@ export class PersistentIdentifierSourceCodeComponent implements OnInit {
         this.identifiersFullObj.splice(index, 1);
 
         const updatingObject = this.entityExecutionService.getActiveSoftwareSourceCodeValue() || {};
-        const newIdentifierArr = updatingObject.identifier?.splice(index, 1);
+        const updatedIdentifierArr = [...(updatingObject.identifier ?? [])];
+        updatedIdentifierArr.splice(index, 1);
         this.softwareSourceCodeService.updateSoftwareSourceCodeRecord(updatingObject, {
-          identifier: newIdentifierArr,
+          identifier: updatedIdentifierArr,
         });
         this.entityExecutionService.handleSoftwareSourceCodeSave();
         this.snackbarService.openSnackbar('Successfully deleted Identifier.', 'Close', SnackbarType.SUCCESS, 3000, [

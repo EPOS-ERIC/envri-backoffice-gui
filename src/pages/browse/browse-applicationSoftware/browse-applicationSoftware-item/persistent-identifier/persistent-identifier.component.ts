@@ -175,9 +175,10 @@ export class PersistentIdentifierSoftAppComponent implements OnInit {
         this.identifiersFullObj.splice(index, 1);
 
         const updatingObject = this.entityExecutionService.getActiveSoftwareApplicationValue() || {};
-        const newIdentifierArr = updatingObject.identifier?.splice(index, 1);
+        const updatedIdentifierArr = [...(updatingObject.identifier ?? [])];
+        updatedIdentifierArr.splice(index, 1);
         this.softwareApplicationService.updateSoftwareApplicationRecord(updatingObject, {
-          identifier: newIdentifierArr,
+          identifier: updatedIdentifierArr,
         });
         this.entityExecutionService.handleDataProductSave();
         this.snackbarService.openSnackbar('Successfully deleted Identifier.', 'Close', SnackbarType.SUCCESS, 3000, [
