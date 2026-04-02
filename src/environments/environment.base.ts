@@ -16,7 +16,7 @@ const removeBackofficeSuffix = (path: string): string => {
   }
 
   const pathWithoutSuffix = normalizedPath.slice(0, -BACKOFFICE_SUFFIX.length);
-  return pathWithoutSuffix === '' ? '/' : pathWithoutSuffix;
+  return normalizePath(pathWithoutSuffix === '' ? '/' : pathWithoutSuffix);
 };
 
 const resolveApiBaseUrl = (): string => {
