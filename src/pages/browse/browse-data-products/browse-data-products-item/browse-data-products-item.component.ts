@@ -22,6 +22,7 @@ import { NavigationService } from 'src/services/navigation.service';
 import { DataProductForm } from 'src/shared/interfaces/form.interface';
 import { WithSubscription } from 'src/helpers/subscription';
 import { LoadingService } from 'src/services/loading.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-browse-data-products-item',
@@ -55,6 +56,7 @@ export class BrowseDataProductsItemComponent extends WithSubscription implements
     private readonly helpersService: HelpersService,
     private readonly navigationService: NavigationService,
     private readonly loadingService: LoadingService,
+    private readonly activeUserService: ActiveUserService,
   ) {
     super();
   }
@@ -98,6 +100,7 @@ export class BrowseDataProductsItemComponent extends WithSubscription implements
   }
 
   private initDataCallback(): void {
+    let userHasEditPermissionsForSubmitted: boolean | undefined = false;
     if (this.dataProduct) {
       this.stateChangeService.setCurrentDataProductState(this.dataProduct.status);
       this.entityExecutionService.setActiveDataProduct(
@@ -107,7 +110,26 @@ export class BrowseDataProductsItemComponent extends WithSubscription implements
       this.initForm();
       this.trackFormData();
       this.distribution = this.dataProduct.distribution;
-      if (this.dataProduct.status === Status.PUBLISHED || this.dataProduct.status === Status.ARCHIVED) {
+      // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+      const activeUser = this.activeUserService.getActiveUser();
+      if(activeUser){
+        const activeUserGroups = activeUser.groups;
+        if(activeUserGroups){
+          // find group in UserGroups matching with current active loaded Entity
+          const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+          if(groupMatch){
+            const userRole = groupMatch.role;
+            console.warn('userRole', userRole);
+            if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+              userHasEditPermissionsForSubmitted = true;
+            }
+            else{
+              userHasEditPermissionsForSubmitted = false;
+            }
+          }
+        }
+      }
+      if ((this.dataProduct.status === Status.SUBMITTED && userHasEditPermissionsForSubmitted === false) || this.dataProduct.status === Status.PUBLISHED || this.dataProduct.status === Status.ARCHIVED) {
         this.form.disable();
       }
     }
@@ -209,7 +231,9 @@ export class BrowseDataProductsItemComponent extends WithSubscription implements
 
   public handleDelete(): void {
     if (this.dataProduct?.instanceId) {
-      this.dialogService.handleDelete(this.dataProduct?.instanceId, EntityEndpointValue.DATA_PRODUCT);
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(this.dataProduct?.instanceId as string, EntityEndpointValue.DATA_PRODUCT);
+      this.dialogService.handleDelete(toDelete);
     }
   }
 

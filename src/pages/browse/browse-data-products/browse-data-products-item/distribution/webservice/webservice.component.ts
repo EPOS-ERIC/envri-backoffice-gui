@@ -20,6 +20,7 @@ import { LoadingService } from 'src/services/loading.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { Entity } from 'src/utility/enums/entity.enum';
 import { Status } from 'src/utility/enums/status.enum';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-distribution-webservice',
@@ -40,6 +41,7 @@ export class DistributionWebserviceComponent extends WithSubscription implements
     private readonly entityExecutionService: EntityExecutionService,
     private readonly loadingService: LoadingService,
     private readonly snackbarService: SnackbarService,
+    private readonly activeUserService: ActiveUserService,
   ) {
     super();
   }
@@ -96,7 +98,27 @@ export class DistributionWebserviceComponent extends WithSubscription implements
             );
             this.handleServiceProviders(this.webservice);
             this.initForm();
-            if (this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED) {
+            let userHasEditPermissionsForSubmitted: boolean | undefined = false;
+            // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+            const activeUser = this.activeUserService.getActiveUser();
+            if(activeUser){
+              const activeUserGroups = activeUser.groups;
+              if(activeUserGroups){
+                // find group in UserGroups matching with current active loaded Entity
+                const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+                if(groupMatch){
+                  const userRole = groupMatch.role;
+                  console.warn('userRole', userRole);
+                  if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+                    userHasEditPermissionsForSubmitted = true;
+                  }
+                  else{
+                    userHasEditPermissionsForSubmitted = false;
+                  }
+                }
+              }
+            }
+            if ((this.dataProduct?.status === Status.SUBMITTED && !userHasEditPermissionsForSubmitted) || this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED) {
               this.form.disable();
               this.disabled = true;
             } else {

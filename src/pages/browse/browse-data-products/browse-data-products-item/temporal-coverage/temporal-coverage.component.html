@@ -50,7 +50,7 @@
           aria-label="Save Temporal Extent"
           matTooltip="Save Temporal Extent"
           (click)="handleSave(i)"
-          [disabled]="form.pristine"
+          [disabled]="!userHasEditPermissionsForSubmitted || form.pristine"
         >
           <mat-icon>save</mat-icon>
         </button>
@@ -78,7 +78,7 @@
 </ng-container>
 <ng-template #empty>
   <p class="notice">Couldn't fetch temporal coverage data.</p>
-  @if (activeDataproduct.status !== STATUS.PUBLISHED && activeDataproduct.status !== STATUS.ARCHIVED) {
+  @if (activeDataproduct.status !== STATUS.PUBLISHED && activeDataproduct.status !== STATUS.ARCHIVED && (activeDataproduct.status !== STATUS.SUBMITTED && !userHasEditPermissionsForSubmitted() )) {
   <button
     mat-stroked-button
     color="primary"

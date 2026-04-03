@@ -47,6 +47,7 @@
         [categories]="filteredCategories"
         [selectedCategoryScheme]="selectedCategorySchemeObj"
         [canManageCategories]="true"
+        [activeEntity]="undefined"
         [entityStatus]="'DRAFT'"
         (categoryChanged)="refreshList()"
       ></app-category-tree-details>

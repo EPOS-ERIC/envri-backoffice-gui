@@ -1,11 +1,9 @@
 import { Observable } from 'rxjs';
-import { Injector, inject } from '@angular/core';
+import { Injector } from '@angular/core';
 import { AuthenticationProvider } from './authProvider.interface';
 import { AAAIUser } from './aaaiUser.interface';
 import { OAuthAuthenticationProvider } from './impl/oAuthProvider';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { PersistorService, StorageType } from 'src/services/persistor.service';
-import { StorageKey } from 'src/utility/enums/storageKey.enum';
 import { Router } from '@angular/router';
 import { LogService } from 'src/services/log.service';
 
@@ -19,17 +17,18 @@ export class AaaiService {
   private readonly now = new Date();
   private readonly logOutAfterInactivityPeriod = this.now.setHours(this.now.getHours() + 1);
   private readonly logoutTime = new Date(this.logOutAfterInactivityPeriod);
-  private readonly persistorService = new PersistorService();
-  private readonly router = new Router();
-  private readonly logger = inject(LogService);
 
-  private constructor(private readonly authProvider: AuthenticationProvider) {
+  private constructor(
+    private readonly authProvider: AuthenticationProvider,
+    private readonly router: Router,
+    private readonly logger: LogService,
+  ) {
     this.startLogoutInterval();
   }
 
   /** Static factory method that creates and configures aaai service */
-  public static make(authProvider: AuthenticationProvider): AaaiService {
-    return new AaaiService(authProvider);
+  public static make(authProvider: AuthenticationProvider, router: Router, logger: LogService): AaaiService {
+    return new AaaiService(authProvider, router, logger);
   }
 
   /**
@@ -49,6 +48,10 @@ export class AaaiService {
     this.authProvider.login();
   }
 
+  public initializeAuth(): Promise<void> {
+    return this.authProvider.initializeAuth();
+  }
+
   public logout(): void {
     this.authProvider.logout();
     this.router.navigate(['/login']);
@@ -59,9 +62,7 @@ export class AaaiService {
   }
 
   public isAuthenticated(): boolean {
-    const accessToken = this.persistorService.getValueFromStorage(StorageType.SESSION_STORAGE, StorageKey.ACCESS_TOKEN);
-    console.log(accessToken);
-    return accessToken != null;
+    return this.authProvider.isAuthenticated();
   }
 
   public checkForAuth(): boolean {
@@ -90,9 +91,14 @@ export class AaaiService {
  * @param router
  * @param oAuthService
  */
-export const aaaiServiceFactory = (injector: Injector, oAuthService: OAuthService): AaaiService => {
+export const aaaiServiceFactory = (
+  injector: Injector,
+  oAuthService: OAuthService,
+  router: Router,
+  logger: LogService,
+): AaaiService => {
   const authProvider: AuthenticationProvider = new OAuthAuthenticationProvider(injector, oAuthService);
-  return AaaiService.make(authProvider);
+  return AaaiService.make(authProvider, router, logger);
 };
 
 /**
@@ -101,5 +107,5 @@ export const aaaiServiceFactory = (injector: Injector, oAuthService: OAuthServic
 export const aaaiServiceProvider = {
   provide: AaaiService,
   useFactory: aaaiServiceFactory,
-  deps: [Injector, OAuthService],
+  deps: [Injector, OAuthService, Router, LogService],
 };

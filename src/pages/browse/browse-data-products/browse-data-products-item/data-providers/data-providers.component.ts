@@ -3,6 +3,7 @@ import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { DataProduct, LinkedEntity, Organization } from 'generated/backofficeSchemas';
 import { map } from 'rxjs';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { Entity } from 'src/utility/enums/entity.enum';
@@ -19,6 +20,7 @@ export class DataProvidersComponent implements OnInit {
     private formBuilder: FormBuilder,
     private entityExecutionService: EntityExecutionService,
     private snackbarService: SnackbarService,
+    private activeUserService: ActiveUserService,
   ) {}
 
   @Input() dataProduct!: DataProduct;
@@ -58,9 +60,35 @@ export class DataProvidersComponent implements OnInit {
     this.form = this.formBuilder.group({
       dataProviders: new FormControl(),
     });
-    if (this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED) {
+    if ((this.dataProduct?.status === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted()) ||this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED) {
       this.form.disable();
       this.disabled = true;
+    }
+  }
+
+  public userHasEditPermissionsForSubmitted(): boolean{
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            return true;
+          }else{
+            return false;
+          }
+        }else{
+          return false;
+        }
+      }else{
+        return false;
+      }
+    }else{
+      return false;
     }
   }
 

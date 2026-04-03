@@ -4,6 +4,7 @@ import { DataProduct, LinkedEntity, ContactPoint } from 'generated/backofficeSch
 import { map, Observable, startWith } from 'rxjs';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { WithSubscription } from 'src/helpers/subscription';
+import { ActiveUserService } from 'src/services/activeUser.service';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { StateChangeService } from 'src/services/stateChange.service';
@@ -41,13 +42,14 @@ export class ContactPointSearchComponent extends WithSubscription implements OnI
     private readonly stateChangeService: StateChangeService,
     private readonly formBuilder: FormBuilder,
     private readonly entityExecutionService: EntityExecutionService,
+    private readonly activeUserService: ActiveUserService
   ) {
     super();
   }
 
   private initSubscriptions(): void {
     this.subscribe(this.stateChangeService.currentDataProductStateObs, (status: DataProduct['status'] | null) => {
-      if (status === null || status === Status.PUBLISHED || status === Status.ARCHIVED) {
+      if (status === null || (status === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted()) || status === Status.PUBLISHED || status === Status.ARCHIVED) {
         this.form.disable();
       }
     });
@@ -58,6 +60,36 @@ export class ContactPointSearchComponent extends WithSubscription implements OnI
       contactPoint: new FormControl(),
       role: new FormControl(this.contactPointRoleOptions[0].id),
     });
+  }
+  public userHasEditPermissionsForSubmitted(): boolean{
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const dataProduct = this.entityExecutionService.getActiveDataProductValue();
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            return true;
+          }
+          else{
+            return false;
+          }
+        }
+        else{
+          return false;
+        }
+      }
+      else{
+        return false;
+      }
+    }
+    else{
+      return false;
+    }
   }
 
   private trackFormChanges(): void {

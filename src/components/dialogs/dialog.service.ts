@@ -105,42 +105,70 @@ export class DialogService extends BaseDialogService {
     return this.openDialog('spatialCoverageHelp', DialogSpatialCoverageHelpComponent, true, null, {});
   }
 
-  public handleDelete(instanceId: string, entityEndpoint: EntityEndpointValue, redirect = true): Promise<boolean> {
+  public handleDelete(entitiesToDelete: Map<string, EntityEndpointValue>, redirect = true): Promise<boolean> {
     return new Promise((resolve) => {
       this.openDialog('delete', DialogDeleteComponent, false, {})
         .then((response: DialogData) => {
           if (response.dataOut === 'delete') {
             this.loadingService.setShowSpinner(true);
-            this.apiService
-              .deleteEntity(entityEndpoint, instanceId)
-              .then(() => {
-                this.snackbarService.openSnackbar(
-                  `Successfully deleted entity: ${instanceId}`,
-                  'Close',
-                  SnackbarType.SUCCESS,
-                  3000,
-                  ['snackbar', 'mat-toolbar', 'snackbar-success'],
-                );
-                this.actionsService.deleteEditedItem(instanceId);
-
-                if (redirect) {
-                  this.router.navigate([`/browse/${entityEndpoint}`]);
-                } else {
-                  this.actionsService.triggerDataProductReload();
+            const deletionPromises: Promise<void>[] = [];
+            let routeToNavigateBack = '';
+            for (const [instanceId, entityEndpointValue] of entitiesToDelete.entries()) {
+              // find main Entity to which to navigate back to
+              switch(entityEndpointValue){
+                case (EntityEndpointValue.DISTRIBUTION):
+                case (EntityEndpointValue.DATA_PRODUCT):
+                  routeToNavigateBack = EntityEndpointValue.DATA_PRODUCT;
+                  break;
+                case (EntityEndpointValue.APPLICATION_SOFTWARE):
+                  routeToNavigateBack = EntityEndpointValue.APPLICATION_SOFTWARE; 
+                  break
+                case (EntityEndpointValue.SOFTWARE_SOURCE_CODE):
+                  routeToNavigateBack = EntityEndpointValue.SOFTWARE_SOURCE_CODE;
+                  break
+                default:
+                  break;
+              }
+              deletionPromises.push(
+                this.apiService
+                .deleteEntity(entityEndpointValue, instanceId)
+                .then(() => {
+                  this.snackbarService.openSnackbar(
+                    `Successfully deleted entity: ${instanceId}`,
+                    'Close',
+                    SnackbarType.SUCCESS,
+                    3000,
+                    ['snackbar', 'mat-toolbar', 'snackbar-success'],
+                  );
+                  this.actionsService.deleteEditedItem(instanceId);
+  
+                  return resolve(true);
+                })
+                .catch((err) => {
+                  console.error(err);
+                  this.snackbarService.openSnackbar('Error deleting entity.', 'Close', SnackbarType.ERROR, 3000, [
+                    'snackbar',
+                    'mat-toolbar',
+                    'snackbar-error',
+                  ]);
+                })
+              );
+              
+            }
+            Promise.allSettled(deletionPromises).finally(() => {
+              this.loadingService.setShowSpinner(false);
+              if (redirect && routeToNavigateBack !== '') {
+                this.router.navigate([`/browse/${routeToNavigateBack}`]);
+              } else {
+                // reload the entity: at the moment DP/Dist only one calling this function with 'redirect === false'
+                switch(routeToNavigateBack){
+                  case (EntityEndpointValue.DISTRIBUTION):
+                  case (EntityEndpointValue.DATA_PRODUCT):
+                    this.actionsService.triggerDataProductReload();
+                    break;
                 }
-                return resolve(true);
-              })
-              .catch((err) => {
-                console.error(err);
-                this.snackbarService.openSnackbar('Error deleting entity.', 'Close', SnackbarType.ERROR, 3000, [
-                  'snackbar',
-                  'mat-toolbar',
-                  'snackbar-error',
-                ]);
-              })
-              .finally(() => {
-                this.loadingService.setShowSpinner(false);
-              });
+              }
+            });
           } else {
             return resolve(false);
           }

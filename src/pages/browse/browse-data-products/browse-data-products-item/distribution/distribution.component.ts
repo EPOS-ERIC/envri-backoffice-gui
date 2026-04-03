@@ -6,6 +6,7 @@ import { DistributionDetailDataSource } from 'src/apiAndObjects/objects/data-sou
 import { WebserviceDetailDataSource } from 'src/apiAndObjects/objects/data-source/webserviceDetailDataSource';
 import { DialogData } from 'src/components/dialogs/baseDialogService.abstract';
 import { DialogService } from 'src/components/dialogs/dialog.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 import { HelpersService } from 'src/services/helpers.service';
 import { LoadingService } from 'src/services/loading.service';
@@ -35,6 +36,7 @@ export class DistributionComponent implements OnInit {
     private entityExecutionService: EntityExecutionService,
     private loadingService: LoadingService,
     private helpersService: HelpersService,
+    private activeUserService: ActiveUserService,
   ) {}
 
   public form!: FormGroup;
@@ -78,7 +80,27 @@ export class DistributionComponent implements OnInit {
         }),
       ),
     });
-    if (this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED) {
+    let userHasEditPermissionsForSubmitted: boolean | undefined = false;
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          console.warn('userRole', userRole);
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            userHasEditPermissionsForSubmitted = true;
+          }
+          else{
+            userHasEditPermissionsForSubmitted = false;
+          }
+        }
+      }
+    }
+    if ((this.dataProduct?.status === Status.SUBMITTED && !userHasEditPermissionsForSubmitted) || this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED) {
       this.form.disable();
       this.disabled = true;
     } else {
@@ -188,8 +210,10 @@ export class DistributionComponent implements OnInit {
   public handleDelete(index: number): void {
     const distToDelete = this.distributionDetails[index];
     if (null != distToDelete) {
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(distToDelete.instanceId! as string, EntityEndpointValue.DISTRIBUTION);
       this.dialogService
-        .handleDelete(distToDelete.instanceId!, EntityEndpointValue.DISTRIBUTION, false)
+        .handleDelete(toDelete, false)
         .then((deleteDistribution: boolean) => {
           if (deleteDistribution) {
             this.distributionDetails.splice(index, 1);

@@ -23,7 +23,7 @@
       Version History
     </button>
     <button
-      *ngIf="this.softwareApplication.status !== stateEnum.PUBLISHED"
+      *ngIf="this.softwareApplication.status !== stateEnum.PUBLISHED && this.softwareApplication.status !== stateEnum.SUBMITTED"
       mat-mini-fab
       color="warn"
       matTooltip="Permanently Delete Software Application"
