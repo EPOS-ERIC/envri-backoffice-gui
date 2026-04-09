@@ -119,7 +119,6 @@ export class BrowseDataProductsItemComponent extends WithSubscription implements
           const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
           if(groupMatch){
             const userRole = groupMatch.role;
-            console.warn('userRole', userRole);
             if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
               userHasEditPermissionsForSubmitted = true;
             }

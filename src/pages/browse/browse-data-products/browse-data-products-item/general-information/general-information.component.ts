@@ -193,10 +193,21 @@ export class GeneralInformationComponent implements OnInit {
     }
 
     const identifiers = this.dataProduct?.identifier || [];
-    const filteredIdentifiers = identifiers.filter((id) => id.status?.toUpperCase() === 'DRAFT');
-    filteredIdentifiers.forEach((identifier) => {
-      entitiesToDelete.set(identifier.instanceId as string, EntityEndpointValue.IDENTIFIER);
-    });
+    for(const identif of identifiers){
+      tasks.push(
+        this.apiService.endpoints.Identifier.get
+          .call({
+            metaId: identif.metaId as string,
+            instanceId: identif.instanceId as string,
+          })
+          .then((identifierResp)=>{
+            const filteredIdentif = (identifierResp || []).filter((id) => id.status?.toUpperCase() === 'DRAFT');
+            filteredIdentif.forEach((persistentIdentifier) => {
+              entitiesToDelete.set(persistentIdentifier.instanceId as string, EntityEndpointValue.IDENTIFIER);
+            });
+          }),
+      );
+    }
 
     const distributions = this.dataProduct?.distribution || [];
     for (const dist of distributions) {
