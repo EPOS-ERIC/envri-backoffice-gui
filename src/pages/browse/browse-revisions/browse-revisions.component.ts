@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { PersistorService, StorageType } from 'src/services/persistor.service';
 import { StorageKey } from 'src/utility/enums/storageKey.enum';
 import { create as createDiffPatcher } from 'jsondiffpatch';
 
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { HelpersService } from 'src/services/helpers.service';
 import { DataProduct, SoftwareApplication } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
@@ -182,7 +184,7 @@ export interface DiffSection {
   templateUrl: './browse-revisions.component.html',
   styleUrls: ['./browse-revisions.component.scss'],
 })
-export class BrowseRevisionsComponent implements OnInit {
+export class BrowseRevisionsComponent implements OnInit, OnDestroy {
   constructor(
     private helpersService: HelpersService,
     private persistorService: PersistorService,
@@ -200,6 +202,7 @@ export class BrowseRevisionsComponent implements OnInit {
   public error = false;
   public referrerId = '';
   public noDifferences = false;
+  private destroy$ = new Subject<void>();
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   private diffPatcher = createDiffPatcher({
@@ -270,12 +273,15 @@ export class BrowseRevisionsComponent implements OnInit {
       const delta = this.diffPatcher.diff(leftSub, rightSub);
 
       if (delta) {
-        hasDifferences = true;
         const typeOfFields = this.getTypeOfFields(leftSub, rightSub, delta, section.fields);
         this.enrichFieldsWithWordDiff(typeOfFields);
+        const sectionHasDifferences = typeOfFields.some(f => f.status !== 'unchanged');
+        if (sectionHasDifferences) {
+          hasDifferences = true;
+        }
         sections.push({
           label: section.label,
-          hasDifferences: true,
+          hasDifferences: sectionHasDifferences,
           type: 'friendly',
           typeOfFields,
         });
@@ -316,12 +322,15 @@ export class BrowseRevisionsComponent implements OnInit {
     if (hasOtherFields) {
       const delta = this.diffPatcher.diff(leftOther, rightOther);
       if (delta) {
-        hasDifferences = true;
         const typeOfFields = this.getTypeOfFields(leftOther, rightOther, delta, otherFields);
         this.enrichFieldsWithWordDiff(typeOfFields);
+        const sectionHasDifferences = typeOfFields.some(f => f.status !== 'unchanged');
+        if (sectionHasDifferences) {
+          hasDifferences = true;
+        }
         sections.push({
           label: 'Other Information',
-          hasDifferences: true,
+          hasDifferences: sectionHasDifferences,
           type: 'friendly',
           typeOfFields,
         });
@@ -353,6 +362,12 @@ export class BrowseRevisionsComponent implements OnInit {
       let fieldType: 'documentation' | 'distribution' | 'webservice' | 'generic' = 'generic';
       if (field === 'documentation') fieldType = 'documentation';
       else if (field === 'distribution') fieldType = 'distribution';
+
+      if (status === 'modified' && fieldType === 'generic') {
+        if (this.formatFriendlyValue(oldVal) === this.formatFriendlyValue(newVal)) {
+          status = 'unchanged';
+        }
+      }
 
       friendlyFields.push({
         label: FIELD_LABELS[field] || this.camelCaseToTitle(field),
@@ -603,13 +618,13 @@ export class BrowseRevisionsComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.route.paramMap.subscribe((obs) => {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((obs) => {
       if (null != obs.get('id')) {
         this.referrerId = obs.get('id') as string;
       }
     });
 
-    this.helpersService.revisionsObs.subscribe((revisions: Array<DataProduct> | Array<SoftwareApplication>) => {
+    this.helpersService.revisionsObs.pipe(takeUntil(this.destroy$)).subscribe((revisions: Array<DataProduct> | Array<SoftwareApplication>) => {
       if (revisions && revisions.length > 0) {
         // We received new revisions from the dialog
         this.loading = true;
@@ -651,6 +666,11 @@ export class BrowseRevisionsComponent implements OnInit {
     });
   }
 
+  public ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   private async fetchRelatedEntities(): Promise<void> {
     const promises: Promise<void>[] = [];
     const providerFields = [
@@ -675,7 +695,7 @@ export class BrowseRevisionsComponent implements OnInit {
 
     if (needsOrgs) {
       try {
-        allOrgs = await this.apiService.endpoints.Organization.getAll.call();
+        allOrgs = await this.apiService.endpoints.Organization.getAll.call(undefined, false);
       } catch (e) {
         console.warn('Failed to fetch all organizations', e);
       }
@@ -686,7 +706,7 @@ export class BrowseRevisionsComponent implements OnInit {
 
       if (revision.spatialExtent && Array.isArray(revision.spatialExtent)) {
         for (const item of revision.spatialExtent) {
-          if (item.instanceId && item.metaId && !(item as any).location && !(item as any).coordinates) {
+          if (item.instanceId && item.metaId && !(item as any).location) {
             promises.push(
               this.apiService.endpoints.Location.get
                 .call({ instanceId: item.instanceId, metaId: item.metaId })
@@ -701,7 +721,7 @@ export class BrowseRevisionsComponent implements OnInit {
 
       if (revision.temporalExtent && Array.isArray(revision.temporalExtent)) {
         for (const item of revision.temporalExtent) {
-          if (item.instanceId && item.metaId && !(item as any).startDate && !(item as any).endDate) {
+          if (item.instanceId && item.metaId && !(item as any).startDate) {
             promises.push(
               this.apiService.endpoints.PeriodOfTime.get
                 .call({ singleOptionOnly: true, instanceId: item.instanceId, metaId: item.metaId } as any)
@@ -716,7 +736,7 @@ export class BrowseRevisionsComponent implements OnInit {
 
       if (revision.identifier && Array.isArray(revision.identifier)) {
         for (const item of revision.identifier) {
-          if (item.instanceId && item.metaId && !(item as any).identifier && !(item as any).type) {
+          if (item.instanceId && item.metaId && !(item as any).identifier) {
             promises.push(
               this.apiService.endpoints.Identifier.get
                 .call({ instanceId: item.instanceId, metaId: item.metaId })
@@ -735,7 +755,6 @@ export class BrowseRevisionsComponent implements OnInit {
             item.instanceId &&
             item.metaId &&
             !(item as any).email &&
-            !(item as any).telephone &&
             !(item as any).role
           ) {
             promises.push(
@@ -762,7 +781,7 @@ export class BrowseRevisionsComponent implements OnInit {
             }
           }
 
-          if (item.instanceId && item.metaId && !(item as any).title && !(item as any).uri) {
+          if (item.instanceId && item.metaId && !(item as any).uri) {
             promises.push(
               this.apiService.endpoints.Documentation.get
                 .call({ instanceId: item.instanceId, metaId: item.metaId })
@@ -787,11 +806,12 @@ export class BrowseRevisionsComponent implements OnInit {
             }
           }
 
-          if (item.instanceId && item.metaId && !(item as any).title && !(item as any).description) {
+          if (item.instanceId && item.metaId && !(item as any).accessService && !(item as any)._hydrated) {
+            (item as any)._hydrated = true;
             // 1. Fetch distribution details
             promises.push(
               this.apiService.endpoints.Distribution.get
-                .call({ instanceId: item.instanceId, metaId: item.metaId })
+                .call({ instanceId: item.instanceId, metaId: item.metaId }, false)
                 .then(async (res: any) => {
                   if (res && res.length > 0) {
                     Object.assign(item, res[0]);
@@ -804,7 +824,7 @@ export class BrowseRevisionsComponent implements OnInit {
                             const dpRes = await this.apiService.endpoints.DataProduct.get.call({
                               instanceId: dp.instanceId,
                               metaId: dp.metaId,
-                            });
+                            }, false);
                             if (dpRes && dpRes.length > 0) {
                               const dpFull = dpRes[0];
                               if (dpFull.contactPoint && Array.isArray(dpFull.contactPoint)) {
@@ -862,7 +882,7 @@ export class BrowseRevisionsComponent implements OnInit {
                           const wsRes = await this.apiService.endpoints.WebService.get.call({
                             instanceId: acc.instanceId,
                             metaId: acc.metaId,
-                          });
+                          }, false);
                           if (wsRes && wsRes.length > 0) {
                             const ws = wsRes[0];
                             if (ws.documentation && Array.isArray(ws.documentation)) {
@@ -882,30 +902,28 @@ export class BrowseRevisionsComponent implements OnInit {
                               await Promise.all(docPromises);
                             }
                             if (ws.spatialExtent && Array.isArray(ws.spatialExtent)) {
-                              for (const item of ws.spatialExtent) {
-                                if (item.instanceId && item.metaId && !(item as any).location && !(item as any).coordinates) {
-                                  promises.push(
-                                    this.apiService.endpoints.Location.get
-                                      .call({ instanceId: item.instanceId, metaId: item.metaId })
-                                      .then((res: any) => {
-                                        if (res && res.length > 0) Object.assign(item, res[0]);
-                                      })
-                                      .catch((e: any) => console.warn('Failed to fetch ws spatial location', e)),
-                                  );
+                              for (const wsLocItem of ws.spatialExtent) {
+                                if (wsLocItem.instanceId && wsLocItem.metaId && !(wsLocItem as any).location && !(wsLocItem as any).coordinates) {
+                                  try {
+                                    const locRes = await this.apiService.endpoints.Location.get
+                                      .call({ instanceId: wsLocItem.instanceId, metaId: wsLocItem.metaId });
+                                    if (locRes && locRes.length > 0) Object.assign(wsLocItem, locRes[0]);
+                                  } catch (e) {
+                                    console.warn('Failed to fetch ws spatial location', e);
+                                  }
                                 }
                               }
                             }
                             if (ws.temporalExtent && Array.isArray(ws.temporalExtent)) {
-                              for (const item of ws.temporalExtent) {
-                                if (item.instanceId && item.metaId && !(item as any).startDate && !(item as any).endDate) {
-                                  promises.push(
-                                    this.apiService.endpoints.PeriodOfTime.get
-                                      .call({ singleOptionOnly: true, instanceId: item.instanceId, metaId: item.metaId } as any)
-                                      .then((res: any) => {
-                                        if (res && res.length > 0) Object.assign(item, res[0]);
-                                      })
-                                      .catch((e: any) => console.warn('Failed to fetch ws temporal period', e)),
-                                  );
+                              for (const wsTempItem of ws.temporalExtent) {
+                                if (wsTempItem.instanceId && wsTempItem.metaId && !(wsTempItem as any).startDate && !(wsTempItem as any).endDate) {
+                                  try {
+                                    const tempRes = await this.apiService.endpoints.PeriodOfTime.get
+                                      .call({ singleOptionOnly: true, instanceId: wsTempItem.instanceId, metaId: wsTempItem.metaId } as any);
+                                    if (tempRes && tempRes.length > 0) Object.assign(wsTempItem, tempRes[0]);
+                                  } catch (e) {
+                                    console.warn('Failed to fetch ws temporal period', e);
+                                  }
                                 }
                               }
                             }
@@ -918,7 +936,7 @@ export class BrowseRevisionsComponent implements OnInit {
                                     const opRes = await this.apiService.endpoints.Operation.get.call({
                                       instanceId: opItem.instanceId,
                                       metaId: opItem.metaId,
-                                    });
+                                    }, false);
                                     if (opRes && opRes.length > 0) {
                                       console.warn('Hydrated operation:', opItem.instanceId, opRes[0]);
                                       Object.assign(opItem, opRes[0]);
@@ -985,7 +1003,7 @@ export class BrowseRevisionsComponent implements OnInit {
             // 3. Fetch distribution-plugin info
             promises.push(
               this.apiService.endpoints.DistributionPlugin.getAll
-                .call({ instanceId: item.instanceId, metaId: item.metaId })
+                .call({ instanceId: item.instanceId, metaId: item.metaId }, false)
                 .then((res: any) => {
                   if (res && res.length > 0) {
                     item.pluginDetail = res[0];

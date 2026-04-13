@@ -233,9 +233,11 @@
         <div *ngIf="dp?.contactPoint?.length > 0">
           <div class="dist-section-spacer" style="margin-top: 1.5rem;"></div>
           <div class="dist-section-title">CONTACT POINTS</div>
-          <div *ngFor="let cp of dp.contactPoint" style="margin-bottom: 0.5rem; padding-left: 0.5rem; border-left: 2px solid #ddd;">
+          <div *ngFor="let cp of dp.contactPoint"
+            style="margin-bottom: 0.5rem; padding-left: 0.5rem; border-left: 2px solid #ddd;">
             <div class="dist-field">
-              <span class="dist-field-value" [innerHTML]="getDiff(formatFriendlyValue(cp), formatFriendlyValue(findMatch(cp, findMatch(dp, other?.dataProduct)?.contactPoint)), side)"></span>
+              <span class="dist-field-value"
+                [innerHTML]="getDiff(formatFriendlyValue(cp), formatFriendlyValue(findMatch(cp, findMatch(dp, other?.dataProduct)?.contactPoint)), side)"></span>
             </div>
           </div>
         </div>
@@ -249,46 +251,67 @@
 
       <!-- Operations from Access Services -->
       <div *ngFor="let ws of item.accessService">
-        <div *ngFor="let op of ws.supportedOperation" style="margin-bottom: 0.5rem; padding-left: 0.5rem; border-left: 2px solid #ddd;">
-          <div class="dist-field" *ngIf="op?.template || findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.template">
+        <div *ngFor="let op of ws.supportedOperation"
+          style="margin-bottom: 0.5rem; padding-left: 0.5rem; border-left: 2px solid #ddd;">
+          <div class="dist-field"
+            *ngIf="op?.template || findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.template">
             <span class="dist-field-label">SERVICE URI TEMPLATE:</span>
-            <span class="dist-field-value" [innerHTML]="getDiff(op?.template, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.template, side)"></span>
+            <span class="dist-field-value"
+              [innerHTML]="getDiff(op?.template, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.template, side)"></span>
           </div>
 
           <!-- MAPPED PARAMETERS FROM OPERATION -->
           <div *ngIf="op?.mapping?.length > 0" style="margin-top: 1rem; padding-left: 1rem;">
-            <div style="font-weight: bold; font-size: 0.9em; text-transform: uppercase; margin-bottom: 0.5rem; color: #666;">OPERATION PARAMETERS</div>
+            <div
+              style="font-weight: bold; font-size: 0.9em; text-transform: uppercase; margin-bottom: 0.5rem; color: #666;">
+              OPERATION PARAMETERS</div>
             <div *ngFor="let map of toArray(op.mapping)" class="mapping-card">
-              <div class="mapping-card-header" *ngIf="map?.variable || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.variable">
-                <span class="mapping-card-title">Variable: <span [innerHTML]="getDiff(map?.variable, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.variable, side)"></span></span>
+              <div class="mapping-card-header"
+                *ngIf="map?.variable || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.variable">
+                <span class="mapping-card-title">Variable: <span
+                    [innerHTML]="getDiff(map?.variable, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.variable, side)"></span></span>
               </div>
-              <div class="dist-field" *ngIf="map?.range || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.range">
+              <div class="dist-field"
+                *ngIf="map?.range || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.range">
                 <span class="dist-field-label">RANGE:</span>
-                <span class="dist-field-value" [innerHTML]="getDiff(map?.range, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.range, side)"></span>
+                <span class="dist-field-value"
+                  [innerHTML]="getDiff(map?.range, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.range, side)"></span>
               </div>
-              <div class="dist-field" *ngIf="map?.label || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.label">
+              <div class="dist-field"
+                *ngIf="map?.label || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.label">
                 <span class="dist-field-label">LABEL:</span>
-                <span class="dist-field-value" [innerHTML]="getDiff(map?.label, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.label, side)"></span>
+                <span class="dist-field-value"
+                  [innerHTML]="getDiff(map?.label, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.label, side)"></span>
               </div>
-              <div class="dist-field" *ngIf="map?.paramValue || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.paramValue">
+              <div class="dist-field"
+                *ngIf="map?.paramValue || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.paramValue">
                 <span class="dist-field-label">PARAM VALUE:</span>
-                <span class="dist-field-value" [innerHTML]="getDiff(formatFriendlyValue(map?.paramValue), formatFriendlyValue(findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.paramValue), side)"></span>
+                <span class="dist-field-value"
+                  [innerHTML]="getDiff(formatFriendlyValue(map?.paramValue), formatFriendlyValue(findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.paramValue), side)"></span>
               </div>
-              <div class="dist-field" *ngIf="map?.defaultValue || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.defaultValue">
+              <div class="dist-field"
+                *ngIf="map?.defaultValue || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.defaultValue">
                 <span class="dist-field-label">DEFAULT VALUE:</span>
-                <span class="dist-field-value" [innerHTML]="getDiff(map?.defaultValue, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.defaultValue, side)"></span>
+                <span class="dist-field-value"
+                  [innerHTML]="getDiff(map?.defaultValue, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.defaultValue, side)"></span>
               </div>
-              <div class="dist-field" *ngIf="map?.readOnlyValue || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.readOnlyValue">
+              <div class="dist-field"
+                *ngIf="map?.readOnlyValue || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.readOnlyValue">
                 <span class="dist-field-label">READ ONLY:</span>
-                <span class="dist-field-value" [innerHTML]="getDiff(map?.readOnlyValue, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.readOnlyValue, side)"></span>
+                <span class="dist-field-value"
+                  [innerHTML]="getDiff(map?.readOnlyValue, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.readOnlyValue, side)"></span>
               </div>
-              <div class="dist-field" *ngIf="map?.required || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.required">
+              <div class="dist-field"
+                *ngIf="map?.required || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.required">
                 <span class="dist-field-label">REQUIRED:</span>
-                <span class="dist-field-value" [innerHTML]="getDiff(map?.required, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.required, side)"></span>
+                <span class="dist-field-value"
+                  [innerHTML]="getDiff(map?.required, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.required, side)"></span>
               </div>
-              <div class="dist-field" *ngIf="map?.multipleValues || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.multipleValues">
+              <div class="dist-field"
+                *ngIf="map?.multipleValues || findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.multipleValues">
                 <span class="dist-field-label">MULTIPLE VALUES:</span>
-                <span class="dist-field-value" [innerHTML]="getDiff(map?.multipleValues, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.multipleValues, side)"></span>
+                <span class="dist-field-value"
+                  [innerHTML]="getDiff(map?.multipleValues, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.multipleValues, side)"></span>
               </div>
             </div>
           </div>
@@ -297,41 +320,129 @@
 
       <!-- MAPPED PARAMETERS FROM DISTRIBUTION -->
       <div *ngIf="item?.mapping?.length > 0" style="margin-top: 1.5rem;">
-        <div style="font-weight: bold; font-size: 0.9em; text-transform: uppercase; margin-bottom: 0.5rem; color: #666;">DISTRIBUTION PARAMETERS</div>
+        <div
+          style="font-weight: bold; font-size: 0.9em; text-transform: uppercase; margin-bottom: 0.5rem; color: #666;">
+          DISTRIBUTION PARAMETERS</div>
         <div *ngFor="let map of toArray(item.mapping)" class="mapping-card">
           <div class="mapping-card-header" *ngIf="map?.variable || findMatch(map, other?.mapping)?.variable">
-            <span class="mapping-card-title">Variable: <span [innerHTML]="getDiff(map?.variable, findMatch(map, other?.mapping)?.variable, side)"></span></span>
+            <span class="mapping-card-title">Variable: <span
+                [innerHTML]="getDiff(map?.variable, findMatch(map, other?.mapping)?.variable, side)"></span></span>
           </div>
           <div class="dist-field" *ngIf="map?.range || findMatch(map, other?.mapping)?.range">
             <span class="dist-field-label">RANGE:</span>
-            <span class="dist-field-value" [innerHTML]="getDiff(map?.range, findMatch(map, other?.mapping)?.range, side)"></span>
+            <span class="dist-field-value"
+              [innerHTML]="getDiff(map?.range, findMatch(map, other?.mapping)?.range, side)"></span>
           </div>
           <div class="dist-field" *ngIf="map?.label || findMatch(map, other?.mapping)?.label">
             <span class="dist-field-label">LABEL:</span>
-            <span class="dist-field-value" [innerHTML]="getDiff(map?.label, findMatch(map, other?.mapping)?.label, side)"></span>
+            <span class="dist-field-value"
+              [innerHTML]="getDiff(map?.label, findMatch(map, other?.mapping)?.label, side)"></span>
           </div>
           <div class="dist-field" *ngIf="map?.paramValue || findMatch(map, other?.mapping)?.paramValue">
             <span class="dist-field-label">PARAM VALUE:</span>
-            <span class="dist-field-value" [innerHTML]="getDiff(formatFriendlyValue(map?.paramValue), formatFriendlyValue(findMatch(map, other?.mapping)?.paramValue), side)"></span>
+            <span class="dist-field-value"
+              [innerHTML]="getDiff(formatFriendlyValue(map?.paramValue), formatFriendlyValue(findMatch(map, other?.mapping)?.paramValue), side)"></span>
           </div>
           <div class="dist-field" *ngIf="map?.defaultValue || findMatch(map, other?.mapping)?.defaultValue">
             <span class="dist-field-label">DEFAULT VALUE:</span>
-            <span class="dist-field-value" [innerHTML]="getDiff(map?.defaultValue, findMatch(map, other?.mapping)?.defaultValue, side)"></span>
+            <span class="dist-field-value"
+              [innerHTML]="getDiff(map?.defaultValue, findMatch(map, other?.mapping)?.defaultValue, side)"></span>
           </div>
           <div class="dist-field" *ngIf="map?.readOnlyValue || findMatch(map, other?.mapping)?.readOnlyValue">
             <span class="dist-field-label">READ ONLY:</span>
-            <span class="dist-field-value" [innerHTML]="getDiff(map?.readOnlyValue, findMatch(map, other?.mapping)?.readOnlyValue, side)"></span>
+            <span class="dist-field-value"
+              [innerHTML]="getDiff(map?.readOnlyValue, findMatch(map, other?.mapping)?.readOnlyValue, side)"></span>
           </div>
           <div class="dist-field" *ngIf="map?.required || findMatch(map, other?.mapping)?.required">
             <span class="dist-field-label">REQUIRED:</span>
-            <span class="dist-field-value" [innerHTML]="getDiff(map?.required, findMatch(map, other?.mapping)?.required, side)"></span>
+            <span class="dist-field-value"
+              [innerHTML]="getDiff(map?.required, findMatch(map, other?.mapping)?.required, side)"></span>
           </div>
           <div class="dist-field" *ngIf="map?.multipleValues || findMatch(map, other?.mapping)?.multipleValues">
             <span class="dist-field-label">MULTIPLE VALUES:</span>
-            <span class="dist-field-value" [innerHTML]="getDiff(map?.multipleValues, findMatch(map, other?.mapping)?.multipleValues, side)"></span>
+            <span class="dist-field-value"
+              [innerHTML]="getDiff(map?.multipleValues, findMatch(map, other?.mapping)?.multipleValues, side)"></span>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- PLUGINS SECTION -->
+    <div *ngIf="item?.pluginDetail?.relations?.length > 0 || other?.pluginDetail?.relations?.length > 0">
+      <div class="dist-section-spacer" style="margin-top: 1.5rem;"></div>
+      <div class="dist-section-title">PLUGINS</div>
+
+      <!-- Plugins present on this side -->
+      <div *ngFor="let rel of toArray(item?.pluginDetail?.relations)" class="plugin-card">
+        <div class="plugin-card-header">
+          <span class="plugin-card-title">Plugin: <span [innerHTML]="getDiff(rel?.plugin?.name, findMatch(rel, other?.pluginDetail?.relations)?.plugin?.name, side)"></span></span>
+        </div>
+        <div class="dist-field" *ngIf="rel?.plugin?.description || findMatch(rel, other?.pluginDetail?.relations)?.plugin?.description">
+          <span class="dist-field-label">DESCRIPTION:</span>
+          <span class="dist-field-value" [innerHTML]="getDiff(rel?.plugin?.description, findMatch(rel, other?.pluginDetail?.relations)?.plugin?.description, side)"></span>
+        </div>
+        <div class="dist-field" *ngIf="rel?.plugin?.version || findMatch(rel, other?.pluginDetail?.relations)?.plugin?.version">
+          <span class="dist-field-label">VERSION:</span>
+          <span class="dist-field-value" [innerHTML]="getDiff(rel?.plugin?.version, findMatch(rel, other?.pluginDetail?.relations)?.plugin?.version, side)"></span>
+        </div>
+        <div class="dist-field" *ngIf="rel?.plugin?.runtime || findMatch(rel, other?.pluginDetail?.relations)?.plugin?.runtime">
+          <span class="dist-field-label">RUNTIME:</span>
+          <span class="dist-field-value" [innerHTML]="getDiff(rel?.plugin?.runtime, findMatch(rel, other?.pluginDetail?.relations)?.plugin?.runtime, side)"></span>
+        </div>
+        <div class="dist-field" *ngIf="rel?.plugin?.repository || findMatch(rel, other?.pluginDetail?.relations)?.plugin?.repository">
+          <span class="dist-field-label">REPOSITORY:</span>
+          <span class="dist-field-value" [innerHTML]="getDiff(rel?.plugin?.repository, findMatch(rel, other?.pluginDetail?.relations)?.plugin?.repository, side)"></span>
+        </div>
+        <div class="dist-field" *ngIf="rel?.plugin?.executable || findMatch(rel, other?.pluginDetail?.relations)?.plugin?.executable">
+          <span class="dist-field-label">EXECUTABLE:</span>
+          <span class="dist-field-value" [innerHTML]="getDiff(rel?.plugin?.executable, findMatch(rel, other?.pluginDetail?.relations)?.plugin?.executable, side)"></span>
+        </div>
+        <div class="dist-field" *ngIf="rel?.plugin?.arguments || findMatch(rel, other?.pluginDetail?.relations)?.plugin?.arguments">
+          <span class="dist-field-label">ARGUMENTS:</span>
+          <span class="dist-field-value" [innerHTML]="getDiff(rel?.plugin?.arguments, findMatch(rel, other?.pluginDetail?.relations)?.plugin?.arguments, side)"></span>
+        </div>
+        <div class="dist-field" *ngIf="rel?.plugin?.enabled != null || findMatch(rel, other?.pluginDetail?.relations)?.plugin?.enabled != null">
+          <span class="dist-field-label">ENABLED:</span>
+          <span class="dist-field-value" [innerHTML]="getDiff(rel?.plugin?.enabled?.toString(), findMatch(rel, other?.pluginDetail?.relations)?.plugin?.enabled?.toString(), side)"></span>
+        </div>
+        <div class="dist-field" *ngIf="rel?.plugin?.installed != null || findMatch(rel, other?.pluginDetail?.relations)?.plugin?.installed != null">
+          <span class="dist-field-label">INSTALLED:</span>
+          <span class="dist-field-value" [innerHTML]="getDiff(rel?.plugin?.installed?.toString(), findMatch(rel, other?.pluginDetail?.relations)?.plugin?.installed?.toString(), side)"></span>
+        </div>
+        <div class="dist-field" *ngIf="rel?.relation?.input_format || findMatch(rel, other?.pluginDetail?.relations)?.relation?.input_format">
+          <span class="dist-field-label">INPUT FORMAT:</span>
+          <span class="dist-field-value" [innerHTML]="getDiff(rel?.relation?.input_format, findMatch(rel, other?.pluginDetail?.relations)?.relation?.input_format, side)"></span>
+        </div>
+        <div class="dist-field" *ngIf="rel?.relation?.output_format || findMatch(rel, other?.pluginDetail?.relations)?.relation?.output_format">
+          <span class="dist-field-label">OUTPUT FORMAT:</span>
+          <span class="dist-field-value" [innerHTML]="getDiff(rel?.relation?.output_format, findMatch(rel, other?.pluginDetail?.relations)?.relation?.output_format, side)"></span>
+        </div>
+      </div>
+
+      <!-- Plugins only on the other side (shows as added/removed depending on side) -->
+      <ng-container *ngFor="let rel of toArray(other?.pluginDetail?.relations)">
+        <div class="plugin-card" *ngIf="!findMatch(rel, item?.pluginDetail?.relations)">
+          <div class="plugin-card-header">
+            <span class="plugin-card-title">Plugin: <span [innerHTML]="getDiff(null, rel?.plugin?.name, side)"></span></span>
+          </div>
+          <div class="dist-field" *ngIf="rel?.plugin?.version">
+            <span class="dist-field-label">VERSION:</span>
+            <span class="dist-field-value" [innerHTML]="getDiff(null, rel?.plugin?.version, side)"></span>
+          </div>
+          <div class="dist-field" *ngIf="rel?.plugin?.runtime">
+            <span class="dist-field-label">RUNTIME:</span>
+            <span class="dist-field-value" [innerHTML]="getDiff(null, rel?.plugin?.runtime, side)"></span>
+          </div>
+          <div class="dist-field" *ngIf="rel?.relation?.input_format">
+            <span class="dist-field-label">INPUT FORMAT:</span>
+            <span class="dist-field-value" [innerHTML]="getDiff(null, rel?.relation?.input_format, side)"></span>
+          </div>
+          <div class="dist-field" *ngIf="rel?.relation?.output_format">
+            <span class="dist-field-label">OUTPUT FORMAT:</span>
+            <span class="dist-field-value" [innerHTML]="getDiff(null, rel?.relation?.output_format, side)"></span>
+          </div>
+        </div>
+      </ng-container>
     </div>
 
   </div>
