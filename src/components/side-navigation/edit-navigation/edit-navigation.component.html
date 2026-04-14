@@ -45,7 +45,7 @@
       <button
         *ngIf="
           (activeDataProduct || activeSoftwareApplication || activeSoftwareSourceCode) &&
-          activeEntityStatus === status.SUBMITTED
+          activeEntityStatus === status.SUBMITTED && userCanPublish
         "
         mat-flat-button
         color="primary"
@@ -57,7 +57,7 @@
       <button
         *ngIf="
           (activeDataProduct || activeSoftwareApplication || activeSoftwareSourceCode) &&
-          activeEntityStatus === status.SUBMITTED
+          activeEntityStatus === status.SUBMITTED && userCanPublish
         "
         mat-flat-button
         color="warn"

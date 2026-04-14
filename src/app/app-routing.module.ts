@@ -5,6 +5,11 @@ import { AppRouteReuseStrategy } from './app-route-reuse-strategy';
 
 const appRoutes: Routes = [
   {
+    path: 'backoffice',
+    redirectTo: 'home',
+    pathMatch: 'full',
+  },
+  {
     path: 'home',
     loadChildren: () => import('../pages/home/home.module').then((m) => m.HomeModule),
     canActivate: [AuthenticatedUser],
@@ -50,4 +55,4 @@ const appRoutes: Routes = [
   exports: [RouterModule],
   providers: [{ provide: RouteReuseStrategy, useClass: AppRouteReuseStrategy }],
 })
-export class AppRoutingModule {}
+export class AppRoutingModule { }

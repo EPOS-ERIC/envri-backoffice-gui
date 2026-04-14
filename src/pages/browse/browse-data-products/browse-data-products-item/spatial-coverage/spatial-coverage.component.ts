@@ -13,6 +13,7 @@ import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum'
 import { DialogService } from 'src/components/dialogs/dialog.service';
 import { LoadingService } from 'src/services/loading.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-spatial-coverage',
@@ -48,6 +49,7 @@ export class SpatialCoverageComponent implements OnInit {
     private readonly dialogService: DialogService,
     private readonly loadingService: LoadingService,
     private readonly snackbarService: SnackbarService,
+    private readonly activeUserService: ActiveUserService
   ) {
     this.dataProduct = this.entityExecutionService.getActiveDataProductValue() as DataProduct;
   }
@@ -63,7 +65,26 @@ export class SpatialCoverageComponent implements OnInit {
   public disabled = true;
 
   public ngOnInit(): void {
-    this.disabled = this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED;
+    let userHasEditPermissionsForSubmitted: boolean | undefined = undefined;
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            userHasEditPermissionsForSubmitted = true;
+          }
+          else{
+            userHasEditPermissionsForSubmitted = false;
+          }
+        }
+      }
+    }
+    this.disabled = (this.dataProduct?.status === Status.SUBMITTED && userHasEditPermissionsForSubmitted === false) || this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED;
   }
 
   /**

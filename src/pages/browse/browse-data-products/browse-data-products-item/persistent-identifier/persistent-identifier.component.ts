@@ -19,6 +19,7 @@ import { GetIdentifierDetailsParams } from 'src/apiAndObjects/api/identifier/get
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
 import { LoadingService } from 'src/services/loading.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-persistent-identifier',
@@ -48,6 +49,7 @@ export class PersistentIdentifierComponent implements OnInit {
     private readonly apiService: ApiService,
     private readonly loadingService: LoadingService,
     private readonly snackbarService: SnackbarService,
+    private readonly activeUserService: ActiveUserService,
   ) {
     this.dataProduct = this.entityExecutionService.getActiveDataProductValue() as DataProduct;
   }
@@ -65,7 +67,32 @@ export class PersistentIdentifierComponent implements OnInit {
         ['snackbar', 'mat-toolbar', 'snackbar-warning'],
       );
     }, 500);
-    if (this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED) {
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const activeUser = this.activeUserService.getActiveUser();
+    let userHasEditPermissionsForSubmitted: boolean | undefined = undefined;
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            userHasEditPermissionsForSubmitted = true;
+          }
+          else{
+            userHasEditPermissionsForSubmitted = false;
+          }
+        }
+        else{
+          userHasEditPermissionsForSubmitted = false;
+        }
+      }
+      else{
+        userHasEditPermissionsForSubmitted = false;
+      }
+    } 
+    if ((this.dataProduct?.status === Status.SUBMITTED && userHasEditPermissionsForSubmitted === false) || this.dataProduct?.status === Status.PUBLISHED || this.dataProduct?.status === Status.ARCHIVED) {
       this.form.disable();
       this.disabled = true;
     }
@@ -151,8 +178,9 @@ export class PersistentIdentifierComponent implements OnInit {
         this.identifiersFullObj.splice(index, 1);
 
         const updatingObject = this.entityExecutionService.getActiveDataProductValue() || {};
-        const newIdentifierArr = updatingObject.identifier?.splice(index, 1);
-        this.dataproductService.updateDataProductRecord(updatingObject, { identifier: newIdentifierArr });
+        const updatedIdentifierArr = [...(updatingObject.identifier ?? [])];
+        updatedIdentifierArr.splice(index, 1);
+        this.dataproductService.updateDataProductRecord(updatingObject, { identifier: updatedIdentifierArr });
         this.entityExecutionService.handleDataProductSave();
         this.snackbarService.openSnackbar('Successfully deleted Identifier.', 'Close', SnackbarType.SUCCESS, 3000, [
           'snackbar',
