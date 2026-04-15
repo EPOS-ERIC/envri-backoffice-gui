@@ -2,7 +2,7 @@ import { NestedTreeControl } from '@angular/cdk/tree';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
-import { Category, CategoryScheme } from 'generated/backofficeSchemas';
+import { Category, CategoryScheme, DataProduct, SoftwareApplication, SoftwareSourceCode } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { DialogService } from 'src/components/dialogs/dialog.service';
@@ -16,6 +16,9 @@ export interface CategoryNode extends Category {
 }
 
 import { ActiveUserService } from 'src/services/activeUser.service';
+import { HelpersService } from 'src/services/helpers.service';
+import { Entity } from 'src/utility/enums/entity.enum';
+import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 
 @Component({
   selector: 'app-category-tree-details',
@@ -55,6 +58,9 @@ export class CategoryTreeDetailsComponent implements OnInit {
   @Input() selectedCategoryScheme: CategoryScheme | undefined;
   @Input() canManageCategories: boolean = false;
 
+  @Input() activeEntity: DataProduct | SoftwareApplication | SoftwareSourceCode | undefined;
+  @Input() entityStatus: string | undefined;
+
   @Output() updateSelectedCategories = new EventEmitter();
   @Output() categoryChanged = new EventEmitter<void>();
 
@@ -80,6 +86,8 @@ export class CategoryTreeDetailsComponent implements OnInit {
     private readonly dialogService: DialogService,
     private readonly cdr: ChangeDetectorRef,
     private readonly activeUserService: ActiveUserService,
+    private readonly helpersService: HelpersService,
+    private readonly entityExecutionService: EntityExecutionService,
   ) {}
 
   public ngOnInit(): void {
@@ -360,13 +368,45 @@ export class CategoryTreeDetailsComponent implements OnInit {
     return this.selectedCategories.includes(node.name as string);
   }
 
-  @Input() entityStatus: string | undefined;
-
+  public userHasEditPermissionsForSubmitted(): boolean {
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    if(this.activeEntity !== undefined){
+      const activeUser = this.activeUserService.getActiveUser();
+      if(activeUser){
+        const activeUserGroups = activeUser.groups;
+        if(activeUserGroups){
+          // find group in UserGroups matching with current active loaded Entity
+          const groupMatch = activeUserGroups.find(group => group.groupId === this.activeEntity?.groups?.find(entityGroup => entityGroup === group.groupId));
+          if(groupMatch){
+            const userRole = groupMatch.role;
+            if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+              return true;
+            }
+            else{
+              return false;
+            }
+          }
+          else{
+            return false;
+          }
+        }
+        else{
+          return false;
+        }
+      }
+      else{
+        return false;
+      }
+    }
+    else{
+      return false;
+    }
+  }
   public canAddSubCategory(node: CategoryNode): boolean {
     return (
       (this.canManageCategories && node.status === Status.DRAFT) ||
       this.entityStatus === Status.DRAFT ||
-      this.entityStatus === Status.SUBMITTED
+      (this.entityStatus === Status.SUBMITTED && this.userHasEditPermissionsForSubmitted())
     );
   }
 
@@ -430,8 +470,7 @@ export class CategoryTreeDetailsComponent implements OnInit {
     return (
       node.status === Status.DRAFT ||
       this.entityStatus === Status.DRAFT ||
-      this.entityStatus === Status.SUBMITTED ||
-      node.status === Status.SUBMITTED
+      ((this.entityStatus === Status.SUBMITTED || node.status === Status.SUBMITTED) && this.userHasEditPermissionsForSubmitted())
     );
   }
 
@@ -442,7 +481,7 @@ export class CategoryTreeDetailsComponent implements OnInit {
     return (
       (this.canManageCategories && this.selectedCategoryScheme.status === Status.DRAFT) ||
       this.entityStatus === Status.DRAFT ||
-      this.entityStatus === Status.SUBMITTED
+      (this.entityStatus === Status.SUBMITTED && this.userHasEditPermissionsForSubmitted())
     );
   }
 

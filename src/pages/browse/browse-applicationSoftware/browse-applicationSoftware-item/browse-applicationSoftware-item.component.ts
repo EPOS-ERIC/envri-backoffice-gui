@@ -22,6 +22,7 @@ import { NavigationService } from 'src/services/navigation.service';
 import { SoftwareApplicationForm } from 'src/shared/interfaces/form.interface';
 import { WithSubscription } from 'src/helpers/subscription';
 import { LoadingService } from 'src/services/loading.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-applicationSoftware-item',
@@ -55,6 +56,7 @@ export class BrowseSoftwareApplicationItemComponent extends WithSubscription imp
     private readonly helpersService: HelpersService,
     private readonly navigationService: NavigationService,
     private readonly loadingService: LoadingService,
+    private readonly activeUserService: ActiveUserService,
   ) {
     super();
   }
@@ -95,6 +97,7 @@ export class BrowseSoftwareApplicationItemComponent extends WithSubscription imp
   }
 
   private initDataCallback(): void {
+    let userHasEditPermissionsForSubmitted: boolean | undefined = false;
     if (this.softwareApplication) {
       this.stateChangeService.setCurrentSoftwareApplicationState(this.softwareApplication.status);
       this.entityExecutionService.setActiveSoftwareApplication(
@@ -104,7 +107,27 @@ export class BrowseSoftwareApplicationItemComponent extends WithSubscription imp
       this.initForm();
       this.trackFormData();
       /* this.distribution = this.softwareApplication.distribution; */ // NO DISTRIBUTION ASSOCIATED TO SOFTWARE APPLICATIONS
-      if (this.softwareApplication.status === Status.PUBLISHED || this.softwareApplication.status === Status.ARCHIVED) {
+      
+      // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+      const activeUser = this.activeUserService.getActiveUser();
+      if(activeUser){
+        const activeUserGroups = activeUser.groups;
+        if(activeUserGroups){
+          // find group in UserGroups matching with current active loaded Entity
+          const groupMatch = activeUserGroups.find(group => group.groupId === this.softwareApplication?.groups?.find(entityGroup => entityGroup === group.groupId));
+          if(groupMatch){
+            const userRole = groupMatch.role;
+            console.warn('userRole', userRole);
+            if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+              userHasEditPermissionsForSubmitted = true;
+            }
+            else{
+              userHasEditPermissionsForSubmitted = false;
+            }
+          }
+        }
+      }
+      if ((this.softwareApplication.status === Status.SUBMITTED && userHasEditPermissionsForSubmitted === false) || this.softwareApplication.status === Status.PUBLISHED || this.softwareApplication.status === Status.ARCHIVED) {
         this.form.disable();
       }
     }
@@ -212,7 +235,9 @@ export class BrowseSoftwareApplicationItemComponent extends WithSubscription imp
 
   public handleDelete(): void {
     if (this.softwareApplication?.instanceId) {
-      this.dialogService.handleDelete(this.softwareApplication?.instanceId, EntityEndpointValue.APPLICATION_SOFTWARE);
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(this.softwareApplication.instanceId, EntityEndpointValue.APPLICATION_SOFTWARE);
+      this.dialogService.handleDelete(toDelete);
     }
   }
 

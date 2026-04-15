@@ -15,6 +15,7 @@ import { Entity } from 'src/utility/enums/entity.enum';
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
 import { StateChangeService } from 'src/services/stateChange.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-temporal-coverage',
@@ -62,6 +63,7 @@ export class TemporalCoverageComponent {
     private readonly loadingService: LoadingService,
     private readonly stateChangeService: StateChangeService,
     private readonly snackbarService: SnackbarService,
+    private readonly activeUserService: ActiveUserService,
   ) {}
 
   private initTemporalCoverage(temporalExent: LinkedEntity[]) {
@@ -100,9 +102,39 @@ export class TemporalCoverageComponent {
     }, 500);
   }
 
+  public userHasEditPermissionsForSubmitted(): boolean{
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.parentEntity?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            return true;
+          }
+          else{
+            return false;
+          }
+        }
+        else{
+          return false;
+        }
+      }
+      else{
+        return false;
+      }
+    }
+    else{
+      return false;
+    }
+  }
+
   private initSubscriptions() {
     this.stateChangeService.currentDataProductStateObs.subscribe((state: DataProduct['status'] | null) => {
-      if (state == null || state === Status.PUBLISHED || state === Status.ARCHIVED || state === Status.DISCARDED) {
+      if (state == null || (state === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted()) || state === Status.PUBLISHED || state === Status.ARCHIVED || state === Status.DISCARDED) {
         this.form.disable();
       } else {
         this.form.enable();

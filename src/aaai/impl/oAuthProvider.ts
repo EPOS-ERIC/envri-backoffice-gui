@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { AuthConfig, OAuthService, UserInfo } from 'angular-oauth2-oidc';
-import { Router } from '@angular/router';
+import { JwksValidationHandler } from 'angular-oauth2-oidc-jwks';
 import { AuthenticationProvider } from '../authProvider.interface';
-import { BehaviorSubject, lastValueFrom, Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { AAAIUser } from '../aaaiUser.interface';
 import { BasicUser } from './basicUser';
 import { Injectable, Injector } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { LogService } from 'src/services/log.service';
 
 /** OAuth provider implementation */
 @Injectable()
@@ -17,19 +18,26 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
   private static readonly AUTH_REVOKE_ENDPOINT = OAuthAuthenticationProvider.AUTH_ISSUER + '/revoke';
   private static readonly REDIRECTION_PAGE = '/last-page-redirect';
 
-  private readonly router: Router;
   private readonly http: HttpClient;
+  private readonly logger: LogService;
+  private authInitializationPromise: null | Promise<void> = null;
 
-  private updateUserProfileTimeout: NodeJS.Timeout;
+  private updateUserProfileTimeout!: NodeJS.Timeout;
 
   /** Current user */
   private readonly userProfileSource = new BehaviorSubject<null | AAAIUser>(null);
 
   constructor(injector: Injector, private readonly oAuthService: OAuthService) {
-    this.router = injector.get(Router);
     this.http = injector.get(HttpClient);
-    this.updateUserProfileTimeout = setTimeout(() => {}, 0); // Initialize with a dummy timeout to avoid undefined errors
-    this.init();
+    this.logger = injector.get(LogService);
+  }
+
+  public initializeAuth(): Promise<void> {
+    if (this.authInitializationPromise == null) {
+      this.authInitializationPromise = this.init();
+    }
+
+    return this.authInitializationPromise;
   }
 
   public isAuthenticated(): boolean {
@@ -44,7 +52,7 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
     return this.userProfileSource.getValue();
   }
 
-  // angular-oauth2-oidc suggests that "Code Flow" rather than "Implicit Flow" should be favoured.
+  // TODO: angular-oauth2-oidc suggests that "Code Flow" rather than "Implicit Flow" should be favoured.
   // SHould we adopt that? https://www.npmjs.com/package/angular-oauth2-oidc
   public login(): void {
     this.oAuthService.initCodeFlow();
@@ -62,29 +70,25 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
     return OAuthAuthenticationProvider.AUTH_ROOT;
   }
 
-  private makeAuthConfig(router: Router): AuthConfig {
+  private makeAuthConfig(): AuthConfig {
+    const redirectUri = new URL(OAuthAuthenticationProvider.REDIRECTION_PAGE.slice(1), document.baseURI).toString();
+    const silentRefreshRedirectUri = new URL('silent-token-refresh.html', document.baseURI).toString();
+
+    this.logger.info('baseURI', document.baseURI);
+    this.logger.info('redirectUri', redirectUri);
+
     const authConfig: AuthConfig = {
       // Url of the Identity Provider
       issuer: OAuthAuthenticationProvider.AUTH_ISSUER,
 
       // URL of the SPA to redirect the user to after login
-      // redirectUri: this.redirectionUri(),
-      get redirectUri(): string {
-        // eslint-disable-next-line max-len
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, no-underscore-dangle, @typescript-eslint/dot-notation
-        const base = String(router['location']._basePath); // e.g. /testpath
-        const origin = window.location.origin; // e.g. http://localhost:4200
-
-        // e.g. http://localhost:4200/testpath/last-page-redirect
-        const redirect = origin + base + OAuthAuthenticationProvider.REDIRECTION_PAGE;
-        return redirect;
-      },
+      redirectUri,
 
       // The SPA's id. The SPA is registerd with this id at the auth-server
       clientId: environment.authClientId,
 
       // URL of the SPA to redirect the user after silent refresh
-      silentRefreshRedirectUri: window.location.origin + '/silent-token-refresh.html',
+      silentRefreshRedirectUri,
 
       timeoutFactor: 0.75,
 
@@ -99,10 +103,21 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
     return authConfig;
   }
 
-  public async init() {
+  private async init(): Promise<void> {
     this.configure();
     this.oAuthService.setupAutomaticSilentRefresh();
-    /* this.oAuthService.tokenValidationHandler = new JwksValidationHandler(); */ // ATTENTION, TO BE VERIFIED: this is now commented out since returning an error, check how to maintain it with Code Flow!
+    this.oAuthService.tokenValidationHandler = new JwksValidationHandler();
+
+    try {
+      await this.oAuthService.loadDiscoveryDocumentAndTryLogin();
+      this.logger.info('Successfully contacted authentication server.');
+    } catch (e) {
+      this.logger.warn('Caught error - Failed to contact authentication server.', e);
+    }
+
+    if (this.oAuthService.hasValidAccessToken()) {
+      this.updateUserProfile();
+    }
 
     this.oAuthService.events.subscribe((e) => {
       // angular-oauth2-oidc EventType string values
@@ -114,22 +129,6 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
           break;
       }
     });
-
-    try {
-      await this.oAuthService.loadDiscoveryDocumentAndTryLogin();
-      if (this.oAuthService.hasValidAccessToken()) {
-        const url = this.router.parseUrl(this.router.url);
-        const returnUrl = url.queryParams['returnUrl'];
-        if (returnUrl) {
-          this.router.navigateByUrl(returnUrl);
-        } else {
-          this.router.navigate(['/home']);
-        }
-        this.updateUserProfile();
-      }
-    } catch (e) {
-      console.warn('❌ Failed to contact Authentication Server.', e);
-    }
   }
 
   private updateUserProfile(): void {
@@ -160,7 +159,7 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
     }, 100);
   }
   private configure() {
-    this.oAuthService.configure(this.makeAuthConfig(this.router));
+    this.oAuthService.configure(this.makeAuthConfig());
   }
 
   private revokeTokenManually(): Promise<void> {

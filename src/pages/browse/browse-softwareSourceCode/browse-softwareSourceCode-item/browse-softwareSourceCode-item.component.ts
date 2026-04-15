@@ -22,6 +22,7 @@ import { NavigationService } from 'src/services/navigation.service';
 import { SoftwareSourceCodeForm } from 'src/shared/interfaces/form.interface';
 import { WithSubscription } from 'src/helpers/subscription';
 import { LoadingService } from 'src/services/loading.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-softwaresourcecode-item',
@@ -54,6 +55,7 @@ export class BrowseSoftwareSourceCodeItemComponent extends WithSubscription impl
     private readonly helpersService: HelpersService,
     private readonly navigationService: NavigationService,
     private readonly loadingService: LoadingService,
+    private readonly activeUserService: ActiveUserService
   ) {
     super();
   }
@@ -94,6 +96,7 @@ export class BrowseSoftwareSourceCodeItemComponent extends WithSubscription impl
   }
 
   private initDataCallback(): void {
+    let userHasEditPermissionsForSubmitted: boolean | undefined = false;
     if (this.softwareSourceCode) {
       this.stateChangeService.setCurrentSoftwareSourceCodeState(this.softwareSourceCode.status);
       this.entityExecutionService.setActiveSoftwareSourceCode(
@@ -102,7 +105,26 @@ export class BrowseSoftwareSourceCodeItemComponent extends WithSubscription impl
       this.actionService.setLiveEdit();
       this.initForm();
       this.trackFormData();
-      if (this.softwareSourceCode.status === Status.PUBLISHED || this.softwareSourceCode.status === Status.ARCHIVED) {
+      // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+      const activeUser = this.activeUserService.getActiveUser();
+      if(activeUser){
+        const activeUserGroups = activeUser.groups;
+        if(activeUserGroups){
+          // find group in UserGroups matching with current active loaded Entity
+          const groupMatch = activeUserGroups.find(group => group.groupId === this.softwareSourceCode?.groups?.find(entityGroup => entityGroup === group.groupId));
+          if(groupMatch){
+            const userRole = groupMatch.role;
+            console.warn('userRole', userRole);
+            if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+              userHasEditPermissionsForSubmitted = true;
+            }
+            else{
+              userHasEditPermissionsForSubmitted = false;
+            }
+          }
+        }
+      }
+      if ((this.softwareSourceCode.status === Status.SUBMITTED && !userHasEditPermissionsForSubmitted) || this.softwareSourceCode.status === Status.PUBLISHED || this.softwareSourceCode.status === Status.ARCHIVED) {
         this.form.disable();
       }
     }
@@ -212,7 +234,9 @@ export class BrowseSoftwareSourceCodeItemComponent extends WithSubscription impl
 
   public handleDelete(): void {
     if (this.softwareSourceCode?.instanceId) {
-      this.dialogService.handleDelete(this.softwareSourceCode?.instanceId, EntityEndpointValue.SOFTWARE_SOURCE_CODE);
+      const toDelete = new Map<string, EntityEndpointValue>();
+      toDelete.set(this.softwareSourceCode?.instanceId, EntityEndpointValue.SOFTWARE_SOURCE_CODE);
+      this.dialogService.handleDelete(toDelete);
     }
   }
 

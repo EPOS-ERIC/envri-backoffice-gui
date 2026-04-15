@@ -19,6 +19,7 @@ import { GetIdentifierDetailsParams } from 'src/apiAndObjects/api/identifier/get
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
 import { LoadingService } from 'src/services/loading.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-persistent-identifier-softApp',
@@ -48,6 +49,7 @@ export class PersistentIdentifierSoftAppComponent implements OnInit {
     private readonly apiService: ApiService,
     private readonly loadingService: LoadingService,
     private readonly snackbarService: SnackbarService,
+    private readonly activeUserService: ActiveUserService,
   ) {
     this.softwareApplication = this.entityExecutionService.getActiveSoftwareApplicationValue() as SoftwareApplication;
   }
@@ -65,7 +67,26 @@ export class PersistentIdentifierSoftAppComponent implements OnInit {
         ['snackbar', 'mat-toolbar', 'snackbar-warning'],
       );
     }, 500);
-    if (this.softwareApplication?.status === Status.PUBLISHED || this.softwareApplication?.status === Status.ARCHIVED) {
+    let userHasEditPermissionsForSubmitted: boolean | undefined = false;
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.softwareApplication?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            userHasEditPermissionsForSubmitted = true;
+          }
+          else{
+            userHasEditPermissionsForSubmitted = false;
+          }
+        }
+      }
+    }
+    if ((this.softwareApplication?.status === Status.SUBMITTED && userHasEditPermissionsForSubmitted === false) || this.softwareApplication?.status === Status.PUBLISHED || this.softwareApplication?.status === Status.ARCHIVED) {
       this.form.disable();
       this.disabled = true;
     }
@@ -154,9 +175,10 @@ export class PersistentIdentifierSoftAppComponent implements OnInit {
         this.identifiersFullObj.splice(index, 1);
 
         const updatingObject = this.entityExecutionService.getActiveSoftwareApplicationValue() || {};
-        const newIdentifierArr = updatingObject.identifier?.splice(index, 1);
+        const updatedIdentifierArr = [...(updatingObject.identifier ?? [])];
+        updatedIdentifierArr.splice(index, 1);
         this.softwareApplicationService.updateSoftwareApplicationRecord(updatingObject, {
-          identifier: newIdentifierArr,
+          identifier: updatedIdentifierArr,
         });
         this.entityExecutionService.handleDataProductSave();
         this.snackbarService.openSnackbar('Successfully deleted Identifier.', 'Close', SnackbarType.SUCCESS, 3000, [

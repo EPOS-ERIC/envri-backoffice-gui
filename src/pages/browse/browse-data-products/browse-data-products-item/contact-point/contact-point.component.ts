@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { ContactPoint, DataProduct, LinkedEntity } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { WithSubscription } from 'src/helpers/subscription';
+import { ActiveUserService } from 'src/services/activeUser.service';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 import { LoadingService } from 'src/services/loading.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
@@ -21,6 +22,7 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
     private readonly snackbarService: SnackbarService,
     private readonly stateChangeService: StateChangeService,
     private readonly loadingService: LoadingService,
+    private readonly activeUserService: ActiveUserService,
   ) {
     super();
   }
@@ -53,7 +55,7 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
 
   private initSubscriptions(): void {
     this.subscribe(this.stateChangeService.currentDataProductStateObs, (status: DataProduct['status'] | null) => {
-      if (status === null || status === Status.PUBLISHED || status === Status.ARCHIVED) {
+      if (status === null|| (status === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted()) || status === Status.PUBLISHED || status === Status.ARCHIVED) {
         this.disabled = true;
       }
     });
@@ -63,6 +65,37 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
     this.initSubscriptions();
     this.syncContactPointsFromActiveDataProduct();
     this.getContactPointDetails();
+  }
+
+  public userHasEditPermissionsForSubmitted(): boolean{
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const dataProduct = this.entityExecutionService.getActiveDataProductValue();
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            return true;
+          }
+          else{
+            return false;
+          }
+        }
+        else{
+          return false;
+        }
+      }
+      else{
+        return false;
+      }
+    }
+    else{
+      return false;
+    }
   }
 
   private syncContactPointsFromActiveDataProduct(): void {

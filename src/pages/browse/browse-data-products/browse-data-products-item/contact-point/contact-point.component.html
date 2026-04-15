@@ -11,7 +11,7 @@
     <app-contact-point-detail
       [contactPointDetails]="contactPointDetails"
       [addedContactPointDetail]="addedContactPointDetail"
-      [disabled]="disabled"
+      [disabled]="!userHasEditPermissionsForSubmitted || disabled"
       (removeContactPoint)="handleUnlinkContactPoint($event)"
     ></app-contact-point-detail>
   </div>

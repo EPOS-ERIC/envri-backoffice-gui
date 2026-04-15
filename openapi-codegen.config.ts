@@ -5,7 +5,7 @@ export default defineConfig({
   backoffice: {
     from: {
       source: 'url',
-      url: 'https://catalogue.staging.envri.eu/api/v1/openapi.json',
+      url: 'https://catalogue.envri.eu/api/v1/openapi.json',
     },
     outputDir: 'generated',
     to: async (context) => {

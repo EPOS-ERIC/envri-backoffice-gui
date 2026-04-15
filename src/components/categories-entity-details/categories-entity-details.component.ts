@@ -18,6 +18,7 @@ import { HelpersService } from 'src/services/helpers.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { Entity } from 'src/utility/enums/entity.enum';
 import { Status } from 'src/utility/enums/status.enum';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-categories-entity-details',
@@ -105,6 +106,7 @@ export class CategoriesEntityDetailsComponent implements OnInit {
     private readonly entityExecutionService: EntityExecutionService,
     private readonly snackbarService: SnackbarService,
     private readonly helpersService: HelpersService,
+    private readonly activeUserService: ActiveUserService,
   ) {}
   public ngOnInit(): void {
     this.initData();
@@ -160,7 +162,7 @@ export class CategoriesEntityDetailsComponent implements OnInit {
   }
 
   private updateFormState(): void {
-    if (this.activeEntity?.status === Status.PUBLISHED || this.activeEntity?.status === Status.ARCHIVED) {
+    if ((this.activeEntity?.status === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted()) || this.activeEntity?.status === Status.PUBLISHED || this.activeEntity?.status === Status.ARCHIVED) {
       this.form.disable();
       this.disabled = true;
     } else {
@@ -222,6 +224,36 @@ export class CategoriesEntityDetailsComponent implements OnInit {
           }
         }
       });
+  }
+
+  public userHasEditPermissionsForSubmitted(): boolean{
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.activeEntity?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            return true;
+          }
+          else{
+            return false;
+          }
+        }
+        else{
+          return false;
+        }
+      }
+      else{
+        return false;
+      }
+    }
+    else{
+      return false;
+    }
   }
 
   public updateCategories(categories: Array<Category>): void {

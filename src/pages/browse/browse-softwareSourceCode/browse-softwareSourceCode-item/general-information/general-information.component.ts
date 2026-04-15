@@ -14,8 +14,10 @@ import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum'
 import { SoftwareSourceCode } from 'src/apiAndObjects/objects/entities/softwareSourceCode.model';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
-import { LinkedEntity, Organization } from 'generated/backofficeSchemas';
+import { Identifier, LinkedEntity, Organization } from 'generated/backofficeSchemas';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
+import { ActiveUserService } from 'src/services/activeUser.service';
+import { LoadingService } from 'src/services/loading.service';
 
 @Component({
   selector: 'app-general-information-sourceCode',
@@ -49,11 +51,14 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
     private readonly formBuilder: UntypedFormBuilder,
     private readonly apiService: ApiService,
     private readonly snackbarService: SnackbarService,
+    private readonly activeUserService: ActiveUserService,
+    private readonly loadingService: LoadingService,
   ) {
     this.softwareSourceCode = this.entityExecutionService.getActiveSoftwareSourceCodeValue() as SoftwareSourceCode;
   }
 
   private initForm(): void {
+    let userHasEditPermissionsForSubmitted: boolean | undefined = false;
     if (this.softwareSourceCode) {
       this.form = new FormGroup({
         name: new FormControl(this.softwareSourceCode?.name, [Validators.required]),
@@ -62,7 +67,7 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
         mainEntityofPage: new FormControl(this.softwareSourceCode?.mainEntityofPage),
         licenseURL: new FormControl(this.softwareSourceCode?.licenseURL),
         softwareVersion: new FormControl(this.softwareSourceCode?.softwareVersion),
-        downloadURL: new FormControl(this.softwareSourceCode?.downloadURL),
+        downloadURL: new FormControl(this.softwareSourceCode?.codeRepository),
         programmingLanguage: this.formBuilder.array(
           (this.softwareSourceCode?.programmingLanguage ?? []).map((lang) => this.formBuilder.control(lang)),
         ),
@@ -72,7 +77,25 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
           (this.softwareSourceCode?.creator ?? []).map((creator) => this.formBuilder.control(creator)),
         ),
       });
-      if (this.softwareSourceCode?.status === Status.PUBLISHED || this.softwareSourceCode?.status === Status.ARCHIVED) {
+      // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+      const activeUser = this.activeUserService.getActiveUser();
+      if(activeUser){
+        const activeUserGroups = activeUser.groups;
+        if(activeUserGroups){
+          // find group in UserGroups matching with current active loaded Entity
+          const groupMatch = activeUserGroups.find(group => group.groupId === this.softwareSourceCode?.groups?.find(entityGroup => entityGroup === group.groupId));
+          if(groupMatch){
+            const userRole = groupMatch.role;
+            if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+              userHasEditPermissionsForSubmitted = true;
+            }
+            else{
+              userHasEditPermissionsForSubmitted = false;
+            }
+          }
+        }
+      }
+      if ((this.softwareSourceCode?.status === Status.SUBMITTED && userHasEditPermissionsForSubmitted === false) || this.softwareSourceCode?.status === Status.PUBLISHED || this.softwareSourceCode?.status === Status.ARCHIVED) {
         this.form.disable();
       }
     }
@@ -174,11 +197,35 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
     );
   }
 
-  public handleDeleteSoftwareSourceCodeDelete(): void {
-    this.dialogService.handleDelete(
-      this.softwareSourceCode?.instanceId as string,
-      EntityEndpointValue.SOFTWARE_SOURCE_CODE,
-    );
+  public async handleDeleteSoftwareSourceCode(): Promise<void> {
+    this.loadingService.setShowSpinner(true);
+
+    const entitiesToDelete = new Map<string, EntityEndpointValue>();
+    // set the softwareSourceCode to be deleted
+    entitiesToDelete.set(this.softwareSourceCode?.instanceId as string, EntityEndpointValue.SOFTWARE_SOURCE_CODE);
+    
+    const identifiers = this.softwareSourceCode?.identifier || [];
+    const identifiersProm: Promise<unknown>[] = [];
+    identifiers.forEach((identifier)=>{
+      identifiersProm.push(
+        this.apiService.endpoints.Identifier.get
+        .call({
+          metaId: identifier.metaId as string,
+          instanceId: identifier.instanceId as string,
+        })
+        .then((identResp: Identifier[])=>{
+          const filteredIdentifiers = identResp.filter((id) => id.status?.toUpperCase() === 'DRAFT');
+          // set Identifier to be deleted
+          filteredIdentifiers.forEach((identifier) => {
+            entitiesToDelete.set(identifier.instanceId as string, EntityEndpointValue.IDENTIFIER);
+          });
+        })
+      );
+    })
+
+    await Promise.allSettled(identifiersProm);
+    this.loadingService.setShowSpinner(false);
+    this.dialogService.handleDelete(entitiesToDelete);
   }
 
   public handleUpdateCreator(): void {

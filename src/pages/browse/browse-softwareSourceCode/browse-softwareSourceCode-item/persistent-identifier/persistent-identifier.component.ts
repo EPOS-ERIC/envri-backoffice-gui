@@ -19,6 +19,7 @@ import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum'
 import { LoadingService } from 'src/services/loading.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { SoftwareSourceCode } from 'src/apiAndObjects/objects/entities/softwareSourceCode.model';
+import { ActiveUserService } from 'src/services/activeUser.service';
 
 @Component({
   selector: 'app-persistent-identifier-sourceCode',
@@ -48,6 +49,7 @@ export class PersistentIdentifierSourceCodeComponent implements OnInit {
     private readonly apiService: ApiService,
     private readonly loadingService: LoadingService,
     private readonly snackbarService: SnackbarService,
+    private readonly activeUserService: ActiveUserService,
   ) {
     this.softwareSourceCode = this.entityExecutionService.getActiveSoftwareSourceCodeValue() as SoftwareSourceCode;
   }
@@ -56,6 +58,7 @@ export class PersistentIdentifierSourceCodeComponent implements OnInit {
     this.form = new FormGroup({
       identifier: this.createIdentifierArray(this.softwareSourceCode?.identifier),
     });
+    let userHasEditPermissionsForSubmitted: boolean | undefined = false;
     setTimeout(() => {
       this.snackbarService.openSnackbar(
         `Please save changes of each Persistent Identifier.`,
@@ -65,7 +68,26 @@ export class PersistentIdentifierSourceCodeComponent implements OnInit {
         ['snackbar', 'mat-toolbar', 'snackbar-warning'],
       );
     }, 500);
-    if (this.softwareSourceCode?.status === Status.PUBLISHED || this.softwareSourceCode?.status === Status.ARCHIVED) {
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.softwareSourceCode?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          console.warn('userRole', userRole);
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            userHasEditPermissionsForSubmitted = true;
+          }
+          else{
+            userHasEditPermissionsForSubmitted = false;
+          }
+        }
+      }
+    }
+    if ((this.softwareSourceCode?.status === Status.SUBMITTED && userHasEditPermissionsForSubmitted === false) || this.softwareSourceCode?.status === Status.PUBLISHED || this.softwareSourceCode?.status === Status.ARCHIVED) {
       this.form.disable();
       this.disabled = true;
     }
@@ -154,9 +176,10 @@ export class PersistentIdentifierSourceCodeComponent implements OnInit {
         this.identifiersFullObj.splice(index, 1);
 
         const updatingObject = this.entityExecutionService.getActiveSoftwareSourceCodeValue() || {};
-        const newIdentifierArr = updatingObject.identifier?.splice(index, 1);
+        const updatedIdentifierArr = [...(updatingObject.identifier ?? [])];
+        updatedIdentifierArr.splice(index, 1);
         this.softwareSourceCodeService.updateSoftwareSourceCodeRecord(updatingObject, {
-          identifier: newIdentifierArr,
+          identifier: updatedIdentifierArr,
         });
         this.entityExecutionService.handleSoftwareSourceCodeSave();
         this.snackbarService.openSnackbar('Successfully deleted Identifier.', 'Close', SnackbarType.SUCCESS, 3000, [

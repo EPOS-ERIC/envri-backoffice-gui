@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { ContactPoint, LinkedEntity, SoftwareApplication } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { WithSubscription } from 'src/helpers/subscription';
+import { ActiveUserService } from 'src/services/activeUser.service';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 import { LoadingService } from 'src/services/loading.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
@@ -21,6 +22,7 @@ export class ContactPointAppSoftComponent extends WithSubscription implements On
     private readonly snackbarService: SnackbarService,
     private readonly stateChangeService: StateChangeService,
     private readonly loadingService: LoadingService,
+    private readonly activeUserService: ActiveUserService,
   ) {
     super();
   }
@@ -55,7 +57,7 @@ export class ContactPointAppSoftComponent extends WithSubscription implements On
     this.subscribe(
       this.stateChangeService.currentSoftwareApplicationStateObs,
       (status: SoftwareApplication['status'] | null) => {
-        if (status === null || status === Status.PUBLISHED || status === Status.ARCHIVED) {
+        if (status === null || (status === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted()) || status === Status.PUBLISHED || status === Status.ARCHIVED) {
           this.disabled = true;
         }
       },
@@ -66,6 +68,37 @@ export class ContactPointAppSoftComponent extends WithSubscription implements On
     this.initSubscriptions();
     this.syncContactPointsFromActiveSoftwareApplication();
     this.getContactPointDetails();
+  }
+
+  public userHasEditPermissionsForSubmitted(): boolean{
+    // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
+    const softwareApplication = this.entityExecutionService.getActiveSoftwareApplicationValue();
+    const activeUser = this.activeUserService.getActiveUser();
+    if(activeUser){
+      const activeUserGroups = activeUser.groups;
+      if(activeUserGroups){
+        // find group in UserGroups matching with current active loaded Entity
+        const groupMatch = activeUserGroups.find(group => group.groupId === softwareApplication?.groups?.find(entityGroup => entityGroup === group.groupId));
+        if(groupMatch){
+          const userRole = groupMatch.role;
+          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            return true;
+          }
+          else{
+            return false;
+          }
+        }
+        else{
+          return false;
+        }
+      }
+      else{
+        return false;
+      }
+    }
+    else{
+      return false;
+    }
   }
 
   private syncContactPointsFromActiveSoftwareApplication(): void {
