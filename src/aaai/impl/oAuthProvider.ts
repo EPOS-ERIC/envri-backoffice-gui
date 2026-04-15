@@ -2,12 +2,13 @@
 import { AuthConfig, OAuthService, UserInfo } from 'angular-oauth2-oidc';
 import { JwksValidationHandler } from 'angular-oauth2-oidc-jwks';
 import { AuthenticationProvider } from '../authProvider.interface';
-import { BehaviorSubject, lastValueFrom, Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { AAAIUser } from '../aaaiUser.interface';
 import { BasicUser } from './basicUser';
-import { Injector } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { LogService } from 'src/services/log.service';
 
 /** OAuth provider implementation */
 @Injectable()
@@ -21,7 +22,7 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
   private readonly logger: LogService;
   private authInitializationPromise: null | Promise<void> = null;
 
-  private updateUserProfileTimeout: NodeJS.Timeout;
+  private updateUserProfileTimeout!: NodeJS.Timeout;
 
   /** Current user */
   private readonly userProfileSource = new BehaviorSubject<null | AAAIUser>(null);
@@ -49,10 +50,6 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
 
   public getUser(): null | AAAIUser {
     return this.userProfileSource.getValue();
-  }
-
-  public isAuthenticated(): boolean {
-    return this.oAuthService.hasValidAccessToken();
   }
 
   // TODO: angular-oauth2-oidc suggests that "Code Flow" rather than "Implicit Flow" should be favoured.
@@ -132,22 +129,6 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
           break;
       }
     });
-
-    try {
-      await this.oAuthService.loadDiscoveryDocumentAndTryLogin();
-      if (this.oAuthService.hasValidAccessToken()) {
-        const url = this.router.parseUrl(this.router.url);
-        const returnUrl = url.queryParams['returnUrl'];
-        if (returnUrl) {
-          this.router.navigateByUrl(returnUrl);
-        } else {
-          this.router.navigate(['/home']);
-        }
-        this.updateUserProfile();
-      }
-    } catch (e) {
-      console.warn('❌ Failed to contact Authentication Server.', e);
-    }
   }
 
   private updateUserProfile(): void {

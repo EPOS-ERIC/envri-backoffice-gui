@@ -21,6 +21,4 @@ export interface AuthenticationProvider {
   isAuthenticated(): boolean;
 
   getManageUrl(): string;
-
-  isAuthenticated(): boolean;
 }
