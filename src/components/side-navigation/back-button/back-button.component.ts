@@ -12,7 +12,10 @@ export class BackButtonComponent {
 
   public handleBack(): void {
     if (this.path !== '') {
-      this.router.navigate([this.path]);
+      this.router.navigate([this.path]).then(()=> {
+        // this reload covers almost any reload case, mainly those related to updating a list of pages in "Browse" navigation
+        location.reload();
+      });
     }
   }
 }
