@@ -165,10 +165,10 @@ const API_BASE = '/api'; // Standard relative API base
 export interface TypeOfField {
   label: string;
   status: 'added' | 'deleted' | 'modified' | 'unchanged';
-  oldValue: any;
-  newValue: any;
-  oldHtml?: string;
-  newHtml?: string;
+  oldValue: undefined;
+  newValue: undefined;
+  oldChunks?: DiffChunk[];
+  newChunks?: DiffChunk[];
   fieldType?: 'documentation' | 'distribution' | 'webservice' | 'generic';
 }
 
@@ -177,6 +177,11 @@ export interface DiffSection {
   hasDifferences: boolean;
   type: 'friendly';
   typeOfFields?: TypeOfField[];
+}
+
+export interface DiffChunk {
+  type: 'same' | 'removed' | 'added';
+  text: string;
 }
 
 @Component({
@@ -384,9 +389,11 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
     if (v == null || v === '') return '-';
     if (Array.isArray(v)) {
       if (v.length === 0) return '-';
-      return v.map((item) => this.formatSingleValue(item)).join('\n');
+      const results = v.map((item) => this.formatSingleValue(item)).filter((s) => s !== '');
+      return results.length > 0 ? results.join('\n') : '-';
     }
-    return this.formatSingleValue(v);
+    const val = this.formatSingleValue(v);
+    return val === '' ? '-' : val;
   }
 
   /**
@@ -398,6 +405,11 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
     if (typeof v !== 'object') return String(v);
 
     const obj = v as Record<string, any>;
+
+    // Category with computed breadcrumb path
+    if (obj['_categoryPath'] && typeof obj['_categoryPath'] === 'string') {
+      return obj['_categoryPath'];
+    }
 
     // 1. Spatial extent: show location / coordinates
     if ('location' in obj || 'coordinates' in obj) {
@@ -411,19 +423,25 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
           parts.push(`Coordinates: ${JSON.stringify(c)}`);
         }
       }
-      return parts.length > 0 ? parts.join(' — ') : JSON.stringify(obj);
+      // If no location or coordinates found, show a readable placeholder
+      if (parts.length === 0) {
+        return 'Location: no coordinates';
+      }
+      return parts.join(' — ');
     }
 
     // 2. Temporal extent: show start / end dates
     if ('startDate' in obj || 'endDate' in obj) {
       const start = obj['startDate'] || '-';
-      const end = obj['endDate'] || 'ongoing';
+      const end = obj['endDate'] || 'Till Present';
       return `${start} → ${end}`;
     }
 
     // 3. Identifiers: show type + identifier string
-    if ('type' in obj && 'identifier' in obj && typeof obj['identifier'] === 'string') {
-      return `${obj['type']}: ${obj['identifier']}`;
+    if ('type' in obj && 'identifier' in obj) {
+      const typeStr = obj['type'] || 'Empty';
+      const idStr = obj['identifier'] || 'Empty';
+      return `${typeStr}: ${idStr}`;
     }
 
     // 4. Contact Point / Linked Entity Wrapper
@@ -498,81 +516,157 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
 
   /**
    * Word-level diff: computes LCS-based diff between two strings,
-   * returning HTML with highlighted changed/unchanged words.
+   * returning an array of DiffChunks instead of HTML strings.
+   * For multi-line strings, a line-level LCS is applied first.
    */
-  private computeWordDiff(oldStr: string, newStr: string): { oldHtml: string; newHtml: string } {
+  private computeWordDiff(oldStr: string, newStr: string): { oldChunks: DiffChunk[]; newChunks: DiffChunk[] } {
+    const oldLines = oldStr.split('\n');
+    const newLines = newStr.split('\n');
+
+    // ── Multi-line: line-level LCS first ────────────────────────────────────
+    if (oldLines.length > 1 || newLines.length > 1) {
+      const m = oldLines.length;
+      const n = newLines.length;
+      const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          dp[i][j] = oldLines[i - 1] === newLines[j - 1]
+            ? dp[i - 1][j - 1] + 1
+            : Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+
+      type LineOp =
+        | { type: 'same'; text: string }
+        | { type: 'removed'; text: string }
+        | { type: 'added'; text: string };
+
+      const stack: LineOp[] = [];
+      let i = m, j = n;
+      while (i > 0 || j > 0) {
+        if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
+          stack.push({ type: 'same', text: oldLines[i - 1] });
+          i--; j--;
+        } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+          stack.push({ type: 'added', text: newLines[j - 1] });
+          j--;
+        } else {
+          stack.push({ type: 'removed', text: oldLines[i - 1] });
+          i--;
+        }
+      }
+      stack.reverse();
+
+      const oldChunks: DiffChunk[] = [];
+      const newChunks: DiffChunk[] = [];
+
+      let pendingRemoved: string | null = null;
+      let isOldFirst = true;
+      let isNewFirst = true;
+
+      const pushOld = (chunks: DiffChunk[]) => {
+        if (!isOldFirst) oldChunks.push({ type: 'same', text: '\n' });
+        oldChunks.push(...chunks);
+        isOldFirst = false;
+      };
+
+      const pushNew = (chunks: DiffChunk[]) => {
+        if (!isNewFirst) newChunks.push({ type: 'same', text: '\n' });
+        newChunks.push(...chunks);
+        isNewFirst = false;
+      };
+
+      for (const op of stack) {
+        if (op.type === 'same') {
+          if (pendingRemoved !== null) {
+            pushOld([{ type: 'removed', text: pendingRemoved }]);
+            pendingRemoved = null;
+          }
+          pushOld([{ type: 'same', text: op.text }]);
+          pushNew([{ type: 'same', text: op.text }]);
+        } else if (op.type === 'removed') {
+          if (pendingRemoved !== null) {
+            pushOld([{ type: 'removed', text: pendingRemoved }]);
+          }
+          pendingRemoved = op.text;
+        } else {
+          // added
+          if (pendingRemoved !== null) {
+            // Pair removed+added → word-level diff between them
+            const sub = this.computeWordDiff(pendingRemoved, op.text);
+            pushOld(sub.oldChunks);
+            pushNew(sub.newChunks);
+            pendingRemoved = null;
+          } else {
+            pushNew([{ type: 'added', text: op.text }]);
+          }
+        }
+      }
+      if (pendingRemoved !== null) {
+        pushOld([{ type: 'removed', text: pendingRemoved }]);
+      }
+
+      return { oldChunks, newChunks };
+    }
+
+    // ── Single-line: word-level LCS ─────────────────────────────────────────
     const oldWords = oldStr.split(/(\s+)/);
     const newWords = newStr.split(/(\s+)/);
 
-    // LCS table
-    const m = oldWords.length;
-    const n = newWords.length;
-    const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-    for (let i = 1; i <= m; i++) {
-      for (let j = 1; j <= n; j++) {
+    const m2 = oldWords.length;
+    const n2 = newWords.length;
+    const dp2: number[][] = Array.from({ length: m2 + 1 }, () => Array(n2 + 1).fill(0));
+    for (let i = 1; i <= m2; i++) {
+      for (let j = 1; j <= n2; j++) {
         if (oldWords[i - 1] === newWords[j - 1]) {
-          dp[i][j] = dp[i - 1][j - 1] + 1;
+          dp2[i][j] = dp2[i - 1][j - 1] + 1;
         } else {
-          dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+          dp2[i][j] = Math.max(dp2[i - 1][j], dp2[i][j - 1]);
         }
       }
     }
 
-    // Backtrack to get diff sequences
-    const oldParts: { text: string; type: 'same' | 'removed' }[] = [];
-    const newParts: { text: string; type: 'same' | 'added' }[] = [];
-    let i = m, j = n;
-    const oldStack: typeof oldParts = [];
-    const newStack: typeof newParts = [];
-    while (i > 0 && j > 0) {
-      if (oldWords[i - 1] === newWords[j - 1]) {
-        oldStack.push({ text: oldWords[i - 1], type: 'same' });
-        newStack.push({ text: newWords[j - 1], type: 'same' });
-        i--; j--;
-      } else if (dp[i - 1][j] >= dp[i][j - 1]) {
-        oldStack.push({ text: oldWords[i - 1], type: 'removed' });
-        i--;
+    const oldChunks: DiffChunk[] = [];
+    const newChunks: DiffChunk[] = [];
+    let i2 = m2, j2 = n2;
+    const oldStack2: DiffChunk[] = [];
+    const newStack2: DiffChunk[] = [];
+
+    while (i2 > 0 && j2 > 0) {
+      if (oldWords[i2 - 1] === newWords[j2 - 1]) {
+        oldStack2.push({ text: oldWords[i2 - 1], type: 'same' });
+        newStack2.push({ text: newWords[j2 - 1], type: 'same' });
+        i2--; j2--;
+      } else if (dp2[i2 - 1][j2] >= dp2[i2][j2 - 1]) {
+        oldStack2.push({ text: oldWords[i2 - 1], type: 'removed' });
+        i2--;
       } else {
-        newStack.push({ text: newWords[j - 1], type: 'added' });
-        j--;
+        newStack2.push({ text: newWords[j2 - 1], type: 'added' });
+        j2--;
       }
     }
-    while (i > 0) { oldStack.push({ text: oldWords[i - 1], type: 'removed' }); i--; }
-    while (j > 0) { newStack.push({ text: newWords[j - 1], type: 'added' }); j--; }
+    while (i2 > 0) { oldStack2.push({ text: oldWords[i2 - 1], type: 'removed' }); i2--; }
+    while (j2 > 0) { newStack2.push({ text: newWords[j2 - 1], type: 'added' }); j2--; }
 
-    oldStack.reverse().forEach(p => oldParts.push(p));
-    newStack.reverse().forEach(p => newParts.push(p));
+    oldStack2.reverse().forEach(p => oldChunks.push(p));
+    newStack2.reverse().forEach(p => newChunks.push(p));
 
-    const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-    const oldHtml = oldParts.map(p =>
-      p.type === 'removed'
-        ? `<span class="word-removed">${escHtml(p.text)}</span>`
-        : escHtml(p.text)
-    ).join('');
-
-    const newHtml = newParts.map(p =>
-      p.type === 'added'
-        ? `<span class="word-added">${escHtml(p.text)}</span>`
-        : escHtml(p.text)
-    ).join('');
-
-    return { oldHtml, newHtml };
+    return { oldChunks, newChunks };
   }
 
   /**
-   * Returns word-diffed HTML for a specific property. Used in the template.
+   * Returns word-diffed chunks for a specific property. Used in the template.
    */
-  public getDiff(v1: any, v2: any, side: 'old' | 'new'): string {
+  public getDiff(v1: any, v2: any, side: 'old' | 'new'): DiffChunk[] {
     // Normalize order: s1 must be OLD, s2 must be NEW for the diff logic to work.
     // Side 'old': v1 is old, v2 is new.
     // Side 'new': v1 is new, v2 is old.
     const s1 = (side === 'old') ? this.formatFriendlyValue(v1) : this.formatFriendlyValue(v2);
     const s2 = (side === 'old') ? this.formatFriendlyValue(v2) : this.formatFriendlyValue(v1);
 
-    if (s1 === s2) return s1;
-    const { oldHtml, newHtml } = this.computeWordDiff(s1, s2);
-    return side === 'old' ? oldHtml : newHtml;
+    if (s1 === s2) return [{ type: 'same', text: s1 }];
+    const { oldChunks, newChunks } = this.computeWordDiff(s1, s2);
+    return side === 'old' ? oldChunks : newChunks;
   }
 
   /** Finds a matching item in another array based on IDs */
@@ -603,12 +697,12 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
   private enrichFieldsWithWordDiff(fields: TypeOfField[]): void {
     fields.forEach(field => {
       if (field.status === 'modified' && field.fieldType === 'generic') {
-        const { oldHtml, newHtml } = this.computeWordDiff(
+        const { oldChunks, newChunks } = this.computeWordDiff(
           this.formatFriendlyValue(field.oldValue),
           this.formatFriendlyValue(field.newValue)
         );
-        field.oldHtml = oldHtml;
-        field.newHtml = newHtml;
+        field.oldChunks = oldChunks;
+        field.newChunks = newChunks;
       }
     });
   }
@@ -638,7 +732,6 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
             JSON.stringify(this.revisions),
           );
           this.visualDiff = this.getVisualDiff();
-          console.warn('HYDRATED DATA:', this.revisions);
           this.loading = false;
         });
       } else {
@@ -654,7 +747,6 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
               this._mapResponse(this.revisions);
               this.fetchRelatedEntities().then(() => {
                 this.visualDiff = this.getVisualDiff();
-                console.warn('HYDRATED DATA:', this.revisions);
                 this.loading = false;
               });
             }
@@ -823,7 +915,7 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
             }
           }
 
-          if (item.instanceId && item.metaId && !(item as any).accessService && !(item as any)._hydrated) {
+          if (item.instanceId && item.metaId && !(item as any)._hydrated) {
             (item as any)._hydrated = true;
             // 1. Fetch distribution details
             promises.push(
@@ -832,6 +924,36 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
                 .then(async (res: any) => {
                   if (res && res.length > 0) {
                     Object.assign(item, res[0]);
+
+                    // Hydrate distribution's own spatialExtent
+                    if (item.spatialExtent && Array.isArray(item.spatialExtent)) {
+                      for (const spatItem of item.spatialExtent) {
+                        if (spatItem.instanceId && spatItem.metaId && !spatItem.location && !spatItem.coordinates) {
+                          try {
+                            const locRes = await this.apiService.endpoints.Location.get
+                              .call({ instanceId: spatItem.instanceId, metaId: spatItem.metaId });
+                            if (locRes && locRes.length > 0) Object.assign(spatItem, locRes[0]);
+                          } catch (e) {
+                            console.warn('Failed to fetch distribution spatial location', e);
+                          }
+                        }
+                      }
+                    }
+
+                    // Hydrate distribution's own temporalExtent
+                    if (item.temporalExtent && Array.isArray(item.temporalExtent)) {
+                      for (const tempItem of item.temporalExtent) {
+                        if (tempItem.instanceId && tempItem.metaId && !tempItem.startDate && !tempItem.endDate) {
+                          try {
+                            const tempRes = await this.apiService.endpoints.PeriodOfTime.get
+                              .call({ singleOptionOnly: true, instanceId: tempItem.instanceId, metaId: tempItem.metaId } as any);
+                            if (tempRes && tempRes.length > 0) Object.assign(tempItem, tempRes[0]);
+                          } catch (e) {
+                            console.warn('Failed to fetch distribution temporal period', e);
+                          }
+                        }
+                      }
+                    }
 
                     // Hydrate dataProduct contact points
                     if (item.dataProduct && Array.isArray(item.dataProduct)) {
@@ -878,7 +1000,6 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
                               metaId: mapItem.metaId,
                             });
                             if (mapRes && mapRes.length > 0) {
-                              console.warn('Hydrated mapping item:', mapItem.instanceId, mapRes[0]);
                               Object.assign(mapItem, mapRes[0]);
                             }
                           } catch (e) {
@@ -955,14 +1076,13 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
                                       metaId: opItem.metaId,
                                     }, false);
                                     if (opRes && opRes.length > 0) {
-                                      console.warn('Hydrated operation:', opItem.instanceId, opRes[0]);
                                       Object.assign(opItem, opRes[0]);
                                     }
                                   } catch (e) {
                                     console.warn('Failed to fetch ws operation', e);
                                   }
                                 }
-                                
+
                                 // 2. Hydrate operation mapping if present
                                 if (opItem.mapping) {
                                   const opMappings = Array.isArray(opItem.mapping) ? opItem.mapping : [opItem.mapping];
@@ -1084,6 +1204,111 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
     }
 
     await Promise.allSettled(promises);
+
+    // Build category breadcrumb paths
+    await this.buildCategoryPaths(categoryFields);
+  }
+
+  /**
+   * For every hydrated category in the revisions, fetch all categories of the
+   * same scheme and build the full ancestor path:
+   *   SchemeTitle > ParentCategory > … > ThisCategory
+   * The result is stored as `_categoryPath` on each category item.
+   */
+  private async buildCategoryPaths(categoryFields: string[]): Promise<void> {
+    // 1. Collect all unique scheme UIDs referenced by the revision categories
+    const schemeUids = new Set<string>();
+    for (const rev of this.revisions) {
+      const revision = rev as any;
+      for (const field of categoryFields) {
+        if (revision[field] && Array.isArray(revision[field])) {
+          for (const cat of revision[field]) {
+            if (cat.inScheme?.uid) {
+              schemeUids.add(cat.inScheme.uid);
+            }
+          }
+        }
+      }
+    }
+
+    if (schemeUids.size === 0) return;
+
+    // 2. Fetch all categories and all category schemes in parallel
+    let allCategories: any[] = [];
+    let allSchemes: any[] = [];
+    try {
+      [allCategories, allSchemes] = await Promise.all([
+        this.apiService.endpoints.Category.getAll.call(),
+        this.apiService.endpoints.CategoryScheme.getAll.call(),
+      ]);
+    } catch (e) {
+      console.warn('Failed to fetch categories/schemes for path building', e);
+      return;
+    }
+
+    // 3. Filter to categories belonging to our schemes and build a uid→category map
+    const relevantCategories = allCategories.filter(
+      (c: any) => c.inScheme?.uid && schemeUids.has(c.inScheme.uid),
+    );
+    const catByUid = new Map<string, any>();
+    const catByInstanceId = new Map<string, any>();
+    for (const cat of relevantCategories) {
+      if (cat.uid) catByUid.set(cat.uid, cat);
+      if (cat.instanceId) catByInstanceId.set(cat.instanceId, cat);
+    }
+
+    // Scheme uid → scheme name map
+    const schemeNameByUid = new Map<string, string>();
+    for (const scheme of allSchemes) {
+      if (scheme.uid) {
+        schemeNameByUid.set(scheme.uid, scheme.title || scheme.name || scheme.uid);
+      }
+    }
+
+    // 4. Walk up broader for a given category, return path segments (leaf-last)
+    const getPath = (cat: any): string[] => {
+      const segments: string[] = [];
+      const visited = new Set<string>();
+      let current = cat;
+      while (current) {
+        const key = current.uid || current.instanceId;
+        if (!key || visited.has(key)) break;
+        visited.add(key);
+        segments.unshift(current.name || current.uid || '?');
+        if (current.broader && current.broader.length > 0) {
+          const parentRef = current.broader[0];
+          current =
+            (parentRef.uid && catByUid.get(parentRef.uid)) ||
+            (parentRef.instanceId && catByInstanceId.get(parentRef.instanceId)) ||
+            null;
+        } else {
+          break;
+        }
+      }
+      // Prepend scheme title
+      if (cat.inScheme?.uid && schemeNameByUid.has(cat.inScheme.uid)) {
+        segments.unshift(schemeNameByUid.get(cat.inScheme.uid)!);
+      }
+      return segments;
+    };
+
+    // 5. Assign _categoryPath to each revision category item
+    for (const rev of this.revisions) {
+      const revision = rev as any;
+      for (const field of categoryFields) {
+        if (revision[field] && Array.isArray(revision[field])) {
+          for (const item of revision[field]) {
+            // Find the full category in the lookup to get the broader chain
+            const fullCat =
+              (item.uid && catByUid.get(item.uid)) ||
+              (item.instanceId && catByInstanceId.get(item.instanceId)) ||
+              item;
+            const path = getPath(fullCat);
+            item._categoryPath = path.join(' > ');
+          }
+        }
+      }
+    }
   }
 
   /**
