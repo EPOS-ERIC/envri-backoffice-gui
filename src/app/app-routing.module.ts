@@ -5,11 +5,6 @@ import { AppRouteReuseStrategy } from './app-route-reuse-strategy';
 
 const appRoutes: Routes = [
   {
-    path: "",
-    redirectTo: "backoffice",
-    pathMatch: "full"
-  },
-  {
     path: 'backoffice',
     redirectTo: 'home',
     pathMatch: 'full',
