@@ -88,7 +88,7 @@ export class CategoryTreeDetailsComponent implements OnInit {
     private readonly activeUserService: ActiveUserService,
     private readonly helpersService: HelpersService,
     private readonly entityExecutionService: EntityExecutionService,
-  ) {}
+  ) { }
 
   public ngOnInit(): void {
     this.isAdmin = this.activeUserService.getActiveUser()?.isAdmin || false;
@@ -126,8 +126,8 @@ export class CategoryTreeDetailsComponent implements OnInit {
         const parent = parentRef.instanceId
           ? map.get(parentRef.instanceId)
           : parentRef.uid
-          ? map.get(parentRef.uid)
-          : null;
+            ? map.get(parentRef.uid)
+            : null;
 
         if (parent && parent !== node) {
           if (!parent.children!.some((child) => child.uid === node.uid)) {
@@ -370,35 +370,35 @@ export class CategoryTreeDetailsComponent implements OnInit {
 
   public userHasEditPermissionsForSubmitted(): boolean {
     // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
-    if(this.activeEntity !== undefined){
+    if (this.activeEntity !== undefined) {
       const activeUser = this.activeUserService.getActiveUser();
-      if(activeUser){
+      if (activeUser) {
         const activeUserGroups = activeUser.groups;
-        if(activeUserGroups){
+        if (activeUserGroups) {
           // find group in UserGroups matching with current active loaded Entity
           const groupMatch = activeUserGroups.find(group => group.groupId === this.activeEntity?.groups?.find(entityGroup => entityGroup === group.groupId));
-          if(groupMatch){
+          if (groupMatch) {
             const userRole = groupMatch.role;
-            if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+            if (userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')) {
               return true;
             }
-            else{
+            else {
               return false;
             }
           }
-          else{
+          else {
             return false;
           }
         }
-        else{
+        else {
           return false;
         }
       }
-      else{
+      else {
         return false;
       }
     }
-    else{
+    else {
       return false;
     }
   }
@@ -442,6 +442,23 @@ export class CategoryTreeDetailsComponent implements OnInit {
               }
               return c;
             });
+
+            // Update selected categories if the edited node is selected
+            const oldName = node.name;
+            const newName = dialogData.dataOut.categoryName;
+
+            if (oldName && this.selectedCategories.includes(oldName)) {
+              this.selectedCategories = this.selectedCategories.map((name) => (name === oldName ? newName : name));
+
+              this.selectedCategoriesObjArr = this.selectedCategoriesObjArr.map((cat) => {
+                if (cat.uid === node.uid) {
+                  return { ...cat, name: newName, description: dialogData.dataOut.categoryDescription || undefined };
+                }
+                return cat;
+              });
+
+              this.updateSelectedCategories.emit(this.selectedCategoriesObjArr);
+            }
 
             this.treeData = this.buildCategoryTree(this._categories);
             this.dataSource.data = this.treeData;
