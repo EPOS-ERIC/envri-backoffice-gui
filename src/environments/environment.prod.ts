@@ -6,6 +6,6 @@ export const environment = {
   ...environmentBase,
   ...{
     production: true,
-    authRootUrl: authRootUrl === '__AUTH_ROOT_URL__' ? 'https://login.staging.envri.eu/auth/realms/envri' : authRootUrl,
+    authRootUrl: authRootUrl.startsWith('http') ?  authRootUrl : 'https://login.staging.envri.eu/auth/realms/envri',
   },
 };

@@ -1,54 +1,304 @@
 .jsondiffpatch-delta {
-  font-family: 'Roboto Flex', sans-serif !important;
+  font-family: 'Roboto Flex', sans-serif, monospace !important;
   font-size: 14px !important;
+  line-height: 1.5;
+  color: #333;
 }
 
-.jsondiffpatch-delta {
-  pre {
-    font-family: 'Roboto Flex', sans-serif !important;
-    font-size: 14px !important;
-  }
+.jsondiffpatch-delta pre {
+  font-family: 'Roboto Flex', sans-serif, monospace !important;
+  font-size: 14px !important;
+  margin: 0;
+  padding: 0;
 }
 
+/* Property names */
+.jsondiffpatch-property-name {
+  font-weight: 500;
+  color: #555;
+  padding: 4px 8px;
+  display: inline-block;
+}
+
+/* Objects/Arrays structure styling */
+.jsondiffpatch-object,
+.jsondiffpatch-array {
+  padding-left: 1.5rem;
+  border-left: 1px solid #eee;
+  margin: 4px 0;
+}
+
+/* Base value styling */
+.jsondiffpatch-value {
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  word-break: break-all;
+}
+
+/* --- Modified Elements --- */
 .jsondiffpatch-modified {
-  .jsondiffpatch-value {
-    font-family: 'Roboto Flex', sans-serif !important;
-    font-size: 14px !important;
-
-    pre {
-      font-family: 'Roboto Flex', sans-serif !important;
-      font-size: 14px !important;
-    }
-  }
+  margin: 6px 0;
 
   .jsondiffpatch-left-value {
     pre {
       background: rgb(248, 212, 212) !important;
+      color: #7b1a1a;
+      text-decoration: line-through;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      display: inline-block;
     }
   }
 
   .jsondiffpatch-right-value {
     pre {
       background: #a4ccbb !important;
+      color: #175038;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
     }
   }
 }
 
-.jsondiffpatch-deleted {
-  .jsondiffpatch-property-name,
-  pre {
-    background: rgb(248, 212, 212) !important;
-  }
-}
-
+/* --- Added Elements --- */
 .jsondiffpatch-added {
+  margin: 6px 0;
+  background-color: rgba(164, 204, 187, 0.15);
+  border-radius: 6px;
+  padding: 4px 8px;
+  border-left: 3px solid #a4ccbb;
+
   .jsondiffpatch-property-name {
-    background: #a4ccbb !important;
+    color: #175038;
   }
 
   .jsondiffpatch-value {
     pre {
       background: #a4ccbb !important;
+      color: #175038;
+      padding: 4px 8px;
+      border-radius: 4px;
     }
+  }
+}
+
+/* --- Deleted Elements --- */
+.jsondiffpatch-deleted {
+  margin: 6px 0;
+  background-color: rgba(248, 212, 212, 0.15);
+  border-radius: 6px;
+  padding: 4px 8px;
+  border-left: 3px solid rgb(248, 212, 212);
+
+  .jsondiffpatch-property-name {
+    color: #7b1a1a;
+  }
+
+  .jsondiffpatch-value {
+    pre {
+      background: rgb(248, 212, 212) !important;
+      color: #7b1a1a;
+      text-decoration: line-through;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  }
+}
+
+/* --- Unchanged Elements --- */
+.jsondiffpatch-unchanged {
+  margin: 6px 0;
+  opacity: 0.8;
+
+  .jsondiffpatch-property-name {
+    color: #777;
+  }
+
+  .jsondiffpatch-value {
+    pre {
+      background: #f5f5f5 !important;
+      color: #555;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+  }
+}
+
+/* --- Hide unchanged comma punctuation and generic object wrappers when possible --- */
+.jsondiffpatch-unchanged>.jsondiffpatch-property-name {
+  opacity: 0.7;
+}
+
+/* Give top level properties more breathing room */
+.jsondiffpatch-delta>.jsondiffpatch-node {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #eee;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Hide some annoying annotations from jsondiffpatch */
+.jsondiffpatch-node:before,
+.jsondiffpatch-node:after {
+  display: none !important;
+}
+
+.jsondiffpatch-arrow {
+  margin: 0 8px;
+  color: #999;
+}
+
+// Nascondi i dettagli tecnici dentro gli oggetti delle array (instanceId, metaId, entityType)
+// mostrando solo i cambiamenti rilevanti
+.jsondiffpatch-child-node-type-object {
+  .jsondiffpatch-unchanged {
+
+    // Collassa i campi "di sistema" nei sotto-oggetti
+    &:has(.jsondiffpatch-property-name:contains("Instance Id")),
+    &:has(.jsondiffpatch-property-name:contains("Meta Id")),
+    &:has(.jsondiffpatch-property-name:contains("Entity Type")) {
+      display: none;
+    }
+  }
+}
+
+/* --- Friendly Diff Layout --- */
+.friendly-diff-container {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.friendly-diff-row {
+  display: flex;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: baseline;
+  transition: background-color 0.2s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.diff-added {
+    background-color: rgba(164, 204, 187, 0.08);
+
+    .friendly-diff-label {
+      color: #175038;
+    }
+
+    .new-value {
+      background-color: #a4ccbb;
+      color: #175038;
+    }
+  }
+
+  &.diff-deleted {
+    background-color: rgba(248, 212, 212, 0.08);
+
+    .friendly-diff-label {
+      color: #7b1a1a;
+    }
+
+    .old-value {
+      background-color: rgb(248, 212, 212);
+      color: #7b1a1a;
+      text-decoration: line-through;
+    }
+  }
+
+  &.diff-modified {
+    background-color: rgba(255, 193, 7, 0.04);
+  }
+
+  &.diff-unchanged {
+    opacity: 0.85;
+
+    &:hover {
+      opacity: 1;
+      background-color: #fafafa;
+    }
+  }
+}
+
+.friendly-diff-label {
+  flex: 0 0 200px;
+  font-weight: 600;
+  color: #555;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.friendly-diff-values {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.friendly-diff-value {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-all;
+  white-space: pre-wrap;
+
+  &.old-value {
+    background-color: #fce4e4;
+    color: #333;
+    margin-bottom: 2px;
+  }
+
+  &.new-value {
+    background-color: #e8f5e9;
+    color: #333;
+  }
+
+  &.unchanged-value {
+    background-color: #f5f5f5;
+    color: #444;
+  }
+
+  // Word-level diff highlighting
+  .word-removed {
+    background-color: #f8a0a0;
+    color: #7b1a1a;
+    text-decoration: line-through;
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+
+  .word-added {
+    background-color: #7bc8a4;
+    color: #175038;
+    font-weight: 500;
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+}
+
+.empty-value {
+  font-style: italic;
+  color: #999;
+  font-size: 12px;
+}
+
+.friendly-diff-values.multiline {
+  .friendly-diff-value {
+    white-space: pre-line;
+    line-height: 1.8;
   }
 }

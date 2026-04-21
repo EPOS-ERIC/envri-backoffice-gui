@@ -299,33 +299,29 @@ export class DialogRevisionsComponent implements OnInit {
   }
 
   public handleCompare(): void {
-    const uids = this.selection.selected.map((item) => item.uid);
+    const instanceIds = this.selection.selected.map((item) => item.instanceId);
     let selectedRevisions: DataProduct[] | SoftwareApplication[] | SoftwareSourceCode[] = [];
     if (this.data.dataIn.type === Entity.DATA_PRODUCT) {
-      const selectedRevisionsDP = this.entities.filter((item) => uids.includes(item.uid as string)) as DataProduct[];
+      const selectedRevisionsDP = this.entities.filter((item) => instanceIds.includes(item.instanceId as string)) as DataProduct[];
       selectedRevisions = selectedRevisionsDP as DataProduct[];
     } else if (this.data.dataIn.type === Entity.SOFTWARE_APPLICATION) {
       const selectedRevisionsSA = this.entities.filter((item) =>
-        uids.includes(item.uid as string),
+        instanceIds.includes(item.instanceId as string),
       ) as SoftwareApplication[];
       selectedRevisions = selectedRevisionsSA as SoftwareApplication[];
     } else if (this.data.dataIn.type === Entity.SOFTWARE_SOURCE_CODE) {
       const selectedRevisionsSSC = this.entities.filter((item) =>
-        uids.includes(item.uid as string),
+        instanceIds.includes(item.instanceId as string),
       ) as SoftwareSourceCode[];
       selectedRevisions = selectedRevisionsSSC as SoftwareSourceCode[];
     }
 
-    // TODO: re-enable sorting ! (adjust typization)
-    /* selectedRevisions.sort((a, b) => {
-      if (a.versionInfo === '' || b.versionInfo === '') {
-        return 1;
-      }
-      if (a.versionInfo !== '' && b.versionInfo !== '') {
-        return compareVersions(a.versionInfo as string, b.versionInfo as string);
-      }
-      return 0;
-    }); */
+    // Sort selected revisions by timestamp to ensure chronological order (Old -> New)
+    (selectedRevisions as any[]).sort((a, b) => {
+      const dateA = new Date(a.changeTimestamp || 0).getTime();
+      const dateB = new Date(b.changeTimestamp || 0).getTime();
+      return dateA - dateB;
+    });
 
     this.dialogRef.close();
     this.router.navigate(['/browse/revisions/compare', this.data?.dataIn.instanceId]);

@@ -158,7 +158,11 @@ export class DialogService extends BaseDialogService {
             Promise.allSettled(deletionPromises).finally(() => {
               this.loadingService.setShowSpinner(false);
               if (redirect && routeToNavigateBack !== '') {
-                this.router.navigate([`/browse/${routeToNavigateBack}`]);
+                this.router.navigate([`/browse/${routeToNavigateBack}`])
+                .then(() => {
+                  // reload so that the list of entities is updated after deletion
+                  location.reload();
+                });
               } else {
                 // reload the entity: at the moment DP/Dist only one calling this function with 'redirect === false'
                 switch(routeToNavigateBack){

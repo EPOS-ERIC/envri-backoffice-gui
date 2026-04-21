@@ -22,6 +22,7 @@ export class Distribution implements DistributionType {
     public modified?: string,
     public operation?: string,
     public state?: DistributionType['status'],
+    public supportedOperation?: Array<LinkedEntity>,
     public title?: Array<string>,
     public toBeDelete?: string,
     public type?: string,

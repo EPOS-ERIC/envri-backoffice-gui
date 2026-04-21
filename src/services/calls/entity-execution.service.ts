@@ -460,6 +460,12 @@ export class EntityExecutionService extends EntityStateManager {
           const activeDistribution = this.getActiveDistributionValue();
           if (activeDistribution != null) {
             activeDistribution.accessURL = [];
+            
+            // save the operation in the Distribution instance as well
+            activeDistribution.supportedOperation = [];
+            activeDistribution.supportedOperation.push(newOperation);
+            this.handleDistributionSave();
+
             // activeDistribution?.accessURL?.push(newOperation);
             this.setActiveDistribution(activeDistribution);
           }
