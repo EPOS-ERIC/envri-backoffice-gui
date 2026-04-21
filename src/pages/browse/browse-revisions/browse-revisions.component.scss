@@ -1,39 +1,152 @@
+.container {
+  padding: 0 1.5rem;
+}
+
+.top-header {
+  .flex-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .back-button {
+      margin-right: 0.25rem;
+    }
+
+    h1 {
+      margin: 0;
+    }
+  }
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .legend-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  .swatch-modified {
+    background: linear-gradient(135deg, rgb(248, 212, 212) 50%, #a4ccbb 50%);
+  }
+
+  .swatch-added {
+    background: #a4ccbb;
+  }
+
+  .swatch-deleted {
+    background: rgb(248, 212, 212);
+  }
+
+  .swatch-unchanged {
+    background: #fff;
+  }
+}
+
+.no-diff-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 22px;
+    height: 22px;
+    width: 22px;
+  }
+}
+
 .flex-wrapper {
   display: flex;
   flex-direction: column;
-  padding: 2rem 0;
-  align-items: flex-start;
+  padding: 1.5rem 0;
+  align-items: stretch;
+}
 
-  .labels {
-    margin-bottom: 1rem;
-  }
+.diff-output {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0; // Remove padding as sections will have it
+  overflow-x: auto;
 
-  .flex-horizontal {
-    display: flex;
-    align-items: center;
 
-    p {
-      margin-left: 1rem;
-    }
-  }
+  ::ng-deep {
+    .diff-section {
+      padding: 1.5rem;
+      border-bottom: 1px solid #eee;
 
-  .box {
-    display: flex;
-    padding: 0.5rem;
-    align-items: center;
-    width: 55px;
-    font-size: 15px;
+      &:last-child {
+        border-bottom: none;
+      }
 
-    p {
-      margin: 0;
-    }
+      .section-title {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        margin-left: 0.5rem !important;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
 
-    &.current {
-      background: #a4ccbb;
-    }
+      .no-changes-badge {
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-transform: none;
+        color: #888;
+        background: #f0f0f0;
+        padding: 2px 8px;
+        border-radius: 10px;
+        letter-spacing: normal;
+      }
 
-    &.previous {
-      background: rgb(248, 212, 212);
+      &.diff-section--unchanged {
+        padding: 1rem 1.5rem;
+        opacity: 0.7;
+
+        .section-title {
+          margin-bottom: 0;
+          border-bottom: none;
+          padding-bottom: 0;
+        }
+      }
+
+      &.diff-section--changed {
+        .section-title {
+          color: #1a237e;
+          border-bottom-color: #c5cae9;
+        }
+      }
     }
   }
 }
@@ -56,4 +169,269 @@
     font-weight: 300;
     margin-top: 0;
   }
+}
+
+// Distribution & WebService Structured Rendering
+::ng-deep {
+  .friendly-diff-spacer {
+    height: 1.5rem;
+    border-top: 1px dashed #ddd;
+    margin: 1rem 0;
+  }
+
+  .dist-card {
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+    &--webservice {
+      background: #f0f4f8; // Slightly different tint for webservices
+      border-left: 4px solid #1a237e;
+    }
+
+    .dist-section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 2px;
+    }
+
+    .dist-section-spacer {
+      height: 1rem;
+    }
+
+    .dist-field {
+      margin-bottom: 2px;
+      line-height: 1.4;
+      font-size: 0.9rem;
+
+      .dist-field-label {
+        font-weight: 600;
+        color: #555;
+        min-width: 100px;
+        display: inline-block;
+      }
+
+      .dist-field-value {
+        color: #333;
+        white-space: pre-line;
+      }
+    }
+
+    .dist-access-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+
+      &.badge-download {
+        background: #e3f2fd;
+        color: #1565c0;
+        border: 1px solid #bbdefb;
+      }
+
+      &.badge-webservice {
+        background: #f3e5f5;
+        color: #7b1fa2;
+        border: 1px solid #e1bee7;
+      }
+    }
+
+    .dist-sub-item-title {
+      font-weight: 600;
+      color: #1a237e;
+      margin: 0.5rem 0 0.25rem 0;
+      font-size: 0.95rem;
+    }
+
+    .dist-inner-sep {
+      height: 1px;
+      background: #eee;
+      margin: 0.75rem 0;
+    }
+
+    .dist-sub-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+
+    .dist-list-item {
+      font-size: 0.85rem;
+      color: #444;
+      margin-left: 0.5rem;
+      line-height: 1.3;
+    }
+
+    // Documentation Detail Styling
+    .doc-detail {
+      margin: 0.5rem 0;
+      padding: 0.6rem 0.75rem;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+
+      .doc-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 2px;
+
+        .doc-link {
+          color: #1a237e;
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+            color: #303f9f;
+          }
+        }
+      }
+
+      .doc-description {
+        font-size: 0.8rem;
+        color: #555;
+        margin-bottom: 4px;
+        line-height: 1.4;
+      }
+
+      .doc-uri {
+        font-size: 0.75rem;
+        color: #777;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .label {
+          font-weight: 600;
+          color: #666;
+        }
+
+        a {
+          color: #1565c0;
+          text-decoration: none;
+          word-break: break-all;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+
+    // Mapping/Parameter Card Styling
+    .mapping-card {
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+      border-left: 4px solid #2e7d32; // Distinct green for parameters
+
+      .mapping-card-header {
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.25rem;
+        border-bottom: 1px solid #eee;
+
+        .mapping-card-title {
+          font-weight: 700;
+          font-size: 0.85rem;
+          color: #2e7d32;
+          text-transform: uppercase;
+        }
+      }
+
+      .dist-field {
+        margin-bottom: 4px;
+
+        .dist-field-label {
+          min-width: 110px;
+          font-size: 0.85rem;
+        }
+      }
+    }
+
+    // Plugin Card Styling
+    .plugin-card {
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+      border-left: 4px solid #1a237e;
+
+      .plugin-card-header {
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.25rem;
+        border-bottom: 1px solid #eee;
+
+        .plugin-card-title {
+          font-weight: 700;
+          font-size: 0.85rem;
+          color: #1a237e;
+          text-transform: uppercase;
+        }
+      }
+
+      .dist-field {
+        margin-bottom: 4px;
+
+        .dist-field-label {
+          min-width: 110px;
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+}
+
+// Distribution Carousel Navigation
+.dist-carousel-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.dist-carousel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  color: #555;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: #eee;
+    border-color: #999;
+  }
+}
+
+.dist-carousel-counter {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  min-width: 40px;
+  text-align: center;
 }

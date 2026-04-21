@@ -23,6 +23,7 @@ export class DistributionDetailDataSource extends BaseObject implements Distribu
     META_ID: 'metaId',
     MODIFIED: 'modified',
     OPERATION: 'operation',
+    SUPPORTED_OPERATION: 'supportedOperation',
     STATUS: 'status',
     TITLE: 'title',
     TYPE: 'type',
@@ -52,6 +53,7 @@ export class DistributionDetailDataSource extends BaseObject implements Distribu
   public readonly modified: string;
   public readonly operation: string;
   public readonly status: Status;
+  public readonly supportedOperation: Array<LinkedEntity>;
   public readonly title: Array<string>;
   public readonly toBeDelete: string;
   public readonly type: string;
@@ -87,5 +89,6 @@ export class DistributionDetailDataSource extends BaseObject implements Distribu
     this.versionId = this._getString(DistributionDetailDataSource.KEYS.VERSION_ID);
     this.licence = this._getString(DistributionDetailDataSource.KEYS.LICENCE);
     this.operation = this._getString(DistributionDetailDataSource.KEYS.OPERATION);
+    this.supportedOperation = this._getArray(DistributionDetailDataSource.KEYS.SUPPORTED_OPERATION);
   }
 }

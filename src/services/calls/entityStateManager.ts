@@ -233,6 +233,7 @@ export class EntityStateManager {
       initial.modified,
       initial.operation,
       initial.status,
+      initial.supportedOperation,
       initial.title,
       initial.toBeDelete,
       initial.type,

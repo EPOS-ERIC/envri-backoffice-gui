@@ -172,11 +172,11 @@ export class BrowseGroupsComponent implements OnInit {
   private initTables(data: { userGroups?: Group[]; allGroups?: CollatedGroup[] }): void {
     const filteredGroups = data.allGroups?.filter((group) => group.id && this.userAdminGroups.includes(group.id));
     if (data.userGroups) {
-      this.dataSource.data = data.userGroups;
+      this.dataSource.data = data.userGroups.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
       this.dataSource.paginator = this.userGroupsPaginator;
     }
     if (data.allGroups) {
-      this.allGroupsDataSource.data = filteredGroups ?? [];
+      this.allGroupsDataSource.data = (filteredGroups ?? []).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
       this.allGroupsDataSource.paginator = this.allGroupsPaginator;
       this.allGroupsDataSource.filterPredicate = this.filterDataSource;
     }
