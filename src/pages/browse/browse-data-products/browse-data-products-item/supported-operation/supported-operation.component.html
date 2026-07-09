@@ -1,4 +1,4 @@
-<ng-container *ngIf="supportedOperations; else empty">
+<ng-container *ngIf="supportedOperations && supportedOperations.length > 0; else empty">
   <form [formGroup]="form">
     <mat-form-field
       appearance="fill"
@@ -55,18 +55,21 @@
       (mappingVals)="mappingSrc.next($event)"
     ></app-operation-parameters>
 
-    <button
-      type="button"
-      mat-flat-button
-      color="primary"
-      (click)="handleAddOperation()"
-      *ngIf="supportedOperations.length === 0"
-      [disabled]="disableFeatures"
-    >
-      Add Operation
-    </button>
   </form>
 </ng-container>
+
+  <button
+    [(ngModel)]="supportedOperations"
+    type="button"
+    mat-flat-button
+    color="primary"
+    (click)="handleAddOperation()"
+    *ngIf="supportedOperations?.length === 0"
+    [disabled]="disableFeatures"  
+  >
+    Add Operation
+  </button>
+
 <ng-template #empty>
   <p class="notice">Couldn't fetch supported operations data.</p>
 </ng-template>

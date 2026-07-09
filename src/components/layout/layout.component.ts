@@ -15,6 +15,7 @@ import { AAAIUser } from 'src/aaai/aaaiUser.interface';
 import { ActionsService } from 'src/services/actions.service';
 import { ActiveUserService } from 'src/services/activeUser.service';
 import { PersistorService, StorageType } from 'src/services/persistor.service';
+import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { StorageKey } from 'src/utility/enums/storageKey.enum';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { Entity } from 'src/utility/enums/entity.enum';
@@ -44,6 +45,35 @@ export class LayoutComponent implements OnInit, AfterViewChecked, OnDestroy {
   public navigationType = '';
   public manageUrl!: string;
   public entityNavigationType: string = '';
+  private userNameClickCount = 0;
+  private readonly motivationalPhrases = [
+    'You’re stronger than the Monday alarm clock.',
+    'You can do it, even if you look like you’re buffering.',
+    'Rise and shine. Or at least rise.',
+    'You’re on the right path, even if Google Maps doesn’t know it.',
+    'You’ve already won; you just need to realize it.',
+    'Go crush it. But not literally.',
+    'You can do it: you just need a reboot.',
+    'You’re stronger than a bug in production.',
+    'Don’t give up: even code compiles eventually.',
+    'You’ve already won; you just need to hit git push.',
+    'You’re doing well, even if the log says otherwise.',
+    'You’re on the right path, even without Stack Overflow.',
+    'Go crush it. But not the database.',
+    'Breathe: it’s not an error, it’s an emotional feature.',
+    'You can do it, even if you look like you’re in debug mode.',
+    'Don’t give up: you’re more stable than the Wi-Fi connection.',
+    'Keep going: your success is in deployment.',
+    'Rise and shine. Or at least come out of sleep mode.',
+    'You’re stronger than a merge conflict on a Friday night.',
+    'You’ll make it: you’re only missing a semicolon.',
+    'You’re not stuck; you’re just loading.',
+    'Go into production with confidence.',
+    'You’re the fix this day was waiting for.',
+    'If you crash today, tomorrow you’ll restart in safe mode.',
+    'Your talent doesn’t need updates.',
+    'Believe in yourself: even legacy code survives.',
+  ];
 
   constructor(
     private router: Router,
@@ -55,7 +85,8 @@ export class LayoutComponent implements OnInit, AfterViewChecked, OnDestroy {
     private activeUserService: ActiveUserService,
     private apiService: ApiService,
     private dialogService: DialogService,
-  ) {}
+    private snackbarService: SnackbarService,
+  ) { }
 
   public ngOnInit(): void {
     this.manageUrl = this.aaai.getManageUrl();
@@ -135,6 +166,23 @@ export class LayoutComponent implements OnInit, AfterViewChecked, OnDestroy {
     } else {
       this.dropdown = dropdownName;
     }
+  }
+
+  public handleUserNameClick(): void {
+    this.userNameClickCount += 1;
+
+    if (this.userNameClickCount < 5) {
+      return;
+    }
+
+    this.userNameClickCount = 0;
+    const randomIndex = Math.floor(Math.random() * this.motivationalPhrases.length);
+
+    this.snackbarService.openSnackbar(this.motivationalPhrases[randomIndex], 'Close', SnackbarType.SUCCESS, 6000, [
+      'snackbar',
+      'mat-toolbar',
+      'snackbar-success',
+    ]);
   }
 
   public login(): void {

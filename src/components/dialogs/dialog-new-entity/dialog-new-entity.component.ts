@@ -29,6 +29,8 @@ export class DialogNewEntityComponent {
   public groupsAll: Array<Group> = [];
   // flag signalling if groups 'ALL' has been loaded (for SA and SSC)
   public groupSoftwaresLoaded: boolean = false;
+  public groupsLoading: boolean = false;
+  public groupsLoadFailed: boolean = false;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: DialogData<null | IncomingEntityType, NewEntityDialog>,
@@ -64,16 +66,27 @@ export class DialogNewEntityComponent {
   }
 
   private getUserRelevantGroups(userIds: Array<string>): void {
-    this.apiService.endpoints.Group.getAll.call().then((allGroups: Array<Group>) => {
-      // save the full response from API before filtering
-      // also if SA or SSC, assign the 'Softwares' group to selectedGroup and assign 'true' to 'groupAllLoaded' flag
-      if (this.entityName === Entity.SOFTWARE_APPLICATION || this.entityName === Entity.SOFTWARE_SOURCE_CODE) {
-        this.groupsAll = allGroups.filter((group) => group.name?.toLowerCase() === 'softwares');
-        this.selectedGroup = this.groupsAll[0];
-        this.groupSoftwaresLoaded = true;
-      }
-      // now filter
-      this.groups = allGroups.filter((group) => userIds.some((userIds) => group.id === userIds));
-    });
+    this.groupsLoading = true;
+    this.groupsLoadFailed = false;
+    this.apiService.endpoints.Group.getAll
+      .call()
+      .then((allGroups: Array<Group>) => {
+        // save the full response from API before filtering
+        // also if SA or SSC, assign the 'Softwares' group to selectedGroup and assign 'true' to 'groupAllLoaded' flag
+        if (this.entityName === Entity.SOFTWARE_APPLICATION || this.entityName === Entity.SOFTWARE_SOURCE_CODE) {
+          this.groupsAll = allGroups.filter((group) => group.name?.toLowerCase() === 'softwares');
+          this.selectedGroup = this.groupsAll[0];
+          this.groupSoftwaresLoaded = true;
+        }
+        // now filter
+        this.groups = allGroups.filter((group) => userIds.some((userIds) => group.id === userIds));
+      })
+      .catch(() => {
+        this.groups = [];
+        this.groupsLoadFailed = true;
+      })
+      .finally(() => {
+        this.groupsLoading = false;
+      });
   }
 }

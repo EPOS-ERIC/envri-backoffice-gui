@@ -1,7 +1,7 @@
 <ng-container *ngIf="!loading">
   <form
     [formGroup]="paramsForm"
-    *ngIf="paramsForm && mapping"
+    *ngIf="paramsForm && mapping && supportedOperations"
     class="operation-params"
   >
     <mat-accordion>
@@ -114,7 +114,7 @@
         color="primary"
         [disabled]="disabled"
         (click)="handleSave()"
-        *ngIf="mapping.length > 0"
+        *ngIf="supportedOperations && (supportedOperations.length > 0) "
       >
         Save Operation
       </button>

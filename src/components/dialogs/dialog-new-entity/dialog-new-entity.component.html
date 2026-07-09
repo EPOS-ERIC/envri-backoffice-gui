@@ -1,66 +1,51 @@
 <div class="wrapper">
   <h1 mat-dialog-title>Confirm</h1>
-  <div mat-dialog-content>
-    <p *ngIf="entityName === 'DataProduct'; else SAorSSC">
-      Please select a Group to associate this <b>{{ entityName }}</b> with.
-    </p>
-    <ng-template #SAorSSC>
-      <p>
-        Do you want to confirm creation of new <b>{{ entityName }}</b
-        >?
+  <ng-container *ngIf="!groupsLoadFailed && (groupsLoading || groups.length > 0); else noResponseFromApi">
+    <div mat-dialog-content>
+
+      <p *ngIf="entityName === 'DataProduct'; else SAorSSC">
+        Please select a Group to associate this <b>{{ entityName }}</b> with.
       </p>
-    </ng-template>
-  </div>
+      <ng-template #SAorSSC>
+        <p>
+          Do you want to confirm creation of new <b>{{ entityName }}</b>?
+        </p>
+      </ng-template>
+    </div>
 
-  <ng-container *ngIf="entityName === 'DataProduct'">
-    <mat-form-field>
-      <mat-select
-        [(value)]="selectedGroup"
-        #select
-      >
-        <mat-option
-          *ngFor="let group of groups"
-          [value]="group"
-        >
-          {{ group.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+    <ng-container *ngIf="entityName === 'DataProduct'">
+      <mat-form-field>
+        <mat-select [(value)]="selectedGroup" [disabled]="groupsLoading" #select>
+          <mat-option *ngFor="let group of groups" [value]="group">
+            {{ group.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </ng-container>
+    <mat-progress-bar *ngIf="groupsLoading" class="groups-loading-bar" mode="indeterminate"></mat-progress-bar>
   </ng-container>
+  <ng-template #noResponseFromApi>
+    <p>There are no groups available</p>
+  </ng-template>
 
-  <ng-container *ngIf="entityName === 'DataProduct'">
+  <ng-container *ngIf="entityName === 'DataProduct' && selectedGroup">
     <span><strong>Description:</strong> {{ selectedGroup ? selectedGroup.description : '...' }} </span>
   </ng-container>
 
   <div mat-dialog-actions>
-    <button
-      mat-stroked-button
-      (click)="handleCancel()"
-    >
+    <button mat-stroked-button (click)="handleCancel()">
       Cancel
     </button>
     <ng-container *ngIf="entityName === 'DataProduct' || groupSoftwaresLoaded; else loadingCreateButton">
-      <button
-        mat-raised-button
-        color="primary"
-        cdkFocusInitial
-        (click)="handleCreate()"
-      >
+      <button mat-raised-button color="primary" cdkFocusInitial
+        [disabled]="entityName === 'DataProduct' && (!selectedGroup || groupsLoading || groupsLoadFailed)"
+        (click)="handleCreate()">
         Create
       </button>
     </ng-container>
     <ng-template #loadingCreateButton>
-      <button
-        mat-raised-button
-        color="primary"
-        cdkFocusInitial
-        (click)="handleCreate()"
-        disabled
-      >
-        <mat-spinner
-          diameter="20"
-          strokeWidth="3"
-        ></mat-spinner>
+      <button mat-raised-button color="primary" cdkFocusInitial (click)="handleCreate()" disabled>
+        <mat-spinner diameter="20" strokeWidth="3"></mat-spinner>
       </button>
     </ng-template>
   </div>

@@ -1,5 +1,5 @@
 /* eslint-disable @angular-eslint/no-output-on-prefix, @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Output, Input } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, Input } from '@angular/core';
 import { MatSelectChange } from '@angular/material/select';
 import { ActionsService } from 'src/services/actions.service';
 import { FilterItem } from 'src/shared/interfaces/form.interface';
@@ -7,9 +7,20 @@ import { Status } from 'src/utility/enums/status.enum';
 import { ActiveUserService } from 'src/services/activeUser.service';
 import { GroupEnum } from 'src/shared/enums/group.enum';
 
-const TITLE_KEY = 'titleSearchText';
 // All SaveComment code in this file has been commented out since it's not in use at the moment, but might turn in useful in the future
 /* const COMMENT_KEY = 'commentSearchText'; */
+
+/** Returns sessionStorage keys namespaced by sectionName to avoid collisions between sections */
+function filterKeys(sectionName: string) {
+  return {
+    status: `${sectionName}_filterStatus`,
+    title: `${sectionName}_filterTitle`,
+    author: `${sectionName}_filterAuthor`,
+    authorOption: `${sectionName}_filterAuthorOption`,
+    group: `${sectionName}_filterGroup`,
+    groupOption: `${sectionName}_filterGroupOption`,
+  };
+}
 
 export interface FilterEmit {
   status: any;
@@ -23,8 +34,8 @@ export interface FilterEmit {
   templateUrl: './table-filter.component.html',
   styleUrls: ['./table-filter.component.scss'],
 })
-export class TableFilterComponent {
-  constructor(private actionsService: ActionsService, private activeUserService: ActiveUserService) {}
+export class TableFilterComponent implements OnInit {
+  constructor(private actionsService: ActionsService, private activeUserService: ActiveUserService) { }
 
   @Input() sectionName!: string;
   @Input() editorIdsMapping!: Map<string, string>;
@@ -72,7 +83,7 @@ export class TableFilterComponent {
     },
   ];
   public selectedAuthorOption = 'all';
-  
+
   public selectedGroupOption = GroupEnum.ALL;
 
   public filteredGroupOptions: FilterItem[] = [];
@@ -86,30 +97,63 @@ export class TableFilterComponent {
     group: '',
   };
 
+  public isExpanded = false;
+
+  /**
+   * Restores all filter values from sessionStorage so they survive
+   * the location.reload() triggered by the back button.
+   */
+  public ngOnInit(): void {
+    const keys = filterKeys(this.sectionName);
+
+    this.filters.status = sessionStorage.getItem(keys.status) ?? '';
+    this.filters.title = sessionStorage.getItem(keys.title) ?? '';
+    this.filters.author = sessionStorage.getItem(keys.author) ?? '';
+    this.filters.group = sessionStorage.getItem(keys.group) ?? '';
+    this.selectedAuthorOption = sessionStorage.getItem(keys.authorOption) ?? 'all';
+    this.selectedGroupOption = (sessionStorage.getItem(keys.groupOption) as GroupEnum) ?? GroupEnum.ALL;
+    this.handleViewResults();
+
+    if (
+      this.filters.status !== '' ||
+      this.filters.title !== '' ||
+      this.filters.author !== '' ||
+      this.filters.group !== ''
+    ) {
+      this.isExpanded = true;
+    }
+  }
+
   public handleFilterByStatus(event: MatSelectChange): void {
     this.filters.status = event.value;
+    sessionStorage.setItem(filterKeys(this.sectionName).status, event.value);
   }
 
   public handleFilterByAuthor(event: MatSelectChange): void {
     this.selectedAuthorOption = event.value;
+    sessionStorage.setItem(filterKeys(this.sectionName).authorOption, event.value);
 
     if (event.value === 'me') {
       if (this.activeUserService.getActiveUser()) {
         const myId = this.editorIdsMapping.get(this.activeUserService.getActiveUser()?.authIdentifier as string);
         if (myId) {
           this.filters.author = myId;
+          sessionStorage.setItem(filterKeys(this.sectionName).author, myId);
         }
       } else {
         this.filters.author = '';
+        sessionStorage.removeItem(filterKeys(this.sectionName).author);
       }
     } else {
       // just passing empty filter for ALL value (empty author filter = no filtering, all results are shown)
       this.filters.author = '';
+      sessionStorage.removeItem(filterKeys(this.sectionName).author);
     }
   }
 
   public handleFilterByGroup(event: MatSelectChange): void {
     this.selectedGroupOption = event.value;
+    sessionStorage.setItem(filterKeys(this.sectionName).groupOption, event.value);
 
     switch (event.value) {
       case GroupEnum.SEISOMOLOGY:
@@ -123,20 +167,21 @@ export class TableFilterComponent {
       case GroupEnum.MULTI_SCALE_LABORATORIES:
       case GroupEnum.TSUNAMI:
         this.filters.group = event.value;
+        sessionStorage.setItem(filterKeys(this.sectionName).group, event.value);
         break;
       case GroupEnum.ALL:
         this.filters.group = '';
+        sessionStorage.removeItem(filterKeys(this.sectionName).group);
         break;
       default:
         break;
     }
-
   }
 
   public handleTitleSearch(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.filters.title = target.value;
-    sessionStorage.setItem(TITLE_KEY, target.value);
+    sessionStorage.setItem(filterKeys(this.sectionName).title, target.value);
   }
 
   /* public handleCommentSearch(event: Event): void {
@@ -153,6 +198,11 @@ export class TableFilterComponent {
     this.filters.group = '';
     this.selectedAuthorOption = 'all';
     this.selectedGroupOption = GroupEnum.ALL;
+
+    // Clear all persisted filter values from sessionStorage
+    const keys = filterKeys(this.sectionName);
+    Object.values(keys).forEach((key) => sessionStorage.removeItem(key));
+
     this.onClear.emit();
   }
 
