@@ -47,6 +47,7 @@ export class DialogNewCategorySchemeComponent implements OnInit {
       homepage: [scheme?.homepage || ''],
       logo: [scheme?.logo || '', Validators.required],
       topConcepts: [scheme?.topConcepts?.[0] || null, Validators.required],
+      orderitemnumber: [scheme?.orderitemnumber || ''],
     });
 
     if (scheme?.color) {
@@ -155,7 +156,7 @@ export class DialogNewCategorySchemeComponent implements OnInit {
           homepage: formValue.homepage,
           logo: formValue.logo,
           topConcepts,
-          orderitemnumber: existingScheme.orderitemnumber,
+          orderitemnumber: formValue.orderitemnumber,
           uid: existingScheme.uid,
           instanceId: existingScheme.instanceId,
           status: 'PUBLISHED',

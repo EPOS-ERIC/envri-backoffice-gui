@@ -1,32 +1,27 @@
-<ng-scrollbar
-  #scrollable
-  class="scroll-container"
->
+<ng-scrollbar #scrollable class="scroll-container">
   <div class="page-container">
     <header class="page-header">
       <div class="header-content">
         <h1 class="page-title">Category Schemes</h1>
         <p class="page-subtitle">Manage the Category Schemes </p>
       </div>
-      <button
-        mat-flat-button
-        color="primary"
-        (click)="handleAddScheme()"
-        class="add-button"
-      >
+      <button mat-flat-button color="primary" (click)="handleAddScheme()" class="add-button">
         <mat-icon>add</mat-icon>
         <span>Add Category Scheme</span>
       </button>
     </header>
 
-    <mat-accordion class="schemes-accordion" multi>
-      <mat-expansion-panel
-        *ngFor="let scheme of categorySchemes"
-        class="scheme-panel"
-      >
+    <mat-accordion cdkDropList [cdkDropListData]="categorySchemes" [cdkDropListDisabled]="isSavingOrder"
+      (cdkDropListDropped)="handleDrop($event)" class="schemes-accordion" multi>
+      <mat-expansion-panel *ngFor="let scheme of categorySchemes" cdkDrag class="scheme-panel">
         <mat-expansion-panel-header>
           <mat-panel-title>
+            <button mat-icon-button cdkDragHandle class="drag-handle" (click)="$event.stopPropagation()"
+              matTooltip="Reorder category scheme">
+              <mat-icon>drag_indicator</mat-icon>
+            </button>
             <mat-icon class="scheme-icon">folder_special</mat-icon>
+            <span class="scheme-order">{{ scheme.orderitemnumber || '-' }}</span>
             <span class="scheme-title">{{ scheme.title }}</span>
           </mat-panel-title>
         </mat-expansion-panel-header>
@@ -54,12 +49,8 @@
             <div class="detail-value">
               <ng-container *ngIf="getLogoUrl(scheme.logo) as logoUrl; else noLogo">
                 <div class="logo-preview">
-                  <img
-                    [src]="logoUrl"
-                    [alt]="scheme.title + ' logo'"
-                    (error)="handleImageError($event)"
-                    loading="lazy"
-                  />
+                  <img [src]="logoUrl" [alt]="scheme.title + ' logo'" (error)="handleImageError($event)"
+                    loading="lazy" />
                 </div>
               </ng-container>
               <ng-template #noLogo>
@@ -109,12 +100,7 @@
         </div>
 
         <div class="panel-actions">
-          <button
-            mat-stroked-button
-            color="primary"
-            (click)="handleEditScheme(scheme)"
-            class="edit-button"
-          >
+          <button mat-stroked-button color="primary" (click)="handleEditScheme(scheme)" class="edit-button">
             <mat-icon>edit</mat-icon>
             Edit
           </button>
@@ -122,29 +108,16 @@
       </mat-expansion-panel>
     </mat-accordion>
 
-    <div
-      *ngIf="categorySchemes.length === 0"
-      class="empty-state"
-    >
+    <div *ngIf="categorySchemes.length === 0" class="empty-state">
       <mat-icon class="empty-icon">inventory_2</mat-icon>
       <p>No Category Schemes found</p>
-      <button
-        mat-stroked-button
-        color="primary"
-        (click)="handleAddScheme()"
-      >
+      <button mat-stroked-button color="primary" (click)="handleAddScheme()">
         Create your first scheme
       </button>
     </div>
   </div>
 
-  <button
-    mat-fab
-    color="accent"
-    class="fab-top"
-    (click)="handleScrollToTop()"
-    matTooltip="Scroll to top"
-  >
+  <button mat-fab color="accent" class="fab-top" (click)="handleScrollToTop()" matTooltip="Scroll to top">
     <mat-icon>arrow_upward</mat-icon>
   </button>
 </ng-scrollbar>

@@ -105,6 +105,15 @@
         </mat-select>
         <mat-icon matPrefix>category</mat-icon>
       </mat-form-field>
+
+      <mat-form-field *ngIf="isEditMode" appearance="outline" class="full-width">
+        <mat-label>Order Number</mat-label>
+        <input
+          matInput
+          formControlName="orderitemnumber"
+        />
+        <mat-icon matPrefix>format_list_numbered</mat-icon>
+      </mat-form-field>
     </div>
   </div>
 </mat-dialog-content>
