@@ -162,7 +162,9 @@ export class SupportedOperationComponent implements OnInit {
         
         // update both the activeDistribtion locally and PUT the entity
         activeDistribution.supportedOperation = [operation];
-        this.apiService.endpoints.Distribution.update.call(activeDistribution)
+        this.apiService.endpoints.Distribution.update.call(
+          this.entityExecutionService.sanitizePayload(activeDistribution as unknown as Record<string, unknown>) as Distribution,
+        )
         .then(()=> { 
         })
         .catch(() => {
