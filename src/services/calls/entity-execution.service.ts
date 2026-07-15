@@ -33,6 +33,12 @@ export class EntityExecutionService extends EntityStateManager {
     super();
   }
 
+  public sanitizePayload<T extends Record<string, unknown>>(entity: T): Omit<T, '_sourceObject'> {
+    const payload = { ...entity } as T & { _sourceObject?: unknown };
+    delete payload._sourceObject;
+    return payload;
+  }
+
   /**
    * The `handleDataProductSave` function updates or creates a draft of a data product and performs
    * various actions based on the result.
@@ -378,9 +384,7 @@ export class EntityExecutionService extends EntityStateManager {
         this.loadingService.setShowSpinner(true);
         this.apiService.endpoints[Entity.DISTRIBUTION].update
           .call(
-            {
-              ...activeDistribution,
-            },
+            this.sanitizePayload(activeDistribution as unknown as Record<string, unknown>) as Distribution,
             false,
           )
           .then((data: Distribution) => {
@@ -433,9 +437,7 @@ export class EntityExecutionService extends EntityStateManager {
       }
       this.loadingService.setShowSpinner(true);
       this.apiService.endpoints[Entity.OPERATION].update
-        .call({
-          ...operationData,
-        })
+        .call(this.sanitizePayload(operationData as unknown as Record<string, unknown>) as Operation)
         .then((data: Operation) => {
           this.handleMappingArrSave();
           this.snackbarService.openSnackbar('Successfully updated Operation.', 'Close', SnackbarType.SUCCESS, 3000, [
