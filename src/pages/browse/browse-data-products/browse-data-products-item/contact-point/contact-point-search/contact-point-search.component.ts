@@ -179,7 +179,7 @@ export class ContactPointSearchComponent extends WithSubscription implements OnI
     }
 
     const contactPointEntityDetail: LinkedEntity = {
-      entityType: Entity.CONTACT_POINT,
+      entityType: 'CONTACTPOINT',
       instanceId: selectedContactPoint.instanceId,
       uid: selectedContactPoint.uid,
       metaId: selectedContactPoint.metaId,
