@@ -108,7 +108,10 @@
             </mat-panel-title>
           </mat-expansion-panel-header>
           @defer (when mepContacts.expanded) {
-          <app-contact-point [contactPoint]="webservice.contactPoint"></app-contact-point>
+          <app-contact-point
+            [contactPoint]="webservice.contactPoint"
+            [isDataProductParent]="false"
+          ></app-contact-point>
           }
         </mat-expansion-panel>
       </div>
