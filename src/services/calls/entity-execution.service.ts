@@ -46,12 +46,16 @@ export class EntityExecutionService extends EntityStateManager {
   public handleDataProductSave(): void {
     const activeDataProduct = this.getActiveDataProductValue();
     if (null != activeDataProduct) {
+      const payload = {
+        ...activeDataProduct,
+        contactPoint: activeDataProduct.contactPoint?.length ? activeDataProduct.contactPoint : null,
+      };
       if (activeDataProduct.status === Status.DRAFT || activeDataProduct.status === Status.SUBMITTED) {
         this.loadingService.setShowSpinner(true);
         this.apiService.endpoints[Entity.DATA_PRODUCT].update
           .call({
-            ...activeDataProduct,
-          })
+            ...payload,
+          } as DataProduct)
           .then((data: DataProduct) => {
             this.snackbarService.openSnackbar(
               'Successfully updated Data Product.',
@@ -96,13 +100,17 @@ export class EntityExecutionService extends EntityStateManager {
             this.loadingService.setShowSpinner(false);
           });
       } else {
+        const draftPayload = {
+          ...activeDataProduct,
+          contactPoint: activeDataProduct.contactPoint?.length ? activeDataProduct.contactPoint : null,
+        };
         this.loadingService.setShowSpinner(true);
         this.apiService.endpoints[Entity.DATA_PRODUCT].update
           .call({
-            ...activeDataProduct,
+            ...draftPayload,
             status: Status.DRAFT,
             instanceChangedId: activeDataProduct.instanceId,
-          })
+          } as DataProduct)
           .then((data: DataProduct) => {
             this.snackbarService.openSnackbar('Successfully created new draft.', 'Close', SnackbarType.SUCCESS, 3000, [
               'snackbar',
@@ -333,11 +341,15 @@ export class EntityExecutionService extends EntityStateManager {
         activeWebservice.status = Status.DRAFT;
         activeWebservice.instanceChangedId = activeWebservice.instanceId;
       }
+      const payload = {
+        ...activeWebservice,
+        contactPoint: activeWebservice.contactPoint?.length ? activeWebservice.contactPoint : null,
+      };
       this.loadingService.setShowSpinner(true);
       this.apiService.endpoints[Entity.WEBSERVICE].update
         .call({
-          ...activeWebservice,
-        })
+          ...payload,
+        } as WebService)
         .then((data: WebService) => {
           this.snackbarService.openSnackbar('Successfully updated Webservice.', 'Close', SnackbarType.SUCCESS, 3000, [
             'snackbar',
