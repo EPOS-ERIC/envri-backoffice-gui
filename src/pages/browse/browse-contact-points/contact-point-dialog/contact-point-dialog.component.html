@@ -1,0 +1,94 @@
+<div class="dialog-wrapper" *ngIf="form">
+  <h1 mat-dialog-title>{{ isEditMode ? 'Edit Contact Point' : 'Add Contact Point' }}</h1>
+
+  <div mat-dialog-content>
+    <form [formGroup]="form" class="contact-point-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Role</mat-label>
+        <mat-select formControlName="role" required>
+          <mat-option *ngFor="let role of roleOptions" [value]="role.id">{{ role.name }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.controls['role'].hasError('required')">Role is required.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <mat-chip-grid #emailGrid aria-label="Email addresses">
+          <mat-chip-row *ngFor="let email of emails" (removed)="removeValue(email, 'email')">
+            {{ email }}
+            <button matChipRemove type="button" [attr.aria-label]="'Remove ' + email">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip-row>
+          <input
+            placeholder="Add email"
+            [matChipInputFor]="emailGrid"
+            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            [matChipInputAddOnBlur]="true"
+            (matChipInputTokenEnd)="addValue($event, 'email')"
+          />
+        </mat-chip-grid>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Telephone</mat-label>
+        <mat-chip-grid #telephoneGrid aria-label="Telephone numbers">
+          <mat-chip-row *ngFor="let telephone of telephones" (removed)="removeValue(telephone, 'telephone')">
+            {{ telephone }}
+            <button matChipRemove type="button" [attr.aria-label]="'Remove ' + telephone">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip-row>
+          <input
+            placeholder="Add telephone"
+            [matChipInputFor]="telephoneGrid"
+            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            [matChipInputAddOnBlur]="true"
+            (matChipInputTokenEnd)="addValue($event, 'telephone')"
+          />
+        </mat-chip-grid>
+        <mat-hint *ngIf="!hasContactMethod" class="contact-error">Add at least one email or telephone.</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Languages</mat-label>
+        <mat-chip-grid #languageGrid aria-label="Languages">
+          <mat-chip-row *ngFor="let language of languages" (removed)="removeValue(language, 'language')">
+            {{ language }}
+            <button matChipRemove type="button" [attr.aria-label]="'Remove ' + language">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip-row>
+          <input
+            placeholder="Add BCP 47 code"
+            [matChipInputFor]="languageGrid"
+            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            [matChipInputAddOnBlur]="true"
+            (matChipInputTokenEnd)="addValue($event, 'language')"
+          />
+        </mat-chip-grid>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Groups</mat-label>
+        <mat-select formControlName="groups" multiple required>
+          <mat-option *ngFor="let group of data.dataIn.groups" [value]="group.id">{{ group.name }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.controls['groups'].hasError('required')">Select at least one group.</mat-error>
+      </mat-form-field>
+    </form>
+  </div>
+
+  <div mat-dialog-actions align="end">
+    <button mat-stroked-button type="button" (click)="handleCancel()">Cancel</button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      [disabled]="form.invalid || !hasContactMethod"
+      (click)="handleSave()"
+    >
+      {{ isEditMode ? 'Update' : 'Create and publish' }}
+    </button>
+  </div>
+</div>
