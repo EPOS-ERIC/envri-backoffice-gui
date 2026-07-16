@@ -1,0 +1,28 @@
+.dialog-wrapper {
+  min-width: 0;
+}
+
+.contact-point-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
+  padding-top: 0.5rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.contact-error {
+  color: #b91c1c;
+}
+
+@media (max-width: 700px) {
+  .contact-point-form {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: auto;
+  }
+}

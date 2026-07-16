@@ -1,0 +1,116 @@
+<ng-scrollbar class="scroll-container">
+  <div class="page-container">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Contact Points</h1>
+        <p class="page-subtitle">Manage Contact Points: Create, Edit or Delete Contact Points</p>
+      </div>
+      <button mat-flat-button color="primary" [disabled]="loading || groups.length === 0" (click)="handleAdd()">
+        <mat-icon>add</mat-icon>
+        Add Contact Point
+      </button>
+    </header>
+
+    <div class="filters">
+      <mat-form-field appearance="outline" class="search-filter">
+        <mat-label>Search Contact Points</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="filters.search" (ngModelChange)="applyFilters()" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select [(ngModel)]="filters.status" (selectionChange)="applyFilters()">
+          <mat-option value="">All statuses</mat-option>
+          <mat-option *ngFor="let status of statusOptions" [value]="status">{{ status }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Group</mat-label>
+        <mat-select [(ngModel)]="filters.group" (selectionChange)="applyFilters()">
+          <mat-option value="">All groups</mat-option>
+          <mat-option *ngFor="let group of groups" [value]="group.id">{{ group.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="table-wrapper">
+      <table mat-table matSort multiTemplateDataRows [dataSource]="dataSource">
+        <ng-container matColumnDef="expand">
+          <th mat-header-cell *matHeaderCellDef aria-label="Expand"></th>
+          <td mat-cell *matCellDef="let contactPoint">
+            <button mat-icon-button type="button" aria-label="Toggle Contact Point details"
+              (click)="toggleRow(contactPoint); $event.stopPropagation()">
+              <mat-icon>{{ expandedContactPoint === contactPoint ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+          <td mat-cell *matCellDef="let contactPoint">{{ getPrimaryEmail(contactPoint) || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Role</th>
+          <td mat-cell *matCellDef="let contactPoint">{{ getRoleLabel(contactPoint.role) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="groups">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Groups</th>
+          <td mat-cell *matCellDef="let contactPoint">{{ getGroupNames(contactPoint.groups) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let contactPoint">
+            <span class="status-badge">{{ contactPoint.status || '-' }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let contactPoint" class="actions-cell">
+            <button mat-icon-button color="primary" matTooltip="Edit Contact Point" [disabled]="groups.length === 0"
+              (click)="handleEdit(contactPoint); $event.stopPropagation()">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" matTooltip="Delete Contact Point"
+              (click)="handleDelete(contactPoint); $event.stopPropagation()">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="expandedDetail">
+          <td mat-cell *matCellDef="let contactPoint" [attr.colspan]="columnsToDisplayWithExpand.length">
+            <div class="contact-point-details"
+              [@detailExpand]="contactPoint === expandedContactPoint ? 'expanded' : 'collapsed'">
+              <div class="detail-grid">
+                <div><span>Email</span>{{ contactPoint.email?.join(', ') || '-' }}</div>
+                <div><span>Telephone</span>{{ contactPoint.telephone?.join(', ') || '-' }}</div>
+                <div><span>Languages</span>{{ contactPoint.language?.join(', ') || '-' }}</div>
+                <div><span>Person</span>{{ getPersonLabel(contactPoint.person) }}</div>
+                <div><span>Organization</span>{{ getOrganizationLabel(contactPoint.organization) }}</div>
+                <div><span>Groups</span>{{ getGroupNames(contactPoint.groups) }}</div>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columnsToDisplayWithExpand"></tr>
+        <tr mat-row *matRowDef="let contactPoint; columns: columnsToDisplayWithExpand" class="contact-point-row"
+          [class.expanded-row]="expandedContactPoint === contactPoint" (click)="toggleRow(contactPoint)"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data-cell" [attr.colspan]="columnsToDisplayWithExpand.length">
+            {{ loading ? 'Loading Contact Points...' : 'No Contact Points found.' }}
+          </td>
+        </tr>
+      </table>
+
+      <mat-paginator [pageSize]="25" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>
+    </div>
+  </div>
+</ng-scrollbar>

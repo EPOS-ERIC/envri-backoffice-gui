@@ -3,11 +3,7 @@
     <ng-container>
       <ng-container>
         <mat-nav-list>
-          <a
-            mat-list-item
-            routerLinkActive="active"
-            [routerLink]="['/browse/dataproduct']"
-          >
+          <a mat-list-item routerLinkActive="active" [routerLink]="['/browse/dataproduct']">
             <mat-icon mat-list-icon>perm_media</mat-icon>
             <span>Data Products</span>
           </a>
@@ -20,51 +16,19 @@
             <mat-icon mat-list-icon>layers</mat-icon>
             <span>Webservices</span>
           </a> -->
-          <a
-            mat-list-item
-            [routerLink]="['/browse/distribution']"
-            routerLinkActive="active"
-          >
+          <a mat-list-item [routerLink]="['/browse/distribution']" routerLinkActive="active">
             <mat-icon mat-list-icon>share</mat-icon>
             <span>Distributions</span>
           </a>
           <!-- Software Application-->
-          <a
-            mat-list-item
-            [routerLink]="['/browse/softwareapplication']"
-            routerLinkActive="active"
-          >
+          <a mat-list-item [routerLink]="['/browse/softwareapplication']" routerLinkActive="active">
             <mat-icon mat-list-icon>web_asset</mat-icon>
             <span>Software Applications</span>
           </a>
           <!-- Software Source Code-->
-          <a
-            mat-list-item
-            [routerLink]="['/browse/softwaresourcecode']"
-            routerLinkActive="active"
-          >
+          <a mat-list-item [routerLink]="['/browse/softwaresourcecode']" routerLinkActive="active">
             <mat-icon mat-list-icon>code</mat-icon>
             <span>Software Source Codes</span>
-          </a>
-          <!-- Categories -->
-          <a
-            *ngIf="userInfo && userInfo.isAdmin"
-            mat-list-item
-            [routerLink]="['/browse/category']"
-            routerLinkActive="active"
-          >
-            <mat-icon mat-list-icon>category</mat-icon>
-            <span>Categories</span>
-          </a>
-          <!-- Category Schemes -->
-          <a
-            *ngIf="userInfo && userInfo.isAdmin"
-            mat-list-item
-            [routerLink]="['/browse/categoryscheme']"
-            routerLinkActive="active"
-          >
-            <mat-icon mat-list-icon>device_hub</mat-icon>
-            <span>Category Schemes</span>
           </a>
           <!-- <a
             mat-list-item
@@ -114,14 +78,28 @@
             <mat-icon mat-list-icon>person</mat-icon>
             <span>Users</span>
           </a> -->
-          <a
-            mat-list-item
-            [routerLink]="['/browse/groups']"
-            routerLinkActive="active"
-          >
+          <a mat-list-item [routerLink]="['/browse/groups']" routerLinkActive="active">
             <mat-icon mat-list-icon>group</mat-icon>
             <span>Groups</span>
           </a>
+          <ng-container *ngIf="userInfo && userInfo.isAdmin">
+            <h3 mat-subheader>Admin</h3>
+            <!-- Categories -->
+            <a mat-list-item [routerLink]="['/browse/category']" routerLinkActive="active">
+              <mat-icon mat-list-icon>category</mat-icon>
+              <span>Categories</span>
+            </a>
+            <!-- Category Schemes -->
+            <a mat-list-item [routerLink]="['/browse/categoryscheme']" routerLinkActive="active">
+              <mat-icon mat-list-icon>device_hub</mat-icon>
+              <span>Category Schemes</span>
+            </a>
+            <!-- Contact Points -->
+            <a mat-list-item [routerLink]="['/browse/contactpoint']" routerLinkActive="active">
+              <mat-icon mat-list-icon>contacts</mat-icon>
+              <span>Contact Points</span>
+            </a>
+          </ng-container>
           <!-- <a
             mat-list-item
             [routerLink]="['/browse/groups']"
@@ -156,117 +134,33 @@
 
 <ng-template #loading>
   <div class="loading-wrapper">
-    <svg
-      role="img"
-      width="280"
-      height="175"
-      aria-labelledby="loading-aria"
-      viewBox="0 0 280 175"
-      preserveAspectRatio="none"
-    >
+    <svg role="img" width="280" height="175" aria-labelledby="loading-aria" viewBox="0 0 280 175"
+      preserveAspectRatio="none">
       <title id="loading-aria">Loading...</title>
-      <rect
-        x="0"
-        y="0"
-        width="100%"
-        height="100%"
-        clip-path="url(#clip-path)"
-        style="fill: url('#fill')"
-      ></rect>
+      <rect x="0" y="0" width="100%" height="100%" clip-path="url(#clip-path)" style="fill: url('#fill')"></rect>
       <defs>
         <clipPath id="clip-path">
-          <circle
-            cx="10"
-            cy="20"
-            r="8"
-          />
-          <rect
-            x="25"
-            y="15"
-            rx="5"
-            ry="5"
-            width="220"
-            height="10"
-          />
-          <circle
-            cx="10"
-            cy="50"
-            r="8"
-          />
-          <rect
-            x="25"
-            y="45"
-            rx="5"
-            ry="5"
-            width="220"
-            height="10"
-          />
-          <circle
-            cx="10"
-            cy="80"
-            r="8"
-          />
-          <rect
-            x="25"
-            y="75"
-            rx="5"
-            ry="5"
-            width="220"
-            height="10"
-          />
-          <circle
-            cx="10"
-            cy="110"
-            r="8"
-          />
-          <rect
-            x="25"
-            y="105"
-            rx="5"
-            ry="5"
-            width="220"
-            height="10"
-          />
+          <circle cx="10" cy="20" r="8" />
+          <rect x="25" y="15" rx="5" ry="5" width="220" height="10" />
+          <circle cx="10" cy="50" r="8" />
+          <rect x="25" y="45" rx="5" ry="5" width="220" height="10" />
+          <circle cx="10" cy="80" r="8" />
+          <rect x="25" y="75" rx="5" ry="5" width="220" height="10" />
+          <circle cx="10" cy="110" r="8" />
+          <rect x="25" y="105" rx="5" ry="5" width="220" height="10" />
         </clipPath>
         <linearGradient id="fill">
-          <stop
-            offset="0.599964"
-            stop-color="#f3f3f3"
-            stop-opacity="1"
-          >
-            <animate
-              attributeName="offset"
-              values="-2; -2; 1"
-              keyTimes="0; 0.25; 1"
-              dur="2s"
-              repeatCount="indefinite"
-            ></animate>
+          <stop offset="0.599964" stop-color="#f3f3f3" stop-opacity="1">
+            <animate attributeName="offset" values="-2; -2; 1" keyTimes="0; 0.25; 1" dur="2s" repeatCount="indefinite">
+            </animate>
           </stop>
-          <stop
-            offset="1.59996"
-            stop-color="#ecebeb"
-            stop-opacity="1"
-          >
-            <animate
-              attributeName="offset"
-              values="-1; -1; 2"
-              keyTimes="0; 0.25; 1"
-              dur="2s"
-              repeatCount="indefinite"
-            ></animate>
+          <stop offset="1.59996" stop-color="#ecebeb" stop-opacity="1">
+            <animate attributeName="offset" values="-1; -1; 2" keyTimes="0; 0.25; 1" dur="2s" repeatCount="indefinite">
+            </animate>
           </stop>
-          <stop
-            offset="2.59996"
-            stop-color="#f3f3f3"
-            stop-opacity="1"
-          >
-            <animate
-              attributeName="offset"
-              values="0; 0; 3"
-              keyTimes="0; 0.25; 1"
-              dur="2s"
-              repeatCount="indefinite"
-            ></animate>
+          <stop offset="2.59996" stop-color="#f3f3f3" stop-opacity="1">
+            <animate attributeName="offset" values="0; 0; 3" keyTimes="0; 0.25; 1" dur="2s" repeatCount="indefinite">
+            </animate>
           </stop>
         </linearGradient>
       </defs>
