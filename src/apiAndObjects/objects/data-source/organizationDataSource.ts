@@ -23,7 +23,7 @@ export class OrganizationDataSource extends BaseObject implements Organization {
     META_ID: 'metaId',
     OPERATION: 'operation',
     OWNS: 'owns',
-    STATE: 'state',
+    STATUS: 'status',
     TELEPHONE: 'telephone',
     TO_BE_DELETE: 'toBeDelete',
     TYPE: 'type',
@@ -85,7 +85,7 @@ export class OrganizationDataSource extends BaseObject implements Organization {
     this.metaId = this._getString(OrganizationDataSource.KEYS.META_ID);
     this.operation = this._getString(OrganizationDataSource.KEYS.OPERATION);
     this.owns = this._getArray(OrganizationDataSource.KEYS.OWNS);
-    this.status = this._getValue(OrganizationDataSource.KEYS.STATE) as Organization['status'];
+    this.status = this._getValue([OrganizationDataSource.KEYS.STATUS, 'state']) as Organization['status'];
     this.telephone = this._getArray(OrganizationDataSource.KEYS.TELEPHONE);
     this.toBeDelete = this._getString(OrganizationDataSource.KEYS.TO_BE_DELETE);
     this.type = this._getString(OrganizationDataSource.KEYS.TYPE);

@@ -25,6 +25,7 @@ import { BrowseApplicationSoftwareModule } from './browse-applicationSoftware/br
 import { BrowseSoftwareSourceCodeItemComponent } from './browse-softwareSourceCode/browse-softwareSourceCode-item/browse-softwareSourceCode-item.component';
 import { BrowseSoftwareSourceCodeModule } from './browse-softwareSourceCode/browse-softwareSourceCode.module';
 import { BrowseContactPointsModule } from './browse-contact-points/browse-contact-points.module';
+import { BrowseOrganizationsModule } from './browse-organizations/browse-organizations.module';
 
 @NgModule({
   declarations: [
@@ -54,6 +55,7 @@ import { BrowseContactPointsModule } from './browse-contact-points/browse-contac
     BrowseCategoriesModule,
     BrowseCategorySchemesModule,
     BrowseContactPointsModule,
+    BrowseOrganizationsModule,
     SkeletonLoaderComponent,
   ],
   exports: [],

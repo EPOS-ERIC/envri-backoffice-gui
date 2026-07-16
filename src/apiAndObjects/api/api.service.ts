@@ -27,6 +27,7 @@ import { PutDistributionDetail } from './distribution/putDistributionDetail';
 import { PostContactPointDetail } from './contact-point/postContactPointDetail';
 import { PostOperationDetail } from './operation/postOperationDetail';
 import { PostOrganizationDetail } from './organization/postOrganizationDetail';
+import { UpdateOrganizationDetail } from './organization/updateOrganizationDetail';
 import { PostWebserviceDetail } from './webservice/postWebserviceDetail';
 import { PutWebserviceDetail } from './webservice/putWebserviceDetail';
 import { PostUserDetail } from './user/postUserDetail';
@@ -93,6 +94,9 @@ import { GetAllSourceCodeVersions } from './software-source-code/getAllSourceCod
 import { GetDistributionPlugins } from './distribution-plugin/getDistributionPlugins';
 import { PostDistributionPluginSendEmail } from './distribution-plugin/postDistributionPluginSendEmail';
 import { DeleteDistributionPlugins } from './distribution-plugin/deleteDistributionPlugins';
+import { GetAllAddresses } from './address/getAllAddresses';
+import { PostAddress } from './address/postAddress';
+import { PutAddress } from './address/putAddress';
 
 @Injectable()
 export class ApiService extends BaseApi {
@@ -184,6 +188,7 @@ export class ApiService extends BaseApi {
     Organization: {
       getAll: new GetAllOrganizations(ApiService.USE_LIVE_API),
       create: new PostOrganizationDetail(ApiService.USE_LIVE_API),
+      update: new UpdateOrganizationDetail(ApiService.USE_LIVE_API),
     },
     User: {
       get: new GetUserInfo(ApiService.USE_LIVE_API),
@@ -215,6 +220,11 @@ export class ApiService extends BaseApi {
       update: new PutIdentifier(ApiService.USE_LIVE_API),
     },
     /* Spatial / Temporal Entities */
+    Address: {
+      getAll: new GetAllAddresses(ApiService.USE_LIVE_API),
+      create: new PostAddress(ApiService.USE_LIVE_API),
+      update: new PutAddress(ApiService.USE_LIVE_API),
+    },
     Location: {
       get: new GetLocation(ApiService.USE_LIVE_API),
       getAll: new GetAllLocations(ApiService.USE_LIVE_API),
