@@ -50,6 +50,17 @@
   gap: 8px;
 }
 
+.scheme-group {
+  margin-bottom: 24px;
+}
+
+.scheme-group-title {
+  margin: 0 0 8px;
+  color: #334155;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 .scheme-panel {
   border-radius: 12px !important;
   border: 1px solid #e2e8f0;
@@ -108,18 +119,6 @@
   font-size: 22px;
   width: 22px;
   height: 22px;
-}
-
-.scheme-order {
-  min-width: 28px;
-  margin-right: 12px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background-color: #f1f5f9;
-  color: #475569;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  text-align: center;
 }
 
 .scheme-title {
