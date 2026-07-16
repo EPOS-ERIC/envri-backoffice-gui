@@ -11,6 +11,12 @@ import { DialogService } from 'src/components/dialogs/dialog.service';
 import { Status } from 'src/utility/enums/status.enum';
 import { DialogNewCategorySchemeComponent } from '../../../components/dialogs/dialog-new-category-scheme/dialog-new-category-scheme.component';
 
+interface CategorySchemeGroup {
+  key: string;
+  label: string;
+  schemes: CategoryScheme[];
+}
+
 @Component({
   selector: 'app-browse-category-schemes',
   templateUrl: './browse-category-schemes.component.html',
@@ -20,6 +26,7 @@ export class BrowseCategorySchemesComponent implements OnInit {
   @ViewChild(NgScrollbar) scrollable!: NgScrollbar;
 
   public categorySchemes: Array<CategoryScheme> = [];
+  public categorySchemeGroups: CategorySchemeGroup[] = [];
   public isSavingOrder = false;
   public statusEnum = Status;
 
@@ -41,7 +48,8 @@ export class BrowseCategorySchemesComponent implements OnInit {
       .then((schemes) => {
         this.categorySchemes = schemes.filter(
           (scheme) => scheme.status !== Status.ARCHIVED && scheme.status !== Status.DISCARDED,
-        ).sort((firstScheme, secondScheme) => this.sortByOrderItemNumber(firstScheme, secondScheme));  
+        ).sort((firstScheme, secondScheme) => this.sortByOrderItemNumber(firstScheme, secondScheme));
+        this.rebuildCategorySchemeGroups();
       })
       .finally(() => this.loadingService.setShowSpinner(false));
   }
@@ -61,6 +69,51 @@ export class BrowseCategorySchemesComponent implements OnInit {
     const parsedOrder = Number.parseInt(orderitemnumber || '', 10);
 
     return Number.isNaN(parsedOrder) ? null : parsedOrder;
+  }
+
+  private rebuildCategorySchemeGroups(): void {
+    const groups = new Map<string, CategorySchemeGroup>();
+
+    this.categorySchemes.forEach((scheme) => {
+      const key = this.getTopConceptUid(scheme);
+      const group = groups.get(key) || {
+        key,
+        label: this.getTopConceptLabel(key),
+        schemes: [],
+      };
+
+      group.schemes.push(scheme);
+      groups.set(key, group);
+    });
+
+    this.categorySchemeGroups = Array.from(groups.values())
+      .map((group) => ({
+        ...group,
+        schemes: group.schemes.sort((firstScheme, secondScheme) =>
+          this.sortByOrderItemNumber(firstScheme, secondScheme),
+        ),
+      }))
+      .sort((firstGroup, secondGroup) => {
+        if (firstGroup.key === 'no-top-concept') return 1;
+        if (secondGroup.key === 'no-top-concept') return -1;
+
+        return firstGroup.label.localeCompare(secondGroup.label);
+      });
+  }
+
+  private getTopConceptUid(scheme: CategoryScheme): string {
+    return scheme.topConcepts?.[0]?.uid || 'no-top-concept';
+  }
+
+  private getTopConceptLabel(uid: string): string {
+    if (uid === 'no-top-concept') return 'No top concept';
+
+    return uid
+      .split('/')
+      .pop()
+      ?.split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ') || uid;
   }
 
   /**
@@ -91,15 +144,28 @@ export class BrowseCategorySchemesComponent implements OnInit {
     img.style.display = 'none';
   }
 
-  public handleDrop(event: CdkDragDrop<CategoryScheme[]>): void {
+  public handleDrop(event: CdkDragDrop<CategoryScheme[]>, group: CategorySchemeGroup): void {
     if (event.previousIndex === event.currentIndex || this.isSavingOrder) return;
 
     const previousOrderNumbers = new Map(
       this.categorySchemes.map((scheme) => [scheme.uid, scheme.orderitemnumber]),
     );
 
-    moveItemInArray(this.categorySchemes, event.previousIndex, event.currentIndex);
-    this.categorySchemes = this.normalizeSchemeOrder(this.categorySchemes);
+    const reorderedGroupSchemes = [...group.schemes];
+    moveItemInArray(reorderedGroupSchemes, event.previousIndex, event.currentIndex);
+    const groupIndexes = this.categorySchemes.reduce<number[]>((indexes, scheme, index) => {
+      if (this.getTopConceptUid(scheme) === group.key) indexes.push(index);
+
+      return indexes;
+    }, []);
+    const reorderedSchemes = [...this.categorySchemes];
+
+    groupIndexes.forEach((index, groupIndex) => {
+      reorderedSchemes[index] = reorderedGroupSchemes[groupIndex];
+    });
+
+    this.categorySchemes = this.normalizeSchemeOrder(reorderedSchemes);
+    this.rebuildCategorySchemeGroups();
 
     const changedSchemes = this.categorySchemes.filter(
       (scheme) => previousOrderNumbers.get(scheme.uid) !== scheme.orderitemnumber,
@@ -256,6 +322,7 @@ export class BrowseCategorySchemesComponent implements OnInit {
         if (changedSchemes.length === 0) return;
 
         this.categorySchemes = normalizedSchemes;
+        this.rebuildCategorySchemeGroups();
         this.persistSchemeUpdates(
           changedSchemes,
           `Category scheme "${response.dataOut.title}" updated successfully.`,
