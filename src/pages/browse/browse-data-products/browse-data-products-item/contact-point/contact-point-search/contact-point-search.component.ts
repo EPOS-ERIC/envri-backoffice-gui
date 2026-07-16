@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
-import { DataProduct, LinkedEntity, ContactPoint } from 'generated/backofficeSchemas';
+import { DataProduct, LinkedEntity, ContactPoint, WebService } from 'generated/backofficeSchemas';
 import { map, Observable, startWith } from 'rxjs';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { WithSubscription } from 'src/helpers/subscription';
@@ -19,6 +19,8 @@ import { Status } from 'src/utility/enums/status.enum';
 })
 export class ContactPointSearchComponent extends WithSubscription implements OnInit {
   @Input() contactPoint: Array<LinkedEntity> | undefined = [];
+
+  @Input() isDataProductParent = true;
 
   @Output() contactPointDetailsUpdated = new EventEmitter<Array<LinkedEntity>>();
 
@@ -53,6 +55,12 @@ export class ContactPointSearchComponent extends WithSubscription implements OnI
         this.form.disable();
       }
     });
+  }
+
+  private getActiveEntity(): DataProduct | WebService | null {
+    return this.isDataProductParent
+      ? this.entityExecutionService.getActiveDataProductValue()
+      : this.entityExecutionService.getActiveWebServiceValue();
   }
 
   private initForm(): void {
@@ -152,8 +160,8 @@ export class ContactPointSearchComponent extends WithSubscription implements OnI
 
     const selectedContactPoint = this.selectedContactPoint;
 
-    const activeDataProduct = this.entityExecutionService.getActiveDataProductValue();
-    if (activeDataProduct == null) {
+    const activeEntity = this.getActiveEntity();
+    if (activeEntity == null) {
       return;
     }
 
@@ -171,15 +179,19 @@ export class ContactPointSearchComponent extends WithSubscription implements OnI
     }
 
     const contactPointEntityDetail: LinkedEntity = {
-      entityType: Entity.CONTACT_POINT,
+      entityType: 'CONTACTPOINT',
       instanceId: selectedContactPoint.instanceId,
       uid: selectedContactPoint.uid,
       metaId: selectedContactPoint.metaId,
     };
 
     const updatedContactPoints = [...existingContactPoints, contactPointEntityDetail];
-    activeDataProduct.contactPoint = updatedContactPoints;
-    this.entityExecutionService.setActiveDataProduct(activeDataProduct);
+    activeEntity.contactPoint = updatedContactPoints;
+    if (this.isDataProductParent) {
+      this.entityExecutionService.setActiveDataProduct(activeEntity as DataProduct);
+    } else {
+      this.entityExecutionService.setActiveWebService(activeEntity as WebService);
+    }
 
     this.contactPoint = updatedContactPoints;
     this.contactPointDetailsUpdated.emit(updatedContactPoints);

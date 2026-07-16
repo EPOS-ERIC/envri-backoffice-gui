@@ -1,6 +1,7 @@
 <ng-container *ngIf="contactPoint; else empty">
   <app-contact-point-search
     [contactPoint]="contactPoint"
+    [isDataProductParent]="isDataProductParent"
     (contactPointDetailsUpdated)="updateContactPointArray($event)"
     (addedContactPointDetail)="handleAddedContactPointDetail($event)"
     (isLoadingObs)="onLoadingChanged($event)"

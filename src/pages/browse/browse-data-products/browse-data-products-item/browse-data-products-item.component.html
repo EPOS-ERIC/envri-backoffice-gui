@@ -63,6 +63,7 @@
         <app-contact-point
           *ngIf="activeItem === entityFieldEnum.CONTACT_POINT"
           [contactPoint]="dataProduct.contactPoint"
+          [isDataProductParent]="true"
         ></app-contact-point>
 
         <app-data-providers
