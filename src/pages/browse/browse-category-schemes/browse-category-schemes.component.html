@@ -11,9 +11,11 @@
       </button>
     </header>
 
-    <mat-accordion cdkDropList [cdkDropListData]="categorySchemes" [cdkDropListDisabled]="isSavingOrder"
-      (cdkDropListDropped)="handleDrop($event)" class="schemes-accordion" multi>
-      <mat-expansion-panel *ngFor="let scheme of categorySchemes" cdkDrag class="scheme-panel">
+    <section *ngFor="let group of categorySchemeGroups" class="scheme-group">
+      <h2 class="scheme-group-title">{{ group.label }}</h2>
+      <mat-accordion cdkDropList [cdkDropListData]="group.schemes" [cdkDropListDisabled]="isSavingOrder"
+        (cdkDropListDropped)="handleDrop($event, group)" class="schemes-accordion" multi>
+        <mat-expansion-panel *ngFor="let scheme of group.schemes" cdkDrag class="scheme-panel">
         <mat-expansion-panel-header>
           <mat-panel-title>
             <button mat-icon-button cdkDragHandle class="drag-handle" (click)="$event.stopPropagation()"
@@ -21,7 +23,6 @@
               <mat-icon>drag_indicator</mat-icon>
             </button>
             <mat-icon class="scheme-icon">folder_special</mat-icon>
-            <span class="scheme-order">{{ scheme.orderitemnumber || '-' }}</span>
             <span class="scheme-title">{{ scheme.title }}</span>
           </mat-panel-title>
         </mat-expansion-panel-header>
@@ -105,8 +106,9 @@
             Edit
           </button>
         </div>
-      </mat-expansion-panel>
-    </mat-accordion>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </section>
 
     <div *ngIf="categorySchemes.length === 0" class="empty-state">
       <mat-icon class="empty-icon">inventory_2</mat-icon>
