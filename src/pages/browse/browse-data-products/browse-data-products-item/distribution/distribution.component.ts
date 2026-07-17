@@ -1,10 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, UntypedFormControl, Validators } from '@angular/forms';
+import { MatTabChangeEvent } from '@angular/material/tabs';
 import { DataProduct, Distribution, LinkedEntity } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { DistributionDetailDataSource } from 'src/apiAndObjects/objects/data-source/distributionDetailDataSource';
 import { WebserviceDetailDataSource } from 'src/apiAndObjects/objects/data-source/webserviceDetailDataSource';
-import { DialogData } from 'src/components/dialogs/baseDialogService.abstract';
 import { DialogService } from 'src/components/dialogs/dialog.service';
 import { ActiveUserService } from 'src/services/activeUser.service';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
@@ -154,6 +154,12 @@ export class DistributionComponent implements OnInit {
     Promise.all(requests).then((value: Distribution[][]) => {
       const flattened = value.flat();
       this.distributionDetails = flattened;
+      if (flattened.length > 0) {
+        // now that we have the Distributions, set the first as active
+        this.entityExecutionService.setActiveDistribution(flattened[0]);
+        // initialize the WebServ as null (if any, will get set byt the WebServ component itself)
+        this.entityExecutionService.setActiveWebService(null);
+      }
       this.initForm();
       this.loadingService.setShowSpinner(false);
     });
@@ -165,6 +171,21 @@ export class DistributionComponent implements OnInit {
 
   public ngOnInit(): void {
     this.getDistributionDetails();
+  }
+
+  // handles switching between Distribution tabs
+  public handleTabChange(event: MatTabChangeEvent): void {
+    const index = event.index;
+    this.selectedDistributionTabIndex = index;
+
+    const activeDistribution = this.distributionDetails[index];
+    if (!activeDistribution) {
+      return;
+    }
+    // set the newly selected Dist as active
+    this.entityExecutionService.setActiveDistribution(activeDistribution);
+    // clean up the old webService value (if any, it will get set in the WebServ component itself)
+    this.entityExecutionService.setActiveWebService(null);
   }
 
   public handleSave(index: number): void {

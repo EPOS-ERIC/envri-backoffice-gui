@@ -478,10 +478,8 @@ export class EntityExecutionService extends EntityStateManager {
             // save the operation in the Distribution instance as well
             activeDistribution.supportedOperation = [];
             activeDistribution.supportedOperation.push(newOperation);
-            this.handleDistributionSave();
 
-            // activeDistribution?.accessURL?.push(newOperation);
-            this.setActiveDistribution(activeDistribution);
+            this.handleDistributionSave();
           }
         })
         .catch((err) => {
