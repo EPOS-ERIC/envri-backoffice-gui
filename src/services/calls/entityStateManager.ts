@@ -114,7 +114,7 @@ export class EntityStateManager {
   /**
    * Sets active WebService
    */
-  public setActiveWebService(webService: WebService): void {
+  public setActiveWebService(webService: WebService | null): void {
     this.webService.next(webService);
   }
 
