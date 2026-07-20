@@ -47,6 +47,6 @@
   </ng-container>
 </ng-container>
 <button mat-stroked-button color="primary" (click)="handleCreate()" [disabled]="disabled"
-  [hidden]="getControls('documentations').length >= 1">
+  [hidden]="form && getControls('documentations').length >= 1">
   Add Documentation
 </button>
