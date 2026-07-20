@@ -127,6 +127,8 @@ export class DistributionComponent implements OnInit {
     dataAccessControl.valueChanges.subscribe((dataAccess: 'download' | 'webservice') => {
       if (dataAccess === 'download') {
         distribution.type = DistributionComponent.DISTRIBUTION_TYPE.DOWNLOAD;
+        // clean supported operation
+        distribution.supportedOperation = [];
         distribution.accessService = [];
         return;
       }
