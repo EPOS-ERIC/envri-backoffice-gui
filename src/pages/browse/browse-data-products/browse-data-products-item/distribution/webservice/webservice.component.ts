@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormBuilder, FormControl, FormGroup, UntypedFormControl, Validators } from '@angular/forms';
 import {
   DataProduct,
@@ -27,11 +27,12 @@ import { ActiveUserService } from 'src/services/activeUser.service';
   templateUrl: './webservice.component.html',
   styleUrl: './webservice.component.scss',
 })
-export class DistributionWebserviceComponent extends WithSubscription implements OnInit {
+export class DistributionWebserviceComponent extends WithSubscription implements OnInit, OnChanges {
   @Input() accessService!: Distribution['accessService'];
   @Input() supportedOperations: WebService['supportedOperation'];
   @Input() distribution!: Distribution;
   @Input() distributionIndex!: number;
+  @Input() isActive = false;
 
   constructor(
     private readonly formBuilder: FormBuilder,
@@ -113,7 +114,6 @@ export class DistributionWebserviceComponent extends WithSubscription implements
                 const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
                 if(groupMatch){
                   const userRole = groupMatch.role;
-                  console.warn('userRole', userRole);
                   if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
                     userHasEditPermissionsForSubmitted = true;
                   }
@@ -138,6 +138,14 @@ export class DistributionWebserviceComponent extends WithSubscription implements
         this.webservice = {};
       })
       .finally(() => this.loadingService.setShowSpinner(false));
+  }
+
+  private syncActiveState(): void {
+    if (this.isActive && this.webservice) {
+      this.entityExecutionService.setActiveWebService(
+        this.entityExecutionService.convertToWebService(this.webservice),
+      );
+    }
   }
 
   private initSubscriptions(): void {
@@ -253,6 +261,14 @@ export class DistributionWebserviceComponent extends WithSubscription implements
       instanceId: this.accessService![0].instanceId,
       metaId: this.accessService![0].metaId,
     });
+  }
+
+  public ngOnChanges(changes: SimpleChanges): void {
+    // on switching Dist tabs
+    if (changes['isActive']) {
+      // update the active webservice
+      this.syncActiveState();
+    }
   }
 
   public compareWithFn(optionOne: any, optionTwo: any): boolean {
