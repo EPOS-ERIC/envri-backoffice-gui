@@ -31,6 +31,8 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
 
   @Input() isDataProductParent = true;
 
+  @Input() webservice: WebService | null = null;
+
   public entityEnum = Entity;
 
   public contactPointDetails!: Promise<ContactPoint[]>[];
@@ -101,6 +103,10 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
   }
 
   private getActiveEntity(): DataProduct | WebService | null {
+    if (!this.isDataProductParent && this.webservice) {
+      return this.webservice;
+    }
+
     return this.isDataProductParent
       ? this.entityExecutionService.getActiveDataProductValue()
       : this.entityExecutionService.getActiveWebServiceValue();
