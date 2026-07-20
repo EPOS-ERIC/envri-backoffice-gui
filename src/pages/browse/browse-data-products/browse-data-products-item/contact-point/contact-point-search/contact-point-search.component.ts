@@ -22,6 +22,8 @@ export class ContactPointSearchComponent extends WithSubscription implements OnI
 
   @Input() isDataProductParent = true;
 
+  @Input() webservice: WebService | null = null;
+
   @Output() contactPointDetailsUpdated = new EventEmitter<Array<LinkedEntity>>();
 
   @Output() addedContactPointDetail = new EventEmitter<ContactPoint>();
@@ -58,6 +60,10 @@ export class ContactPointSearchComponent extends WithSubscription implements OnI
   }
 
   private getActiveEntity(): DataProduct | WebService | null {
+    if (!this.isDataProductParent && this.webservice) {
+      return this.webservice;
+    }
+
     return this.isDataProductParent
       ? this.entityExecutionService.getActiveDataProductValue()
       : this.entityExecutionService.getActiveWebServiceValue();

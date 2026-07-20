@@ -2,6 +2,7 @@
   <app-contact-point-search
     [contactPoint]="contactPoint"
     [isDataProductParent]="isDataProductParent"
+    [webservice]="webservice"
     (contactPointDetailsUpdated)="updateContactPointArray($event)"
     (addedContactPointDetail)="handleAddedContactPointDetail($event)"
     (isLoadingObs)="onLoadingChanged($event)"
