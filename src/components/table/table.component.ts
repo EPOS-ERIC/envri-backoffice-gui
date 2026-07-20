@@ -241,7 +241,9 @@ export class TableComponent implements AfterViewInit {
   }
 
   public handleFilter(filters: FilterEmit) {
-    this.dataSource.filter = JSON.stringify(filters);
+    if (null != this.dataSource) {
+      this.dataSource.filter = JSON.stringify(filters);
+    }
   }
 
   public handleClear(): void {
