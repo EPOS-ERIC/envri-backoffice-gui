@@ -5,6 +5,7 @@ export enum EntityEndpointValue {
   ORGANIZATION = 'organization',
   USER = 'user',
   PERSON = 'person',
+  ADDRESS = 'address',
   CONTACT_POINT = 'contactpoint',
   WEBSERVICE = 'webservice',
   DISTRIBUTION = 'distribution',

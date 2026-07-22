@@ -140,8 +140,21 @@ export class BrowseOrganizationsComponent implements OnInit, AfterViewInit {
         if (!confirmed) return;
 
         this.loadingService.setShowSpinner(true);
-        this.apiService
-          .deleteEntity(EntityEndpointValue.ORGANIZATION, organization.instanceId as string)
+        Promise.resolve()
+          .then(() => {
+            if (!organization.address?.instanceId) return;
+            return this.apiService.deleteEntity(EntityEndpointValue.ADDRESS, organization.address.instanceId);
+          })
+          .then(() =>
+            Promise.all(
+              (organization.identifier || [])
+                .filter((identifier) => Boolean(identifier.instanceId))
+                .map((identifier) =>
+                  this.apiService.deleteEntity(EntityEndpointValue.IDENTIFIER, identifier.instanceId as string),
+              ),
+            ),
+          )
+          .then(() => this.apiService.deleteEntity(EntityEndpointValue.ORGANIZATION, organization.instanceId as string))
           .then(() => {
             this.showSuccess(`Organization "${label}" deleted successfully.`);
             return this.refreshList();
