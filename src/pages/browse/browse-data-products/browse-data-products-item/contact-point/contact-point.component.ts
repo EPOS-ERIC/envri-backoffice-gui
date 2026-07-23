@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { ContactPoint, DataProduct, LinkedEntity, WebService } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { WithSubscription } from 'src/helpers/subscription';
@@ -32,6 +32,8 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
   @Input() isDataProductParent = true;
 
   @Input() webservice: WebService | null = null;
+
+  @Output() contactPointDetailsUpdated = new EventEmitter<Array<LinkedEntity>>();
 
   public entityEnum = Entity;
 
@@ -132,6 +134,8 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
         this.entityExecutionService.setActiveWebService(activeEntity as WebService);
       }
     }
+
+    this.contactPointDetailsUpdated.emit(newContactPointDetails);
   }
 
   public handleAddedContactPointDetail(contactPoint: ContactPoint): void {
@@ -154,13 +158,7 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
       (item: LinkedEntity) => item.instanceId !== removedInstanceId,
     );
 
-    activeEntity.contactPoint = updatedContactPoints;
-    if (this.isDataProductParent) {
-      this.entityExecutionService.setActiveDataProduct(activeEntity as DataProduct);
-    } else {
-      this.entityExecutionService.setActiveWebService(activeEntity as WebService);
-    }
-    this.contactPoint = updatedContactPoints;
+    this.updateContactPointArray(updatedContactPoints);
 
     this.snackbarService.openSnackbar(`Please save.`, 'close', SnackbarType.WARNING, 3000, [
       'snackbar',
