@@ -152,6 +152,12 @@ export class DistributionWebserviceComponent extends WithSubscription implements
     this.subscribe(this.entityExecutionService.dataProductObs, (dataProduct: DataProduct | null) => {
       this.dataProduct = dataProduct;
     });
+
+    this.subscribe(this.entityExecutionService.webServiceObs, (webservice: WebService | null) => {
+      if (webservice && this.isCurrentWebservice(webservice)) {
+        this.webservice = webservice;
+      }
+    });
   }
 
   private trackFormData(): void {
@@ -162,6 +168,7 @@ export class DistributionWebserviceComponent extends WithSubscription implements
           updatingObject.name = changes.name;
           updatingObject.description = changes.description;
           this.entityExecutionService.setActiveWebService(updatingObject);
+          this.webservice = updatingObject;
         }
       });
     }
@@ -292,7 +299,18 @@ export class DistributionWebserviceComponent extends WithSubscription implements
       };
       webservice.provider = serviceProviderEntityDetail;
       this.entityExecutionService.setActiveWebService(webservice);
+      this.webservice = webservice;
     }
+  }
+
+  private isCurrentWebservice(webservice: WebService): boolean {
+    const currentAccessService = this.accessService?.[0];
+
+    return Boolean(
+      currentAccessService &&
+        currentAccessService.instanceId === webservice.instanceId &&
+        currentAccessService.metaId === webservice.metaId,
+    );
   }
 
   private handleServiceProviders(webservice: WebService): void {

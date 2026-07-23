@@ -171,7 +171,7 @@ export class ContactPointSearchComponent extends WithSubscription implements OnI
       return;
     }
 
-    const existingContactPoints = [...(this.contactPoint ?? [])];
+    const existingContactPoints = [...(activeEntity.contactPoint ?? [])];
     const alreadySelected = existingContactPoints.some(
       (item: LinkedEntity) => item.instanceId === selectedContactPoint.instanceId,
     );
