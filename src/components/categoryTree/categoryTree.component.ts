@@ -172,6 +172,13 @@ export class CategoryTreeDetailsComponent implements OnInit {
   public onAddCategory(node: CategoryNode | null = null): void {
     this.dialogService.openDialogForComponent(DialogNewCategoryComponent, node || {}, '30vw').then((dialogData) => {
       if (dialogData.dataOut.create === true) {
+
+        // check status of active entity: if it's DRAFT or SUBMITTED, we need to specify the originator editorId
+        let editorId = undefined;
+        if(this.activeEntity?.status?.toUpperCase() === Status.DRAFT || this.activeEntity?.status?.toUpperCase() === Status.SUBMITTED){
+          editorId = this.activeEntity?.editorId;
+        }
+
         //create category
         const category: Category = {
           name: dialogData.dataOut.categoryName,
@@ -182,6 +189,7 @@ export class CategoryTreeDetailsComponent implements OnInit {
           uid: `category:${dialogData.dataOut.categoryName}`,
           status: 'DRAFT',
           inScheme: node ? node.inScheme : this.selectedCategoryScheme,
+          editorId: editorId,
         };
 
         this.apiService.endpoints.Category.create
