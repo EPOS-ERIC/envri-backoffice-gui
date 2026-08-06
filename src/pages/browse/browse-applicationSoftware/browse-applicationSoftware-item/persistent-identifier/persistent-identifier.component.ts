@@ -126,8 +126,15 @@ export class PersistentIdentifierSoftAppComponent implements OnInit {
     this.loadingService.setShowSpinner(true);
     // group to assign the new Identifier (the to which the SA belongs to)
     const group = this.softwareApplication.groups?.[0] || ''; // Assuming groups Array has only 1 item
+
+    // need to specify the originator editorId if the SA is in DRAFT or SUBMITTED status
+    let editorId = undefined;
+    if(this.softwareApplication.status?.toUpperCase() === Status.DRAFT || this.softwareApplication.status?.toUpperCase() === Status.SUBMITTED){
+      editorId = this.softwareApplication.editorId;
+    }
+
     this.apiService.endpoints.Identifier.create
-      .call({groups: [group as string]})
+      .call({groups: [group as string], editorId: editorId})
       .then((item: Identifier) => {
         this.identifiersFullObj.push(item);
         const linkedEntity: LinkedEntity = {
@@ -205,6 +212,13 @@ export class PersistentIdentifierSoftAppComponent implements OnInit {
     const identifierArr = this.form.get('identifier') as FormArray;
     identifierToUpdate.identifier = identifierArr.at(index).value.identifier;
     identifierToUpdate.type = identifierArr.at(index).value.type;
+
+    // need to specify the originator editorId if the SA is in DRAFT or SUBMITTED status
+    let editorId = undefined;
+    if(this.softwareApplication.status?.toUpperCase() === Status.DRAFT || this.softwareApplication.status?.toUpperCase() === Status.SUBMITTED){
+      editorId = this.softwareApplication.editorId;
+      identifierToUpdate.editorId = editorId;
+    }
 
     this.apiService.endpoints.Identifier.update
       .call(identifierToUpdate)

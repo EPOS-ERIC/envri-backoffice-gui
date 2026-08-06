@@ -51,6 +51,10 @@ export class EntityExecutionService extends EntityStateManager {
         contactPoint: activeDataProduct.contactPoint?.length ? activeDataProduct.contactPoint : null,
       };
       if (activeDataProduct.status === Status.DRAFT || activeDataProduct.status === Status.SUBMITTED) {
+        // need to specify the originator editorId to include in payload
+        let editorId = activeDataProduct.editorId;
+        payload.editorId = editorId;
+
         this.loadingService.setShowSpinner(true);
         this.apiService.endpoints[Entity.DATA_PRODUCT].update
           .call({
@@ -150,9 +154,14 @@ export class EntityExecutionService extends EntityStateManager {
     if (null != activeSoftwareApplication) {
       if (activeSoftwareApplication.status === Status.DRAFT || activeSoftwareApplication.status === Status.SUBMITTED) {
         this.loadingService.setShowSpinner(true);
+
+        // // need to specify the originator editorId to include in payload
+        let editorId = activeSoftwareApplication.editorId;
+
         this.apiService.endpoints[Entity.SOFTWARE_APPLICATION].update
           .call({
             ...activeSoftwareApplication,
+            editorId: editorId,
           })
           .then((data: SoftwareApplication) => {
             this.snackbarService.openSnackbar(
@@ -244,9 +253,13 @@ export class EntityExecutionService extends EntityStateManager {
     if (null != activeSoftwareSourceCode) {
       if (activeSoftwareSourceCode.status === Status.DRAFT || activeSoftwareSourceCode.status === Status.SUBMITTED) {
         this.loadingService.setShowSpinner(true);
+        // need to specify the originator editorId to include in payload
+        let editorId = activeSoftwareSourceCode.editorId;
+        
         this.apiService.endpoints[Entity.SOFTWARE_SOURCE_CODE].update
           .call({
             ...activeSoftwareSourceCode,
+            editorId: editorId,
           })
           .then((data: SoftwareSourceCode) => {
             this.snackbarService.openSnackbar(
@@ -341,6 +354,14 @@ export class EntityExecutionService extends EntityStateManager {
         activeWebservice.status = Status.DRAFT;
         activeWebservice.instanceChangedId = activeWebservice.instanceId;
       }
+
+      // read the DataProduct status before updating the WebService: if it's status DRAFT/SUBMITTED we need to specify the originator editorId 
+      let editorId = null;
+      if(this.dataProduct.getValue()?.status?.toUpperCase() === Status.DRAFT || this.dataProduct.getValue()?.status?.toUpperCase() === Status.SUBMITTED) {
+        editorId = this.dataProduct.getValue()?.editorId as string;
+        activeWebservice.editorId = editorId ? editorId : undefined;
+      }
+      
       const payload = {
         ...activeWebservice,
         contactPoint: activeWebservice.contactPoint?.length ? activeWebservice.contactPoint : null,
@@ -392,6 +413,13 @@ export class EntityExecutionService extends EntityStateManager {
         if (activeDistribution.status !== Status.DRAFT) {
           activeDistribution.status = Status.DRAFT;
           activeDistribution.instanceChangedId = activeDistribution.instanceId;
+        }
+
+        // read the DataProduct status before posting the Distribution: if it's status DRAFT/SUBMITTED we need to specify the originator editorId 
+        let editorId = null;
+        if(this.dataProduct.getValue()?.status?.toUpperCase() === Status.DRAFT || this.dataProduct.getValue()?.status?.toUpperCase() === Status.SUBMITTED) {
+          editorId = this.dataProduct.getValue()?.editorId as string;
+          activeDistribution.editorId = editorId ? editorId : undefined;
         }
         this.loadingService.setShowSpinner(true);
         this.apiService.endpoints[Entity.DISTRIBUTION].update
@@ -446,6 +474,13 @@ export class EntityExecutionService extends EntityStateManager {
       if (operationData.status !== Status.DRAFT) {
         operationData.status = Status.DRAFT;
         operationData.instanceChangedId = operationData.instanceId;
+      }
+      // Check DataProduct status before updating the Operation, if DRAFT/SUBMITTED, pass the originator editorId
+      const dataProduct = this.getActiveDataProductValue();
+      let editorId = null;
+      if(dataProduct?.status?.toUpperCase() === Status.DRAFT || dataProduct?.status?.toUpperCase() === Status.SUBMITTED) {
+        editorId = dataProduct.editorId as string;
+        operationData.editorId = editorId ? editorId : undefined; 
       }
       this.loadingService.setShowSpinner(true);
       this.apiService.endpoints[Entity.OPERATION].update

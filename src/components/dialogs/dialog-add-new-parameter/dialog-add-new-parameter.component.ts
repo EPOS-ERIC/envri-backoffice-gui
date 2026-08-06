@@ -7,6 +7,7 @@ import { FormBuilder, FormControl, UntypedFormGroup, Validators } from '@angular
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { LinkedEntity, Mapping } from 'generated/backofficeSchemas';
+import { Status } from 'src/utility/enums/status.enum';
 
 @Component({
   selector: 'app-dialog-add-new-parameter',
@@ -69,11 +70,18 @@ export class DialogAddNewParameterComponent implements OnInit {
     }
 
     this.form.disable();
+    // read the operation status before posting the Mapping: if it's status DRAFT we need to specify the originator editorId 
+    const dataProduct = this.operationService.getActiveDataProductValue();
+    let editorId = undefined;
+    if(dataProduct?.status?.toUpperCase() === Status.DRAFT || dataProduct?.status?.toUpperCase() === Status.SUBMITTED) {
+      editorId = dataProduct.editorId as string;
+    }
     const newParam: Mapping = {
       range: this.mapping.range,
       required: this.mapping.required,
       variable: this.mapping.variable,
       groups: this.mapping.groups,
+      editorId: editorId,
     };
     this.apiService.endpoints.Mapping.create.call(newParam).then((data: LinkedEntity) => {
       this.data.dataOut = data;

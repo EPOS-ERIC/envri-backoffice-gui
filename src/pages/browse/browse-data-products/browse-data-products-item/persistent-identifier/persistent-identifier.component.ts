@@ -129,8 +129,13 @@ export class PersistentIdentifierComponent implements OnInit {
     this.loadingService.setShowSpinner(true);
     // group to assign the new Identifier (the to which the DP belongs to)
     const group = this.dataProduct.groups?.[0] || ''; // Assuming groups Array has only 1 item
+    // need to specify the originator editorId if the DataProduct is in DRAFT or SUBMITTED status
+    let editorId = undefined;
+    if(this.dataProduct.status?.toUpperCase() === Status.DRAFT || this.dataProduct.status?.toUpperCase() === Status.SUBMITTED){
+      editorId = this.dataProduct.editorId;
+    }
     this.apiService.endpoints.Identifier.create
-      .call({groups: [group as string]})
+      .call({groups: [group as string], editorId: editorId})
       .then((item: Identifier) => {
         this.identifiersFullObj.push(item);
         const linkedEntity: LinkedEntity = {
@@ -206,6 +211,12 @@ export class PersistentIdentifierComponent implements OnInit {
     const identifierArr = this.form.get('identifier') as FormArray;
     identifierToUpdate.identifier = identifierArr.at(index).value.identifier;
     identifierToUpdate.type = identifierArr.at(index).value.type;
+    // check the status of the DataProduct before updating the Identifier: if it's status DRAFT or SUBMITTED we need to specify the originator editorId
+    let editorId = undefined;
+    if(this.dataProduct.status?.toUpperCase() === Status.DRAFT || this.dataProduct.status?.toUpperCase() === Status.SUBMITTED){
+      editorId = this.dataProduct.editorId;
+      identifierToUpdate.editorId = editorId;
+    }
 
     this.apiService.endpoints.Identifier.update
       .call(identifierToUpdate)

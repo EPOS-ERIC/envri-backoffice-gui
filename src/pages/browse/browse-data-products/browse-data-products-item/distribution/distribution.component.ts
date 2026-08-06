@@ -258,7 +258,14 @@ export class DistributionComponent implements OnInit {
     // groups to which assign the Distribution to
     const groups = this.dataProduct?.groups?.[0] ?? '';
 
-    this.apiService.endpoints[Entity.DISTRIBUTION].create.call({ groups: [groups] })
+     // read the DataProduct status before posting the Distribution: if it's status DRAFT we need to specify the originator editorId 
+     const dataProduct = this.entityExecutionService.getActiveDataProductValue();
+     let editorId = undefined;
+     if(dataProduct?.status?.toUpperCase() === Status.DRAFT || dataProduct?.status?.toUpperCase() === Status.SUBMITTED) {
+       editorId = dataProduct.editorId as string;
+     }
+
+    this.apiService.endpoints[Entity.DISTRIBUTION].create.call({ groups: [groups], editorId: editorId })
       .then((dist: DistributionDetailDataSource) => {
         this.distributionDetails.push(dist);
         this.selectedDistributionTabIndex = this.distributionDetails.length - 1;
@@ -286,7 +293,14 @@ export class DistributionComponent implements OnInit {
     // the groups to which assign the webService to
     const groups = this.dataProduct?.groups?.[0] ?? '';
 
-    this.apiService.endpoints[Entity.WEBSERVICE].create.call({ groups: [groups] }).then((webservice: WebserviceDetailDataSource) => {
+    // read the DataProduct status before posting the WebService: if it's status DRAFT we need to specify the originator editorId 
+    const dataProduct = this.entityExecutionService.getActiveDataProductValue();
+    let editorId = null;
+    if(dataProduct?.status?.toUpperCase() === Status.DRAFT || dataProduct?.status?.toUpperCase() === Status.SUBMITTED) {
+      editorId = dataProduct.editorId as string;
+    }
+
+    this.apiService.endpoints[Entity.WEBSERVICE].create.call({ groups: [groups], editorId: editorId ? editorId : undefined }).then((webservice: WebserviceDetailDataSource) => {
       const newWebserviceEntity: LinkedEntity = {
         entityType: Entity.WEBSERVICE,
         instanceId: webservice.instanceId,
