@@ -20,6 +20,7 @@ import { DialogSelectGroupComponent } from './dialog-select-group/dialog-select-
 import { DialogUserStatusComponent } from './dialog-user-status/dialog-user-status.component';
 import { DialogNewCategoryComponent } from './dialog-new-category/dialog-new-category.component';
 import { DialogNewCategorySchemeComponent } from './dialog-new-category-scheme/dialog-new-category-scheme.component';
+import { DialogAddNewMultiParamValuesComponent } from './dialog-add-new-multi-param-values/dialog-add-new-multi-param-values.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { DialogNewCategorySchemeComponent } from './dialog-new-category-scheme/d
     DialogUserPermissionsComponent,
     DialogWebserviceAddOperationComponent,
     DialogAddNewParameterComponent,
+    DialogAddNewMultiParamValuesComponent,
     DialogConfirmComponent,
     DialogDataproductAddDistributionComponent,
     DialogDataproductAddWebserviceComponent,

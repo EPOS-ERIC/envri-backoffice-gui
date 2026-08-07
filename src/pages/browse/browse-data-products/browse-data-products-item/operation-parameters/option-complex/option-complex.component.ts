@@ -4,6 +4,7 @@ import { ActiveToggle } from '../toggle.interface';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { Subscription } from 'rxjs';
+import { DialogService } from 'src/components/dialogs/dialog.service';
 
 import { EncodingFormatSemanticTag } from 'src/utility/enums/encodingFormatSemanticTag.enum';
 
@@ -34,6 +35,8 @@ export class OptionComplexComponent implements OnInit, AfterViewInit, OnDestroy 
 
   public dataSource = new MatTableDataSource<ControlledValueRow>([]);
 
+  public multipleValuesAddList = [];
+
   private selectedDefaultControl: FormControl | null = null;
 
   private selectedDefaultSubscription: Subscription | null = null;
@@ -45,6 +48,10 @@ export class OptionComplexComponent implements OnInit, AfterViewInit, OnDestroy 
   private editingControl: FormControl | null = null;
 
   @ViewChild(MatPaginator) public paginator!: MatPaginator;
+
+  constructor(private dialogService: DialogService) {
+    this.dialogService = dialogService;
+  }
 
   public ngOnInit(): void {
     this.dataSource.filterPredicate = (row: ControlledValueRow, filter: string) => {
@@ -185,6 +192,24 @@ export class OptionComplexComponent implements OnInit, AfterViewInit, OnDestroy 
     const values = this.getParamValues();
     values.push(new FormControl('', Validators.required));
     this.refreshDataSource();
+  }
+
+  public handleMultipleAdd(): void {
+    // Array of current FormControls
+    const values = this.getParamValues();
+    // Array of current string values
+    const currentValues: Array<string> = values.value;
+    
+    this.dialogService.openAddNewMultiParamValuesDialog(currentValues).then((dialogData) => {
+      const multiValues = dialogData.dataOut as string[];
+      if (multiValues && multiValues.length > 0) {
+        multiValues.forEach(value => {
+          values.push(new FormControl(value, Validators.required));
+        });
+        //refresh data
+        this.refreshDataSource();
+      }
+    });
   }
 
   public removeItem(index: number) {

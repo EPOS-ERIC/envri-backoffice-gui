@@ -18,6 +18,7 @@ import { LoadingService } from 'src/services/loading.service';
 import { DialogSpatialCoverageHelpComponent } from './dialog-spatial-coverage-help/dialog-spatial-coverage-help.component';
 import { LinkedEntity, User, Operation, Group } from 'generated/backofficeSchemas';
 import { DialogUserStatusComponent } from './dialog-user-status/dialog-user-status.component';
+import { DialogAddNewMultiParamValuesComponent } from './dialog-add-new-multi-param-values/dialog-add-new-multi-param-values.component';
 
 @Injectable({
   providedIn: 'root',
@@ -98,6 +99,10 @@ export class DialogService extends BaseDialogService {
 
   public openAddNewParameterDialog(groups: string[] | undefined): Promise<DialogData> {
     return this.openDialog('addNewParam', DialogAddNewParameterComponent, false, groups, {});
+  }
+  
+  public openAddNewMultiParamValuesDialog(currentValues: Array<string>): Promise<DialogData> {
+    return this.openDialog('addNewMultiParamValues', DialogAddNewMultiParamValuesComponent, false, {width: '400px', currentValues: currentValues});
   }
 
   public openSpatialCoverageHelpDialog(): Promise<DialogData> {
