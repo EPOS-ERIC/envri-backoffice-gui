@@ -10,6 +10,7 @@ import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { Entity } from 'src/utility/enums/entity.enum';
 import { OperationParamsRange } from 'src/utility/enums/operationParamsRange.enum';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
+import { Status } from 'src/utility/enums/status.enum';
 
 @Component({
   selector: 'app-supported-operation',
@@ -143,7 +144,14 @@ export class SupportedOperationComponent implements OnInit {
       uid: this.webservice?.uid ?? '',
       metaId: this.webservice?.metaId ?? '',
     };
-    this.dialogService.handleAddWebserviceOperation(webserviceEtityDetail, [this.groups]).then((result: Operation | unknown) => {
+    let editorId: string | undefined = undefined;
+    
+    // Check dataProd status before creating the Operation: if status is DRAFT/SUBMITTED, we need to include editorId in the payload
+    const dp = this.entityExecutionService.getActiveDataProductValue();
+    if(dp?.status?.toUpperCase() === Status.DRAFT || dp?.status?.toUpperCase() === Status.SUBMITTED){
+      editorId = dp.editorId as string;
+    }
+    this.dialogService.handleAddWebserviceOperation(webserviceEtityDetail, [this.groups], editorId).then((result: Operation | unknown) => {
       // put result on supportedOperation array (first position and focused)
       const newOperation = result as Operation;
       this.entityExecutionService.setActiveOperation(newOperation);
