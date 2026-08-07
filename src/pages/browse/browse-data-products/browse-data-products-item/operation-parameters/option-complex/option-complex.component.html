@@ -177,16 +177,29 @@
             ></mat-paginator>
           </div>
         </div>
-        <button
-          mat-raised-button
-          color="primary"
-          type="button"
-          (click)="handleAddNewValue()"
-          [disabled]="form.disabled"
-          [ngClass]="form.disabled ? 'hidden' : ''"
-        >
-          Add new value
-        </button>
+        <div style="display: flex; gap: 3px;">
+          <button
+            mat-raised-button
+            style="width: 50%;"
+            color="primary"
+            type="button"
+            (click)="handleAddNewValue()"
+            [disabled]="form.disabled"
+            [ngClass]="form.disabled ? 'hidden' : ''"
+          >
+            Add new value
+          </button>
+          <button
+            mat-raised-button
+            style="width: 50%;"
+            type="button"
+            (click)="handleMultipleAdd()"
+            [disabled]="form.disabled"
+            [ngClass]="form.disabled ? 'hidden' : ''"
+          >
+            Add multiple values
+          </button>
+        </div>
       </ng-container>
     </ng-container>
 
