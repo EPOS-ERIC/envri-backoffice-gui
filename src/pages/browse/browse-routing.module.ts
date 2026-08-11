@@ -17,6 +17,7 @@ import { BrowseSoftwareSourceCodeItemComponent } from './browse-softwareSourceCo
 import { BrowseCategoriesComponent } from './browse-categories/browse-categories.component';
 import { BrowseCategorySchemesComponent } from './browse-category-schemes/browse-category-schemes.component';
 import { BrowseContactPointsComponent } from './browse-contact-points/browse-contact-points.component';
+import { BrowseOrganizationsComponent } from './browse-organizations/browse-organizations.component';
 
 const routes: Routes = [
   {
@@ -84,6 +85,11 @@ const routes: Routes = [
     path: EntityEndpointValue.CONTACT_POINT,
     component: LayoutComponent,
     children: [{ path: '', component: BrowseContactPointsComponent }],
+  },
+  {
+    path: EntityEndpointValue.ORGANIZATION,
+    component: LayoutComponent,
+    children: [{ path: '', component: BrowseOrganizationsComponent }],
   },
 ];
 

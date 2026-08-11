@@ -84,6 +84,10 @@
           </a>
           <ng-container *ngIf="userInfo && userInfo.isAdmin">
             <h3 mat-subheader>Admin</h3>
+            <a mat-list-item [routerLink]="['/browse/organization']" routerLinkActive="active">
+              <mat-icon mat-list-icon>business</mat-icon>
+              <span>Organizations</span>
+            </a>
             <!-- Categories -->
             <a mat-list-item [routerLink]="['/browse/category']" routerLinkActive="active">
               <mat-icon mat-list-icon>category</mat-icon>
