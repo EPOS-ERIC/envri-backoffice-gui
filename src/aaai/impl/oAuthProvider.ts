@@ -147,12 +147,12 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
             .then((object) => {
               this.userProfileSource.next(BasicUser.makeFromProfileResponse(token, object as UserInfo));
             })
-            .catch((error: unknown) => {
+            .catch(() => {
               const userId = this.getUserId();
               const user = BasicUser.makeOrDefault(userId, userId, token, userId);
               this.userProfileSource.next(user);
             });
-        } catch (error) {
+        } catch {
           this.userProfileSource.next(null);
         }
       }

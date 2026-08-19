@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { Mapping } from 'generated/backofficeSchemas';
 import { ParametersFormService } from '../parameters-form.service';
 
 @Component({
@@ -7,12 +8,12 @@ import { ParametersFormService } from '../parameters-form.service';
   styleUrls: ['./option-boolean.component.scss'],
 })
 export class OptionBooleanComponent {
-  @Input() param!: any;
+  @Input() param!: Mapping;
   @Input() disabled = false;
 
   constructor(private formService: ParametersFormService) {}
 
-  public handleCacheParam(updatedMapping: any): void {
+  public handleCacheParam(updatedMapping: Mapping): void {
     this.formService.cacheParam(updatedMapping);
   }
 }

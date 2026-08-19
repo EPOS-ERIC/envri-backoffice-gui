@@ -317,7 +317,7 @@ export class DialogRevisionsComponent implements OnInit {
     }
 
     // Sort selected revisions by timestamp to ensure chronological order (Old -> New)
-    (selectedRevisions as any[]).sort((a, b) => {
+    selectedRevisions.sort((a, b) => {
       const dateA = new Date(a.changeTimestamp || 0).getTime();
       const dateB = new Date(b.changeTimestamp || 0).getTime();
       return dateA - dateB;

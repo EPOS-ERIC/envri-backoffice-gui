@@ -201,7 +201,7 @@ export class OperationParametersComponent implements OnInit {
     const regex = /{([^}]+)}/g;
     const match = template.match(regex);
     if (match) {
-      return match.map((m: any) => m.slice(1, -1));
+      return match.map((m) => m.slice(1, -1));
     } else {
       return [];
     }

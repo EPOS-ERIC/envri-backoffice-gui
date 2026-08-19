@@ -1,10 +1,7 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { ContactPoint, Group, LinkedEntity, Organization } from 'generated/backofficeSchemas';
-import { ApiService } from 'src/apiAndObjects/api/api.service';
+import { ContactPoint, Group, Organization } from 'generated/backofficeSchemas';
 import { Person } from 'src/apiAndObjects/objects/entities/person.model';
-import { DialogService } from 'src/components/dialogs/dialog.service';
-import { LoadingService } from 'src/services/loading.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 
 interface ContactPointFilters {
@@ -20,7 +17,7 @@ interface ContactPointFilters {
   animations: [
   ],
 })
-export class BrowseECVComponent implements OnInit, AfterViewInit {
+export class BrowseECVComponent {
 
   public readonly displayedColumns = ['  '];
   public readonly columnsToDisplayWithExpand = [...this.displayedColumns];
@@ -43,19 +40,8 @@ export class BrowseECVComponent implements OnInit, AfterViewInit {
   public filters: ContactPointFilters = { search: '', status: '', group: '' };
 
   constructor(
-    private readonly apiService: ApiService,
-    private readonly dialogService: DialogService,
-    private readonly loadingService: LoadingService,
     private readonly snackbarService: SnackbarService,
   ) { }
-
-  public ngOnInit(): void {
-    
-  }
-
-  public ngAfterViewInit(): void {
-
-  }
 
   public applyFilters(): void {
     this.dataSource.filter = JSON.stringify(this.filters);
@@ -65,10 +51,10 @@ export class BrowseECVComponent implements OnInit, AfterViewInit {
   public handleAdd(): void {
   }
 
-  public handleEdit(contactPoint: ContactPoint): void {
+  public handleEdit(): void {
   }
 
-  public handleDelete(contactPoint: ContactPoint): void {
+  public handleDelete(): void {
   }
 
   private showSuccess(message: string): void {
