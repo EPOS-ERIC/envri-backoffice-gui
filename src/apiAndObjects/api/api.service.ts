@@ -93,7 +93,7 @@ import { GetAllSourceCodeVersions } from './software-source-code/getAllSourceCod
 import { GetDistributionPlugins } from './distribution-plugin/getDistributionPlugins';
 import { PostDistributionPluginSendEmail } from './distribution-plugin/postDistributionPluginSendEmail';
 import { DeleteDistributionPlugins } from './distribution-plugin/deleteDistributionPlugins';
-import { GetAllECV } from './ecv/getAllECV';
+import { GetAllECV } from './ECV/getAllECV';
 
 @Injectable()
 export class ApiService extends BaseApi {

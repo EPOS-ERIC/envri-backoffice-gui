@@ -59,7 +59,7 @@ export class ECVComponent extends WithSubscription implements OnInit {
         console.warn('Hello, response getAllECV:', response);
       }
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error('Error fetching ECVs:', error);
     });
     return responseArray;
