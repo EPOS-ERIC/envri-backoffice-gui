@@ -1,0 +1,22 @@
+<ng-container>
+    <ng-container *ngIf="variableMeasured; else empty;">
+      <mat-form-field>
+        <mat-label>Select ECV</mat-label>
+        <mat-select
+        >
+          <mat-option
+            *ngFor="let ecv of allECVs"
+          >
+            {{ ecv }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <input type="text" placeholder="ECV value" [value]="variableMeasured" />
+    </ng-container>
+    
+    <ng-template #empty>
+      No ECV associated with this product.
+    </ng-template>
+  </ng-container>
+  
+  

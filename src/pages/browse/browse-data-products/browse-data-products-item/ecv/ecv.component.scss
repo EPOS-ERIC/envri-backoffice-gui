@@ -1,0 +1,17 @@
+.notice {
+    font-size: 15px;
+    color: #5c5c5c;
+  }
+  
+  .item {
+    p {
+      font-weight: 500;
+    }
+  }
+  
+  button {
+    &.disabled {
+      opacity: 0.6;
+    }
+  }
+  

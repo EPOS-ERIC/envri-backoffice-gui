@@ -93,6 +93,7 @@ import { GetAllSourceCodeVersions } from './software-source-code/getAllSourceCod
 import { GetDistributionPlugins } from './distribution-plugin/getDistributionPlugins';
 import { PostDistributionPluginSendEmail } from './distribution-plugin/postDistributionPluginSendEmail';
 import { DeleteDistributionPlugins } from './distribution-plugin/deleteDistributionPlugins';
+import { GetAllECV } from './ecv/getAllECV';
 
 @Injectable()
 export class ApiService extends BaseApi {
@@ -227,6 +228,10 @@ export class ApiService extends BaseApi {
       create: new PostPeriodOfTime(ApiService.USE_LIVE_API),
       update: new PutPeriodOfTime(ApiService.USE_LIVE_API),
     },
+
+    ECV: {
+      getAll: new GetAllECV(ApiService.USE_LIVE_API),
+    }
   };
 
   constructor(httpClient: HttpClient, injector: Injector, private persistorService: PersistorService) {
