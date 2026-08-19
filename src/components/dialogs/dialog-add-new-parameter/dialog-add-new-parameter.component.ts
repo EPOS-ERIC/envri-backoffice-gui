@@ -20,17 +20,17 @@ export class DialogAddNewParameterComponent implements OnInit {
   public duplicateName = false;
   public forbiddenName = '';
   private activeMappingArr: Array<string> = [];
-  private mapping: any = { range: '', variable: '', required: '' };
+  private mapping: Pick<Mapping, 'range' | 'variable' | 'required'> = { range: '', variable: '', required: '' };
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: DialogData<any>,
+    @Inject(MAT_DIALOG_DATA) public data: DialogData<unknown, LinkedEntity | null>,
     private readonly formBuilder: FormBuilder,
     private operationService: EntityExecutionService,
     private apiService: ApiService,
   ) {
     this.operationService.operationObs.subscribe((operation: Operation | null) => {
       if (operation?.mapping) {
-        this.activeMappingArr = operation.mapping.map((mapping: any) => mapping.variable);
+        this.activeMappingArr = operation.mapping.map((mapping: Mapping) => mapping.variable ?? '');
       }
     });
   }
@@ -71,7 +71,7 @@ export class DialogAddNewParameterComponent implements OnInit {
     });
   }
 
-  public checkForSameVariableName(value: string) {
+  public checkForSameVariableName(value: string): void {
     this.duplicateName = this.activeMappingArr.includes(value);
   }
 }

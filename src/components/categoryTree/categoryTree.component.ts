@@ -2,23 +2,21 @@ import { NestedTreeControl } from '@angular/cdk/tree';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
-import { Category, CategoryScheme, DataProduct, SoftwareApplication, SoftwareSourceCode } from 'generated/backofficeSchemas';
+import { Category, CategoryScheme, DataProduct, LinkedEntity, SoftwareApplication, SoftwareSourceCode } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { DialogService } from 'src/components/dialogs/dialog.service';
 import { DialogNewCategoryComponent } from 'src/components/dialogs/dialog-new-category/dialog-new-category.component';
 import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum';
 import { Status } from 'src/utility/enums/status.enum';
+import { ActiveUserService } from 'src/services/activeUser.service';
+import { HelpersService } from 'src/services/helpers.service';
+import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 
 // interface fo hierarchical representation of categories
 export interface CategoryNode extends Category {
   children?: CategoryNode[];
 }
-
-import { ActiveUserService } from 'src/services/activeUser.service';
-import { HelpersService } from 'src/services/helpers.service';
-import { Entity } from 'src/utility/enums/entity.enum';
-import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 
 @Component({
   selector: 'app-category-tree-details',
@@ -278,17 +276,15 @@ export class CategoryTreeDetailsComponent implements OnInit {
       )
       .then((confirmed) => {
         if (confirmed) {
-          let newBroader: Array<any> = [];
+          let newBroader: LinkedEntity[] = [];
           if (node.broader && node.broader.length > 0) {
             newBroader = node.broader;
           }
-          const updatePromises: Promise<any>[] = [];
+          const updatePromises: Array<Promise<Category>> = [];
           if (node.children && node.children.length > 0) {
             node.children.forEach((child) => {
-              // Create a payload to update the child's broader property
-              // It's safer to use the spread and remove `children` if it exists to keep all other props
               const payloadToSend = { ...child };
-              delete (payloadToSend as any).children;
+              payloadToSend.children = undefined;
               payloadToSend.broader = newBroader;
 
               updatePromises.push(this.apiService.endpoints.Category.update.call(payloadToSend));
@@ -414,8 +410,8 @@ export class CategoryTreeDetailsComponent implements OnInit {
     const dialogDataIn = { ...node, isEditMode: true };
     this.dialogService.openDialogForComponent(DialogNewCategoryComponent, dialogDataIn, '30vw').then((dialogData) => {
       if (dialogData.dataOut.update === true) {
-        const payloadToSend: Category = { ...node };
-        delete (payloadToSend as any).children; // Remove children property for API
+        const payloadToSend = { ...node };
+        payloadToSend.children = undefined;
         payloadToSend.name = dialogData.dataOut.categoryName;
         payloadToSend.description = dialogData.dataOut.categoryDescription || undefined;
 

@@ -1242,11 +1242,6 @@ export type Element = {
   versionId?: string;
 };
 
-export type Email = {
-  bodyText?: string;
-  subject?: string;
-};
-
 export type EmailPluginRequest = {
   message?: string;
 };

@@ -13,7 +13,7 @@ export class OptionComponent implements OnInit {
   @Input() id: string = '';
   @Input() param!: Mapping;
   @Input() disabled = false;
-  @Output() updatedParam = new Subject<any>();
+  @Output() updatedParam = new Subject<Mapping>();
 
   constructor(private formService: ParametersFormService) {}
 

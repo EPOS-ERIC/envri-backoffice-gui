@@ -27,17 +27,17 @@ export class DialogNewCategorySchemeComponent implements OnInit {
     private readonly formBuilder: FormBuilder,
     private readonly apiService: ApiService,
     public dialogRef: MatDialogRef<DialogNewCategorySchemeComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData<unknown, any>,
+    @Inject(MAT_DIALOG_DATA) public data: DialogData<CategoryScheme | null, CategoryScheme>,
   ) {}
 
   public ngOnInit(): void {
-    this.isEditMode = !!(this.data.dataIn && (this.data.dataIn as any).uid);
+    this.isEditMode = !!this.data.dataIn?.uid;
     this.initForm();
     this.loadCategorySchemes();
   }
 
   private initForm(): void {
-    const scheme = this.isEditMode ? (this.data.dataIn as any) : null;
+    const scheme = this.isEditMode ? this.data.dataIn : null;
 
     this.form = this.formBuilder.group({
       title: [scheme?.title || '', Validators.required],
@@ -146,7 +146,7 @@ export class DialogNewCategorySchemeComponent implements OnInit {
       const topConcepts = formValue.topConcepts ? [formValue.topConcepts] : [];
 
       if (this.isEditMode) {
-        const existingScheme = this.data.dataIn as any;
+        const existingScheme = this.data.dataIn!;
         this.data.dataOut = {
           title: formValue.title,
           description: formValue.description,
