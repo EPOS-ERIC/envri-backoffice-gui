@@ -5,11 +5,32 @@
   <section class="ecv-panel">
     <div class="ecv-header">
       <div>
-        <p class="ecv-kicker">ECV Variable</p>
+        <p class="ecv-kicker">ECV</p>
         <h3>ECV</h3>
-        <p class="ecv-description">Set the variable measured value for this Data Product.</p>
+        <p class="ecv-description">Manage one or more variable measured URIs for this Data Product.</p>
       </div>
     </div>
+
+    <div class="ecv-list" *ngIf="canDisplayVariableMeasuredList; else emptyList">
+      <div class="ecv-item" *ngFor="let uri of variableMeasured">
+        <div class="ecv-item-text">
+          <div class="ecv-item-name">{{ getEcvListItem(uri).name }}</div>
+          <div class="ecv-item-uri">{{ getEcvListItem(uri).uri }}</div>
+        </div>
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Remove"
+          (click)="removeVariableMeasured(uri)"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <ng-template #emptyList>
+      <p class="ecv-empty">No ECV linked yet.</p>
+    </ng-template>
 
     <div class="ecv-row">
       <mat-form-field>
@@ -20,17 +41,48 @@
         >
           <mat-option
             *ngFor="let ecv of allECVs"
-            [value]="ecv.name"
+            [value]="ecv.uri"
           >
             {{ ecv.name }}
           </mat-option>
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="ecv-value-field">
-        <mat-label>ECV value</mat-label>
-        <input matInput type="text" [value]="selectedVariableMeasured" disabled />
+      <button
+        mat-stroked-button
+        color="primary"
+        type="button"
+        (click)="addSelectedVariableMeasured()"
+        [disabled]="!canAddSelectedVariableMeasured"
+      >
+        Add to list
+      </button>
+    </div>
+
+    <div class="ecv-row ecv-manual-row">
+      <mat-form-field appearance="outline" class="ecv-manual-field">
+        <mat-label>Custom ECV URI</mat-label>
+        <input
+          matInput
+          type="text"
+          [value]="manualVariableMeasured"
+          (input)="manualVariableMeasured = $any($event.target).value"
+          placeholder="https://vocab.nerc.ac.uk/..."
+        />
+        <mat-error *ngIf="hasManualVariableMeasuredError">
+          URI must contain `vocab.nerc.ac.uk`.
+        </mat-error>
       </mat-form-field>
+
+      <button
+        mat-stroked-button
+        color="primary"
+        type="button"
+        (click)="addManualVariableMeasured()"
+        [disabled]="!canAddManualVariableMeasured"
+      >
+        Add custom URI
+      </button>
     </div>
   </section>
 </fieldset>
