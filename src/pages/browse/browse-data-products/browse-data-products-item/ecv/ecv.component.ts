@@ -12,6 +12,12 @@ import { ActionsService } from 'src/services/actions.service';
 import { Entity } from 'src/utility/enums/entity.enum';
 import { Status } from 'src/utility/enums/status.enum';
 
+interface EcvListItem {
+  uri: string;
+  name: string;
+  isCustom: boolean;
+}
+
 @Component({
   selector: 'app-ecv',
   templateUrl: './ecv.component.html',
@@ -22,11 +28,13 @@ export class ECVComponent extends WithSubscription implements OnInit {
 
   public disabled = false;
 
-  public variableMeasured: string[] | undefined = undefined;
+  public variableMeasured: string[] = [];
 
   public selectedVariableMeasured = '';
 
-  public allECVs: Array<EXVSDetailDataSource> | undefined = undefined;
+  public manualVariableMeasured = '';
+
+  public allECVs: Array<EXVSDetailDataSource> = [];
 
   constructor(
     private readonly entityExecutionService: EntityExecutionService,
@@ -42,9 +50,7 @@ export class ECVComponent extends WithSubscription implements OnInit {
 
   private initSubscriptions(): void {
     this.subscribe(this.entityExecutionService.dataProductObs, (dataProduct) => {
-      this.variableMeasured = dataProduct?.variableMeasured;
-      this.selectedVariableMeasured = this.variableMeasured?.[0] ?? '';
-      console.warn('The set VariableMeasured:', this.variableMeasured);
+      this.variableMeasured = [...new Set(dataProduct?.variableMeasured ?? [])];
     });
 
     this.subscribe(this.stateChangeService.currentDataProductStateObs, (status: DataProduct['status'] | null) => {
@@ -61,18 +67,81 @@ export class ECVComponent extends WithSubscription implements OnInit {
 
   public async fetchECVs(){
     const callResponse = await this.apiService.endpoints.ECV.getAll.call(); 
-    console.warn('Hello, response getAllECV:', callResponse);
     if(callResponse.length > 0){
-      this.allECVs = []  as EXVSDetailDataSource[];
-      callResponse.forEach((ecv: EXVSDetailDataSource)=>{
-        this.allECVs?.push(ecv as EXVSDetailDataSource);
-      })
+      this.allECVs = [...callResponse] as EXVSDetailDataSource[];
     }
   }
 
   public onEcvSelectionChange(selectedValue: string): void {
     this.selectedVariableMeasured = selectedValue;
-    this.variableMeasured = selectedValue ? [selectedValue] : [];
+  }
+
+  public addSelectedVariableMeasured(): void {
+    this.addVariableMeasured(this.selectedVariableMeasured);
+    this.selectedVariableMeasured = '';
+  }
+
+  public addManualVariableMeasured(): void {
+    const value = this.manualVariableMeasured.trim();
+    if (!this.isManualVariableMeasuredValid(value)) {
+      return;
+    }
+
+    this.addVariableMeasured(value);
+    this.manualVariableMeasured = '';
+  }
+
+  public removeVariableMeasured(uri: string): void {
+    const updated = this.variableMeasured.filter((item) => item !== uri);
+    this.persistVariableMeasured(updated);
+    if (this.selectedVariableMeasured === uri) {
+      this.selectedVariableMeasured = '';
+    }
+  }
+
+  public getEcvListItem(uri: string): EcvListItem {
+    const match = this.allECVs.find((ecv) => ecv.uri === uri);
+
+    return {
+      uri,
+      name: match?.name ?? 'Manual URI',
+      isCustom: !match,
+    };
+  }
+
+  public isManualVariableMeasuredValid(value = this.manualVariableMeasured): boolean {
+    return value.trim().includes('vocab.nerc.ac.uk');
+  }
+
+  public get canAddSelectedVariableMeasured(): boolean {
+    const value = this.selectedVariableMeasured.trim();
+    return value.length > 0 && !this.variableMeasured.includes(value);
+  }
+
+  public get canAddManualVariableMeasured(): boolean {
+    const value = this.manualVariableMeasured.trim();
+    return this.isManualVariableMeasuredValid(value) && value.length > 0 && !this.variableMeasured.includes(value);
+  }
+
+  public get hasManualVariableMeasuredError(): boolean {
+    return this.manualVariableMeasured.trim().length > 0 && !this.isManualVariableMeasuredValid();
+  }
+
+  public get canDisplayVariableMeasuredList(): boolean {
+    return this.variableMeasured.length > 0;
+  }
+
+  private addVariableMeasured(uri: string): void {
+    const normalizedUri = uri.trim();
+    if (!normalizedUri || this.variableMeasured.includes(normalizedUri)) {
+      return;
+    }
+
+    this.persistVariableMeasured([...this.variableMeasured, normalizedUri]);
+  }
+
+  private persistVariableMeasured(updatedValue: string[]): void {
+    this.variableMeasured = [...new Set(updatedValue)];
 
     const activeDataProduct = this.entityExecutionService.getActiveDataProductValue();
     if (activeDataProduct != null) {
