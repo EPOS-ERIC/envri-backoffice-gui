@@ -16,7 +16,6 @@ import { BrowseSoftwareSourceCodeComponent } from './browse-softwareSourceCode/b
 import { BrowseSoftwareSourceCodeItemComponent } from './browse-softwareSourceCode/browse-softwareSourceCode-item/browse-softwareSourceCode-item.component';
 import { BrowseCategoriesComponent } from './browse-categories/browse-categories.component';
 import { BrowseCategorySchemesComponent } from './browse-category-schemes/browse-category-schemes.component';
-import { BrowseECVComponent } from './browse-ecv/browse-ecv.component';
 
 const routes: Routes = [
   {
@@ -79,11 +78,6 @@ const routes: Routes = [
     path: EntityEndpointValue.CATEGORY_SCHEME,
     component: LayoutComponent,
     children: [{ path: '', component: BrowseCategorySchemesComponent }],
-  },
-  {
-    path: EntityEndpointValue.ECV,
-    component: LayoutComponent,
-    children: [{ path: '', component: BrowseECVComponent }],
   },
 ];
 

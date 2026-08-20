@@ -38,5 +38,6 @@ export class DataProduct implements DataProductType {
     public uid?: string,
     public version?: string,
     public versionInfo?: string,
+    public variableMeasured?: string[],
   ) {}
 }

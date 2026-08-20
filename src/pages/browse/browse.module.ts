@@ -24,7 +24,6 @@ import { BrowseSoftwareApplicationItemComponent } from './browse-applicationSoft
 import { BrowseApplicationSoftwareModule } from './browse-applicationSoftware/browse-applicationSoftware.module';
 import { BrowseSoftwareSourceCodeItemComponent } from './browse-softwareSourceCode/browse-softwareSourceCode-item/browse-softwareSourceCode-item.component';
 import { BrowseSoftwareSourceCodeModule } from './browse-softwareSourceCode/browse-softwareSourceCode.module';
-import { BrowseECVModule } from './browse-ecv/browse-ecv.module';
 
 @NgModule({
   declarations: [
@@ -54,7 +53,6 @@ import { BrowseECVModule } from './browse-ecv/browse-ecv.module';
     BrowseCategoriesModule,
     BrowseCategorySchemesModule,
     SkeletonLoaderComponent,
-    BrowseECVModule
   ],
   exports: [],
   providers: [
