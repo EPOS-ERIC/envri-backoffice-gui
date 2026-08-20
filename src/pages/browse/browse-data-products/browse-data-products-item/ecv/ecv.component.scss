@@ -1,3 +1,42 @@
+.ecv-panel {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.1rem 1.15rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-left: 5px solid #004926;
+  background: linear-gradient(180deg, rgba(0, 73, 38, 0.06), rgba(0, 73, 38, 0.02));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ecv-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.2;
+  }
+}
+
+.ecv-kicker {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0b6b3a;
+}
+
+.ecv-description {
+  margin: 0.25rem 0 0;
+  color: rgba(0, 0, 0, 0.66);
+  font-size: 0.92rem;
+}
+
 .notice {
   font-size: 15px;
   color: #5c5c5c;
@@ -25,12 +64,49 @@ mat-form-field {
   flex: 1 1 18rem;
 }
 
+@media (max-width: 720px) {
+  .ecv-panel {
+    padding: 0.9rem;
+  }
+
+  .ecv-header {
+    margin-bottom: 0.75rem;
+  }
+
+  mat-form-field {
+    max-width: 100%;
+  }
+}
+
 ::ng-deep .ecv-value-field .mat-form-field-flex > .mat-form-field-infix {
   padding-top: 0.4rem !important;
 }
 
-::ng-deep .ecv-value-field input:disabled {
+::ng-deep .ecv-value-field.mat-form-field-disabled {
+  opacity: 1;
+}
+
+::ng-deep .ecv-value-field.mat-form-field-disabled .mat-form-field-label {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+::ng-deep .ecv-value-field.mat-form-field-disabled .mat-form-field-underline {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+::ng-deep .ecv-value-field input.mat-input-element:disabled {
   color: rgba(0, 0, 0, 0.87);
+  -webkit-text-fill-color: rgba(0, 0, 0, 0.87);
+  opacity: 1;
+  cursor: default;
+}
+
+::ng-deep .ecv-value-field .mat-form-field-appearance-outline.mat-form-field-disabled .mat-form-field-outline {
+  color: rgba(0, 0, 0, 0.18);
+}
+
+::ng-deep .ecv-value-field .mat-form-field-appearance-outline.mat-form-field-disabled .mat-form-field-outline-thick {
+  color: rgba(0, 0, 0, 0.28);
 }
 
 button {

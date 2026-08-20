@@ -17,5 +17,4 @@ export enum EntityEndpointValue {
   DOCUMENTATION = 'documentation',
   CATEGORY = 'category',
   CATEGORY_SCHEME = 'categoryscheme',
-  ECV = 'ecv',
 }
