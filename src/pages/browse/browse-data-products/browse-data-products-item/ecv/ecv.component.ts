@@ -1,11 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { DataProduct } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
+import { EXVSDetailDataSource } from 'src/apiAndObjects/objects/data-source/exvsDetailDataSource';
 import { WithSubscription } from 'src/helpers/subscription';
 import { ActiveUserService } from 'src/services/activeUser.service';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 import { LoadingService } from 'src/services/loading.service';
 import { StateChangeService } from 'src/services/stateChange.service';
+import { DataproductService } from '../../dataproduct.service';
+import { ActionsService } from 'src/services/actions.service';
 import { Entity } from 'src/utility/enums/entity.enum';
 import { Status } from 'src/utility/enums/status.enum';
 
@@ -15,30 +18,35 @@ import { Status } from 'src/utility/enums/status.enum';
   styleUrl: './ecv.component.scss',
 })
 export class ECVComponent extends WithSubscription implements OnInit {
+  public entityEnum = Entity;
+
+  public disabled = false;
+
+  public variableMeasured: string[] | undefined = undefined;
+
+  public selectedVariableMeasured = '';
+
+  public allECVs: Array<EXVSDetailDataSource> | undefined = undefined;
+
   constructor(
     private readonly entityExecutionService: EntityExecutionService,
     private readonly stateChangeService: StateChangeService,
     private readonly apiService: ApiService,
     private readonly loadingService: LoadingService,
     private readonly activeUserService: ActiveUserService,
+    private readonly dataProductService: DataproductService,
+    private readonly actionsService: ActionsService,
   ) {
     super();
-    if(this.entityExecutionService.getActiveDataProductValue()){
-      this.variableMeasured = this.entityExecutionService.getActiveDataProductValue()?.variableMeasured;
-    }
-    this.allECVs = this.fetchECVs();
-    
   }
 
-  public entityEnum = Entity;
-
-  public disabled = false;
-  
-  public variableMeasured: string [] | undefined = undefined;
-
-  public allECVs: Array<string> | undefined = undefined;
-
   private initSubscriptions(): void {
+    this.subscribe(this.entityExecutionService.dataProductObs, (dataProduct) => {
+      this.variableMeasured = dataProduct?.variableMeasured;
+      this.selectedVariableMeasured = this.variableMeasured?.[0] ?? '';
+      console.warn('The set VariableMeasured:', this.variableMeasured);
+    });
+
     this.subscribe(this.stateChangeService.currentDataProductStateObs, (status: DataProduct['status'] | null) => {
       if (status === null|| (status === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted()) || status === Status.PUBLISHED || status === Status.ARCHIVED) {
         this.disabled = true;
@@ -48,21 +56,31 @@ export class ECVComponent extends WithSubscription implements OnInit {
 
   public ngOnInit(): void {
     this.initSubscriptions();
+    void this.fetchECVs();
   }
 
-  public fetchECVs(){
-    let responseArray: Array<string> | undefined = undefined;
-    this.apiService.endpoints.ECV.getAll.call()
-    .then((response: Array<string>) => {
-      if(response.length > 0){
-        responseArray = response;
-        console.warn('Hello, response getAllECV:', response);
-      }
-    })
-    .catch((error: unknown) => {
-      console.error('Error fetching ECVs:', error);
-    });
-    return responseArray;
+  public async fetchECVs(){
+    const callResponse = await this.apiService.endpoints.ECV.getAll.call(); 
+    console.warn('Hello, response getAllECV:', callResponse);
+    if(callResponse.length > 0){
+      this.allECVs = []  as EXVSDetailDataSource[];
+      callResponse.forEach((ecv: EXVSDetailDataSource)=>{
+        this.allECVs?.push(ecv as EXVSDetailDataSource);
+      })
+    }
+  }
+
+  public onEcvSelectionChange(selectedValue: string): void {
+    this.selectedVariableMeasured = selectedValue;
+    this.variableMeasured = selectedValue ? [selectedValue] : [];
+
+    const activeDataProduct = this.entityExecutionService.getActiveDataProductValue();
+    if (activeDataProduct != null) {
+      this.dataProductService.updateDataProductRecord(activeDataProduct, {
+        variableMeasured: this.variableMeasured,
+      });
+      this.actionsService.enableSave();
+    }
   }
 
 

@@ -5,14 +5,14 @@ import { StorageKey } from 'src/utility/enums/storageKey.enum';
 import { Endpoint } from 'src/apiAndObjects/_lib_code/api/endpoint.abstract';
 import { EXVSDetailDataSource } from 'src/apiAndObjects/objects/data-source/exvsDetailDataSource';
 
-export class GetAllECV extends Endpoint<Array<string>, GetAllECVParams, Array<string>> {
+export class GetAllECV extends Endpoint<Array<EXVSDetailDataSource>, GetAllECVParams, Array<EXVSDetailDataSource>> {
   private persistorService: PersistorService = new PersistorService();
 
   protected getCacheKey(params: GetAllECVParams): string {
     return JSON.stringify(params);
   }
 
-  protected callLive(): Promise<string[]> {
+  protected callLive(): Promise<EXVSDetailDataSource[]> {
     const accessToken = this.persistorService.getValueFromStorage(StorageType.SESSION_STORAGE, StorageKey.ACCESS_TOKEN);
     const headers = (): HttpHeaders => {
       let authHeader = new HttpHeaders();
@@ -32,7 +32,7 @@ export class GetAllECV extends Endpoint<Array<string>, GetAllECVParams, Array<st
     );
   }
 
-  protected callMock(): Promise<string[]> {
+  protected callMock(): Promise<EXVSDetailDataSource[]> {
     throw new Error('Method not implemented.');
   }
 }

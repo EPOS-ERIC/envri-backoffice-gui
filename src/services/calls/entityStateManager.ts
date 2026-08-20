@@ -199,6 +199,7 @@ export class EntityStateManager {
       initial.uid,
       initial.version,
       initial.versionInfo,
+      initial.variableMeasured,
     );
     return exportVar;
   }

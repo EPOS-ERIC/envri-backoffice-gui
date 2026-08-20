@@ -40,6 +40,7 @@ export class DataProductDetailDataSource extends BaseObject implements DataProdu
     QUALITY_ASSURANCE: 'qualityAssurance',
     HAS_QUALITY_ANNOTATION: 'hasQualityAnnotation',
     GROUPS: 'groups',
+    VARIABLE_MEASURED: 'variableMeasured',
     VERSION_ID: 'versionId',
   };
 
@@ -81,6 +82,7 @@ export class DataProductDetailDataSource extends BaseObject implements DataProdu
   public readonly version: string;
   public readonly versionId: string;
   public readonly versionInfo: string;
+  public readonly variableMeasured: Array<string>;
 
   protected constructor(sourceObject?: Record<string, unknown>) {
     super(sourceObject);
@@ -123,5 +125,6 @@ export class DataProductDetailDataSource extends BaseObject implements DataProdu
     this.qualityAssurance = this._getString(DataProductDetailDataSource.KEYS.QUALITY_ASSURANCE);
     this.hasQualityAnnotation = this._getString(DataProductDetailDataSource.KEYS.HAS_QUALITY_ANNOTATION);
     this.groups = this._getArray(DataProductDetailDataSource.KEYS.GROUPS);
+    this.variableMeasured = this._getArray(DataProductDetailDataSource.KEYS.VARIABLE_MEASURED);
   }
 }

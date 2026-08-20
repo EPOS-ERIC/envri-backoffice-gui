@@ -1,17 +1,40 @@
 .notice {
-    font-size: 15px;
-    color: #5c5c5c;
+  font-size: 15px;
+  color: #5c5c5c;
+}
+
+.item {
+  p {
+    font-weight: 500;
   }
-  
-  .item {
-    p {
-      font-weight: 500;
-    }
+}
+
+.ecv-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+mat-form-field {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.ecv-value-field {
+  flex: 1 1 18rem;
+}
+
+::ng-deep .ecv-value-field .mat-form-field-flex > .mat-form-field-infix {
+  padding-top: 0.4rem !important;
+}
+
+::ng-deep .ecv-value-field input:disabled {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+button {
+  &.disabled {
+    opacity: 0.6;
   }
-  
-  button {
-    &.disabled {
-      opacity: 0.6;
-    }
-  }
-  
+}
