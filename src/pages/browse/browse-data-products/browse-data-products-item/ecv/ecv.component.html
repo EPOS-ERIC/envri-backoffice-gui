@@ -1,31 +1,36 @@
-<section class="ecv-panel">
-  <div class="ecv-header">
-    <div>
-      <p class="ecv-kicker">ECV Variable</p>
-      <h3>ECV</h3>
-      <p class="ecv-description">Set the variable measured value for this Data Product.</p>
+<fieldset
+  [disabled]="disabled"
+  class="fieldset-container"
+>
+  <section class="ecv-panel">
+    <div class="ecv-header">
+      <div>
+        <p class="ecv-kicker">ECV Variable</p>
+        <h3>ECV</h3>
+        <p class="ecv-description">Set the variable measured value for this Data Product.</p>
+      </div>
     </div>
-  </div>
 
-  <div class="ecv-row">
-    <mat-form-field>
-      <mat-label>Select ECV</mat-label>
-      <mat-select
-        [value]="selectedVariableMeasured"
-        (selectionChange)="onEcvSelectionChange($event.value)"
-      >
-        <mat-option
-          *ngFor="let ecv of allECVs"
-          [value]="ecv.name"
+    <div class="ecv-row">
+      <mat-form-field>
+        <mat-label>Select ECV</mat-label>
+        <mat-select
+          [value]="selectedVariableMeasured"
+          (selectionChange)="onEcvSelectionChange($event.value)"
         >
-          {{ ecv.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+          <mat-option
+            *ngFor="let ecv of allECVs"
+            [value]="ecv.name"
+          >
+            {{ ecv.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
 
-    <mat-form-field appearance="outline" class="ecv-value-field">
-      <mat-label>ECV value</mat-label>
-      <input matInput type="text" [value]="selectedVariableMeasured" disabled />
-    </mat-form-field>
-  </div>
-</section>
+      <mat-form-field appearance="outline" class="ecv-value-field">
+        <mat-label>ECV value</mat-label>
+        <input matInput type="text" [value]="selectedVariableMeasured" disabled />
+      </mat-form-field>
+    </div>
+  </section>
+</fieldset>
