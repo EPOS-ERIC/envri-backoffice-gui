@@ -168,7 +168,6 @@ export class BrowseDataProductsItemComponent extends WithSubscription implements
         created: new FormControl(this.dataProduct?.created),
         modified: new FormControl(this.dataProduct?.modified),
         qualityAssurance: new FormControl(this.dataProduct?.qualityAssurance),
-        variableMeasured: this.dataProduct?.variableMeasured,
       }),
       distribution: this.formBuilder.array([]),
       contactPoint: this.formBuilder.array([]),
@@ -203,6 +202,7 @@ export class BrowseDataProductsItemComponent extends WithSubscription implements
           accrualPeriodicity: changes.generalInformation?.accrualPeriodicity,
           type: changes.generalInformation?.type,
           qualityAssurance: changes.generalInformation?.qualityAssurance,
+          variableMeasured: this.dataProduct?.variableMeasured,
         };
 
         this.entityExecutionService.setActiveDataProduct(updatingObject);
