@@ -21,6 +21,7 @@
           mat-icon-button
           type="button"
           matTooltip="Remove"
+          [disabled]="disabled"
           (click)="removeVariableMeasured(uri)"
         >
           <mat-icon>close</mat-icon>
@@ -37,6 +38,7 @@
         <mat-label>Select ECV</mat-label>
         <mat-select
           [value]="selectedVariableMeasured"
+          [disabled]="disabled"
           (selectionChange)="onEcvSelectionChange($event.value)"
         >
           <mat-option
@@ -52,8 +54,8 @@
         mat-stroked-button
         color="primary"
         type="button"
+        [disabled]="disabled || !canAddSelectedVariableMeasured"
         (click)="addSelectedVariableMeasured()"
-        [disabled]="!canAddSelectedVariableMeasured"
       >
         Add to list
       </button>
@@ -78,8 +80,8 @@
         mat-stroked-button
         color="primary"
         type="button"
+        [disabled]="disabled || !canAddManualVariableMeasured"
         (click)="addManualVariableMeasured()"
-        [disabled]="!canAddManualVariableMeasured"
       >
         Add custom URI
       </button>
