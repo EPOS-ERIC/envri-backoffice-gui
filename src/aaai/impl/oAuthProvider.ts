@@ -2,17 +2,18 @@
 import { AuthConfig, OAuthService, UserInfo } from 'angular-oauth2-oidc';
 import { JwksValidationHandler } from 'angular-oauth2-oidc-jwks';
 import { AuthenticationProvider } from '../authProvider.interface';
-import { BehaviorSubject, lastValueFrom, Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { AAAIUser } from '../aaaiUser.interface';
 import { BasicUser } from './basicUser';
-import { Injector } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 
 /** OAuth provider implementation */
+@Injectable()
 export class OAuthAuthenticationProvider implements AuthenticationProvider {
   private static readonly AUTH_ROOT = environment.authRootUrl;
-  private static readonly AUTH_ISSUER = OAuthAuthenticationProvider.AUTH_ROOT + '/oauth2';
+  private static readonly AUTH_ISSUER = OAuthAuthenticationProvider.AUTH_ROOT + '';
   private static readonly AUTH_REVOKE_ENDPOINT = OAuthAuthenticationProvider.AUTH_ISSUER + '/revoke';
   private static readonly REDIRECTION_PAGE = '/last-page-redirect';
   private static readonly SILENT_REFRESH_PAGE = '/silent-token-refresh.html';
@@ -37,16 +38,16 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
     return this.authInitializationPromise;
   }
 
+  public isAuthenticated(): boolean {
+    return this.oAuthService.hasValidAccessToken();
+  }
+
   public watchForUserChange(): Observable<null | AAAIUser> {
     return this.userProfileSource.asObservable();
   }
 
   public getUser(): null | AAAIUser {
     return this.userProfileSource.getValue();
-  }
-
-  public isAuthenticated(): boolean {
-    return this.oAuthService.hasValidAccessToken();
   }
 
   public getAccessTokenExpiration(): null | number {
@@ -57,7 +58,7 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
   // TODO: angular-oauth2-oidc suggests that "Code Flow" rather than "Implicit Flow" should be favoured.
   // SHould we adopt that? https://www.npmjs.com/package/angular-oauth2-oidc
   public login(): void {
-    this.oAuthService.initImplicitFlow();
+    this.oAuthService.initCodeFlow();
   }
 
   public logout(): void {
@@ -95,7 +96,6 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
       scope: environment.authScope,
 
       disableAtHashCheck: true,
-      // showDebugInformation: true,
     };
     return authConfig;
   }
@@ -166,15 +166,26 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
       console.info('[AAAI][OAuth] valid access token present after init');
       this.updateUserProfile();
     }
+
+    this.oAuthService.events.subscribe((e) => {
+      // angular-oauth2-oidc EventType string values
+      switch (e.type) {
+        case 'discovery_document_loaded':
+        case 'token_received': // first logged in
+        case 'logout': // logout to clear user info
+          this.updateUserProfile();
+          break;
+      }
+    });
   }
 
   private updateUserProfile(): void {
+    console.warn('Update User Profile called');
     // ensure not called too often
-    clearTimeout(this.updateUserProfileTimeout);
+    clearTimeout(this.updateUserProfileTimeout as NodeJS.Timeout);
     this.updateUserProfileTimeout = setTimeout(() => {
       const token = this.getUserToken();
       const currentProfile = this.userProfileSource.getValue();
-
       // only if the token has changed
       if (currentProfile == null || currentProfile.getToken() !== token) {
         // Try protects against a promise not being returned from "loadUserProfile" function.
@@ -190,10 +201,10 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
             })
             .catch((error: unknown) => {
               const userId = this.getUserId();
-              const user = BasicUser.makeOrDefault(userId, userId, token);
+              const user = BasicUser.makeOrDefault(userId, userId, token, userId);
               this.userProfileSource.next(user);
             });
-        } catch (error) {
+        } catch {
           this.userProfileSource.next(null);
         }
       }
@@ -207,21 +218,21 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
     const httpOptions = {
       headers: new HttpHeaders({
         Authorization: 'Bearer ' + this.oAuthService.getAccessToken(),
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         'Content-Type': 'application/x-www-form-urlencoded',
       }),
     };
 
     // console.debug('authorizationHeader', this.oAuthService.authorizationHeader());
-    return lastValueFrom(
-      this.http.post(
+    return this.http.post(
         OAuthAuthenticationProvider.AUTH_REVOKE_ENDPOINT,
         `token=${this.oAuthService.getAccessToken()}` +
           `&client_id=${this.oAuthService.clientId}` +
           '&token_type_hint=access_token' +
           '&logout=true',
         httpOptions,
-      ),
-    )
+      )
+      .toPromise()
       .then(() => {})
       .catch((e) => {
         console.warn('Unable to revoke Access Token', e);

@@ -34,6 +34,7 @@ import { DistributionWebserviceComponent } from './browse-data-products-item/dis
 import { SupportedOperationComponent } from './browse-data-products-item/supported-operation/supported-operation.component';
 import { DocumentationComponent } from './browse-data-products-item/documentation/documentation.component';
 import { PipesModule } from 'src/pipes/pipes.module';
+import { ECVComponent } from './browse-data-products-item/ecv/ecv.component';
 
 @NgModule({
   declarations: [
@@ -65,6 +66,7 @@ import { PipesModule } from 'src/pipes/pipes.module';
     DistributionWebserviceComponent,
     SupportedOperationComponent,
     DocumentationComponent,
+    ECVComponent
   ],
   imports: [AngularMaterialModule, CommonModule, ComponentsModule, NgFor, SideNavigationModule, PipesModule],
   exports: [
@@ -91,6 +93,7 @@ import { PipesModule } from 'src/pipes/pipes.module';
     SpatialCoverageComponent,
     SpatialCoverageMapComponent,
     TemporalCoverageComponent,
+    ECVComponent
   ],
   providers: [
     {

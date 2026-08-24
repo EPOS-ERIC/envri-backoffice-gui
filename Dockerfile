@@ -3,7 +3,7 @@ FROM nginx:stable-alpine
 ENV SERVER_NAME=_ \
     BASE_URL=/ \
     API_HOST=http://gateway:5000 \
-    AUTH_ROOT_URL=http://localhost:35000
+    AUTH_ROOT_URL=https://login.staging.envri.eu/auth/realms/envri
 
 COPY dist/browser/ /opt/epos-backoffice-gui/
 COPY nginx.conf /etc/nginx/conf.d/default.conf

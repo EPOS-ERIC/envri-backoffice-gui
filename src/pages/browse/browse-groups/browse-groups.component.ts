@@ -54,7 +54,7 @@ export class BrowseGroupsComponent implements OnInit {
   };
   public statusOptions = statusOptions;
   public groupOptions = groupOptions;
-  public expandedElement: any;
+  public expandedElement: Group | CollatedGroup | null = null;
   public columnsToDisplayWithExpand = [...this.allGroupsColumns, 'expand'];
 
   constructor(

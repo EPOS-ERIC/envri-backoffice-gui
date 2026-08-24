@@ -22,7 +22,7 @@ export class DialogAddNewParameterComponent implements OnInit {
   private mapping: any = { range: '', variable: '', required: '', groups: undefined };
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: DialogData<string[] | undefined>,
+    @Inject(MAT_DIALOG_DATA) public data: DialogData<unknown, LinkedEntity | null>,
     private readonly formBuilder: FormBuilder,
     private operationService: EntityExecutionService,
     private apiService: ApiService,

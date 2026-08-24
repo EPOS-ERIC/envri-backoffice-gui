@@ -206,6 +206,7 @@ export class BrowseDataProductsItemComponent extends WithSubscription implements
           accrualPeriodicity: changes.generalInformation?.accrualPeriodicity,
           type: changes.generalInformation?.type,
           qualityAssurance: changes.generalInformation?.qualityAssurance,
+          variableMeasured: this.dataProduct?.variableMeasured,
         };
 
         this.entityExecutionService.setActiveDataProduct(updatingObject);

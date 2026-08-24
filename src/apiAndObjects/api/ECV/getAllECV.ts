@@ -1,44 +1,41 @@
 import { HttpHeaders } from '@angular/common/http';
-import { UserInfoDataSource } from 'src/apiAndObjects/objects/data-source/userInfoDataSource';
-import { CacheableEndpoint } from 'src/apiAndObjects/_lib_code/api/cacheableEndpoint.abstract';
 import { RequestMethod } from 'src/apiAndObjects/_lib_code/api/requestMethod.enum';
 import { PersistorService, StorageType } from 'src/services/persistor.service';
 import { StorageKey } from 'src/utility/enums/storageKey.enum';
+import { Endpoint } from 'src/apiAndObjects/_lib_code/api/endpoint.abstract';
+import { EXVSDetailDataSource } from 'src/apiAndObjects/objects/data-source/exvsDetailDataSource';
 
-export class GetUserInfo extends CacheableEndpoint<UserInfoDataSource, GetUserInfoParams, UserInfoDataSource> {
+export class GetAllECV extends Endpoint<Array<EXVSDetailDataSource>, GetAllECVParams, Array<EXVSDetailDataSource>> {
   private persistorService: PersistorService = new PersistorService();
 
-  protected getCacheKey(params: GetUserInfoParams): string {
+  protected getCacheKey(params: GetAllECVParams): string {
     return JSON.stringify(params);
   }
 
-  protected callLive(params: GetUserInfoParams): Promise<UserInfoDataSource> {
+  protected callLive(): Promise<EXVSDetailDataSource[]> {
     const accessToken = this.persistorService.getValueFromStorage(StorageType.SESSION_STORAGE, StorageKey.ACCESS_TOKEN);
     const headers = (): HttpHeaders => {
       let authHeader = new HttpHeaders();
       authHeader = authHeader.append('Authorization', accessToken ? `Bearer ${accessToken}` : '');
       return authHeader;
     };
+
     const callResponsePromise = this.apiCaller.doCall(
-      ['/user/self'],
+      ['resources/exvs'],
       RequestMethod.GET,
-      {
-        available_section: String(params.available_section),
-      },
+      undefined,
       undefined,
       headers,
     );
-
-    return this.buildObjectFromResponse(UserInfoDataSource, callResponsePromise).then(
-      (userInfo: UserInfoDataSource) => userInfo,
+    return this.buildObjectsFromResponse(EXVSDetailDataSource, callResponsePromise).then((result) =>
+      result.flat()
     );
   }
 
-  protected callMock(): Promise<UserInfoDataSource> {
+  protected callMock(): Promise<EXVSDetailDataSource[]> {
     throw new Error('Method not implemented.');
   }
 }
 
-export interface GetUserInfoParams {
-  available_section: boolean;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface GetAllECVParams {}

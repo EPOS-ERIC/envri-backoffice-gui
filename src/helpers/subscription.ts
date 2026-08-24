@@ -12,16 +12,11 @@ export abstract class WithSubscription implements OnDestroy {
   protected subscribe<T>(
     observable: Observable<T>,
     observerOrNext?: PartialObserver<T> | ((value: T) => void),
-    error?: (error: any) => void,
+    error?: (error: unknown) => void,
     complete?: () => void,
   ): Subscription | void {
-    return this.subSink.add(
-      observable.subscribe({
-        next: observerOrNext as any,
-        error,
-        complete,
-      }),
-    );
+    const next = typeof observerOrNext === 'function' ? observerOrNext : observerOrNext?.next;
+    return this.subSink.add(observable.subscribe({ next, error, complete }));
   }
 
   protected unsubscribe(innerSub: Subscription) {
