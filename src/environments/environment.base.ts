@@ -32,7 +32,7 @@ export const environmentBase = {
   authClientId: '2d7f667e-9d6c-4c09-ad15-ceec571ae554',
   authRootUrl: 'https://login.staging.envri.eu/auth/realms/envri',
   authScope: ['openid', 'profile', 'email', 'offline_access'].join(' '),
-  brandLogoPath: 'assets/img/logo-envri-hub-centered-color.png',
+  brandLogoPath: 'assets/img/logo-envri-hub-centred-color.png',
   browserTitle: 'EPOS Backoffice',
   faviconPath: 'assets/favicon.ico',
   headerLogoPath: 'assets/ENVRI-Hub-logo-white.svg',
