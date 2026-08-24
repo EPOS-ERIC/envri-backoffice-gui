@@ -1,5 +1,5 @@
 import { Component, Input, Output, OnInit } from '@angular/core';
-import { debounceTime, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { ParametersFormService } from '../parameters-form.service';
 import { UntypedFormGroup } from '@angular/forms';
 import { Mapping } from 'generated/backofficeSchemas';
@@ -41,7 +41,7 @@ export class OptionComponent implements OnInit {
   }
 
   private trackFormChanges(): void {
-    this.optionForm.valueChanges.pipe(debounceTime(500)).subscribe((changes) => {
+    this.optionForm.valueChanges.subscribe((changes) => {
       if (changes.multipleValues && this.formService.checkBool(changes.multipleValues)) {
         this.disableAddNewValue = true;
       } else {

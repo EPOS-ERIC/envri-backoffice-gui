@@ -1,0 +1,81 @@
+<div class="wrapper">
+  <ng-container>
+    <h1 mat-dialog-title>Add Multiple Parameters</h1>
+  </ng-container>
+
+  <div mat-dialog-content>
+    <div class="textarea-shell">
+      <label for="multiple-params" class="textarea-label">Values</label>
+      <div class="textarea-top-row">
+        <p class="textarea-hint">Separate each value with a comma.</p>
+        <button class="copy-link-button" mat-button type="button" [disabled]="textareaContent.trim().length === 0" (click)="copyTextareaContent()">
+          Copy textarea
+        </button>
+      </div>
+      <textarea
+        name="multiple-params"
+        id="multiple-params"
+        matInput
+        rows="6"
+        placeholder="value-1, value-2, value-3"
+        [(ngModel)]="textareaContent"
+        (ngModelChange)="onTextareaContentChange()"
+      ></textarea>
+    </div>
+  </div>
+  <div class="duplicates-panel" *ngIf="alreadyExistingValues.length > 0 || introducedDuplicateValues.length > 0">
+    <p class="duplicates-title">Values to review</p>
+    <p class="duplicates-text">Please edit your list before adding it.</p>
+
+    <details class="duplicate-section" *ngIf="alreadyExistingValues.length > 0">
+      <summary class="duplicate-summary">
+        <div class="duplicate-summary-copy">
+          <p class="duplicate-section-title">Already existing</p>
+          <p class="duplicate-section-meta">{{ alreadyExistingValues.length }} values</p>
+        </div>
+        <mat-icon class="duplicate-chevron" aria-hidden="true">expand_more</mat-icon>
+      </summary>
+      <div class="duplicate-section-body">
+        <div class="duplicates-list">
+          <code class="duplicate-chip duplicate-chip--existing" *ngFor="let duplicate of alreadyExistingValues">
+            {{ duplicate }}
+          </code>
+        </div>
+      </div>
+    </details>
+
+    <details class="duplicate-section" *ngIf="introducedDuplicateValues.length > 0">
+      <summary class="duplicate-summary">
+        <div class="duplicate-summary-copy">
+          <p class="duplicate-section-title">Introduced by you</p>
+          <p class="duplicate-section-meta">{{ introducedDuplicateValues.length }} values</p>
+        </div>
+        <mat-icon class="duplicate-chevron" aria-hidden="true">expand_more</mat-icon>
+      </summary>
+      <div class="duplicate-section-body">
+        <div class="duplicates-list">
+          <code class="duplicate-chip duplicate-chip--introduced" *ngFor="let duplicate of introducedDuplicateValues">
+            {{ duplicate }}
+          </code>
+        </div>
+      </div>
+    </details>
+  </div>
+  <div mat-dialog-actions>
+    <button
+      mat-button
+      (click)="handleCancel()"
+    >
+      Cancel
+    </button>
+    <button
+      [disabled]="textareaContent.trim().length === 0"
+      mat-flat-button
+      color="primary"
+      cdkFocusInitial
+      (click)="handleAdd()"
+    >
+      Add
+    </button>
+  </div>
+</div>

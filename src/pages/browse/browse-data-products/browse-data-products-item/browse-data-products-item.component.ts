@@ -43,6 +43,10 @@ export class BrowseDataProductsItemComponent extends WithSubscription implements
   public activeTitle: string = '';
   public canManageCategories: boolean = false;
 
+  public get activeDataProduct(): DataProduct | null {
+    return this.entityExecutionService.getActiveDataProductValue();
+  }
+
   constructor(
     private readonly dialogService: DialogService,
     private readonly actionService: ActionsService,

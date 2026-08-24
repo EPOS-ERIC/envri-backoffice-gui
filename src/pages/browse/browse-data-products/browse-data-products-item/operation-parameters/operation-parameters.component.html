@@ -1,7 +1,7 @@
 <ng-container *ngIf="!loading">
   <form
     [formGroup]="paramsForm"
-    *ngIf="paramsForm && mapping"
+    *ngIf="paramsForm && mapping && supportedOperations"
     class="operation-params"
   >
     <mat-accordion>
@@ -9,6 +9,12 @@
         <mat-expansion-panel
           *ngFor="let control of getControls('mapping'); let i = index"
           [formGroupName]="i"
+          [expanded]="expandedPanelInstanceId === control.value.instanceId"
+          (opened)="expandedPanelInstanceId = control.value.instanceId"
+          (closed)="
+            expandedPanelInstanceId =
+              expandedPanelInstanceId === control.value.instanceId ? null : expandedPanelInstanceId
+          "
         >
           <mat-expansion-panel-header>
             <mat-panel-title>{{ control.value.variable }}</mat-panel-title>
@@ -92,28 +98,27 @@
     <div>
       <button
         type="button"
+        id="param"
+        mat-stroked-button
+        color="primary"
+        [disabled]="disabled"
+        (click)="handleAddParam()"
+        *ngIf="supportedOperations && supportedOperations.length > 0"
+      >
+        Add Parameter
+      </button>
+      <button
+        type="button"
         class="action"
         mat-raised-button
         color="primary"
         [disabled]="disabled"
         (click)="handleSave()"
-        *ngIf="mapping.length > 0"
+        *ngIf="supportedOperations && (supportedOperations.length > 0) "
       >
         Save Operation
       </button>
-      <p style="color: red;">Please, be reminded to click on "Save Distribution" button below before saving Operation.</p>
     </div>
-    <button
-      type="button"
-      id="param"
-      mat-stroked-button
-      color="primary"
-      [disabled]="disabled"
-      (click)="handleAddParam()"
-      *ngIf="supportedOperations && supportedOperations.length > 0"
-    >
-      Add Parameter
-    </button>
   </div>
 </ng-container>
 <ng-container *ngIf="loading">

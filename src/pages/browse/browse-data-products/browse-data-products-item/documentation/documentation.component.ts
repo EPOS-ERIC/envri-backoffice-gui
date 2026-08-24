@@ -129,8 +129,11 @@ export class DocumentationComponent implements OnInit {
   }
 
   public handleCreate() {
+    // group to assign the new Identifier (the to which the DP belongs to)
+    const group = this.dataProduct?.groups?.[0] || ''; // Assuming groups Array has only 1 item
+
     this.apiService.endpoints.Documentation.create
-      .call({ title: 'New Documentation' })
+      .call({ title: 'New Documentation', groups: [group as string] })
       .then((doc: DocumentationDataSource) => {
         const newDoc: LinkedEntity = {
           entityType: Entity.DOCUMENTATION,

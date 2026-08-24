@@ -63,16 +63,11 @@ export class BrowseApplicationSoftwareComponent {
   }
 
   public rowClicked(row: Record<string, unknown>): void {
-    const dataProduct = row['dataProduct'] as DataProduct; // TODO: change to SoftwareApplication? (NO dataProduct field in SoftwareApplication)
-
-    if (dataProduct === undefined) {
-      this.entityService.setFocusedDistribution(row['instanceId'] as string); // TODO: change to SoftwareApplication? (NO distribution field in SoftwareApplication)
-      this.router.navigate([
-        `/browse/${EntityEndpointValue.APPLICATION_SOFTWARE}/details`,
-        row['metaId'],
-        row['instanceId'],
-      ]);
-    }
+    this.router.navigate([
+      `/browse/${EntityEndpointValue.APPLICATION_SOFTWARE}/details`,
+      row['metaId'],
+      row['instanceId'],
+    ]);
   }
 
   public createAsset(): void {

@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { BehaviorSubject } from 'rxjs';
-import { Mapping } from 'generated/backofficeSchemas';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
 
 @Injectable({
@@ -14,7 +13,7 @@ export class ParametersFormService {
 
   public disableOperationSaveObs = this.disableOperationSave.asObservable();
 
-  private checkAllowedValues(parameter: Mapping): string {
+  private checkAllowedValues(parameter: any): string {
     if (parameter.paramValue) {
       return parameter.paramValue.length > 0 ? 'controlled' : 'any';
     } else {
@@ -30,14 +29,14 @@ export class ParametersFormService {
    * is `null`, falsy (e.g., empty string, false, 0), or the string 'false'. Otherwise, it returns
    * `true`.
    */
-  public checkBool(value: string | boolean | null | undefined): boolean {
+  public checkBool(value: string | boolean | null): boolean {
     if (null == value || !value || value === 'false') {
       return false;
     }
     return true;
   }
 
-  public generateOptionForm(parameter: Mapping): FormGroup {
+  public generateOptionForm(parameter: any): FormGroup {
     return this.formBuilder.group({
       uid: [parameter.uid],
       metaId: [parameter.metaId],
@@ -45,36 +44,36 @@ export class ParametersFormService {
       label: [parameter.label, [Validators.required]],
       range: [{ value: parameter.range, disabled: true }],
       variable: [{ value: parameter.variable, disabled: true }],
-      required: [this.checkBool(parameter.required ?? null)],
+      required: [this.checkBool(parameter.required)],
       readOnlyValue: [parameter.readOnlyValue === 'true'],
       defaultValue: [parameter.defaultValue],
       minValue: [parameter.minValue],
       maxValue: [parameter.maxValue],
       property: [parameter.property],
       allowedValues: [this.checkAllowedValues(parameter)],
-      multipleValues: [this.checkBool(parameter.multipleValues ?? null)],
+      multipleValues: [this.checkBool(parameter.multipleValues)],
       paramValue: this.formBuilder.array(
-        (parameter.paramValue ?? []).map((value) => new FormControl(value, Validators.required)),
+        parameter.paramValue.map((value: any) => new FormControl(value, Validators.required)),
       ),
     });
   }
 
-  public cacheParam(updatedMapping: Mapping): void {
+  public cacheParam(updatedMapping: any): void {
     const activeSupportedOperation = this.entityExecutionService.getActiveOperationValue();
     if (null != activeSupportedOperation) {
-      const updatedMappingArray = activeSupportedOperation?.mapping?.map((item: Mapping) =>
-        item.variable === updatedMapping.variable ? updatedMapping : item,
+      const updatedMappingArray = activeSupportedOperation?.mapping?.map((item: any) =>
+        item.instanceId === updatedMapping.instanceId ? updatedMapping : item,
       );
-      activeSupportedOperation.mapping = updatedMappingArray as Array<Mapping>;
+      activeSupportedOperation.mapping = updatedMappingArray as Array<any>;
+      this.entityExecutionService.setActiveMappingArr(activeSupportedOperation.mapping as Array<any>);
 
-      const nullsOrEmptyExist = (map: Mapping) => map.label == null || map.label === '';
+      const nullsOrEmptyExist = (map: any) => map.label == null || map.label === '';
       this.disableOperationSave.next(activeSupportedOperation.mapping.some(nullsOrEmptyExist));
 
-      activeSupportedOperation?.mapping.map((mappingObj: Mapping) => {
+      activeSupportedOperation?.mapping.map((mappingObj: Record<string, unknown>) => {
         Object.keys(mappingObj).forEach((key) => {
-          const typedKey = key as keyof Mapping;
-          if (null == mappingObj[typedKey]) {
-            mappingObj[typedKey] = undefined;
+          if (null == mappingObj[key]) {
+            mappingObj[key] = undefined;
           }
         });
         return mappingObj;

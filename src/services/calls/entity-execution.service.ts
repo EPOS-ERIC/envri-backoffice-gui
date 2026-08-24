@@ -33,6 +33,12 @@ export class EntityExecutionService extends EntityStateManager {
     super();
   }
 
+  public sanitizePayload<T extends Record<string, unknown>>(entity: T): Omit<T, '_sourceObject'> {
+    const payload = { ...entity } as T & { _sourceObject?: unknown };
+    delete payload._sourceObject;
+    return payload;
+  }
+
   /**
    * The `handleDataProductSave` function updates or creates a draft of a data product and performs
    * various actions based on the result.
@@ -40,12 +46,20 @@ export class EntityExecutionService extends EntityStateManager {
   public handleDataProductSave(): void {
     const activeDataProduct = this.getActiveDataProductValue();
     if (null != activeDataProduct) {
+      const payload = {
+        ...activeDataProduct,
+        contactPoint: activeDataProduct.contactPoint?.length ? activeDataProduct.contactPoint : null,
+      };
       if (activeDataProduct.status === Status.DRAFT || activeDataProduct.status === Status.SUBMITTED) {
+        // need to specify the originator editorId to include in payload
+        let editorId = activeDataProduct.editorId;
+        payload.editorId = editorId;
+
         this.loadingService.setShowSpinner(true);
         this.apiService.endpoints[Entity.DATA_PRODUCT].update
           .call({
-            ...activeDataProduct,
-          })
+            ...payload,
+          } as DataProduct)
           .then((data: DataProduct) => {
             this.snackbarService.openSnackbar(
               'Successfully updated Data Product.',
@@ -90,13 +104,17 @@ export class EntityExecutionService extends EntityStateManager {
             this.loadingService.setShowSpinner(false);
           });
       } else {
+        const draftPayload = {
+          ...activeDataProduct,
+          contactPoint: activeDataProduct.contactPoint?.length ? activeDataProduct.contactPoint : null,
+        };
         this.loadingService.setShowSpinner(true);
         this.apiService.endpoints[Entity.DATA_PRODUCT].update
           .call({
-            ...activeDataProduct,
+            ...draftPayload,
             status: Status.DRAFT,
             instanceChangedId: activeDataProduct.instanceId,
-          })
+          } as DataProduct)
           .then((data: DataProduct) => {
             this.snackbarService.openSnackbar('Successfully created new draft.', 'Close', SnackbarType.SUCCESS, 3000, [
               'snackbar',
@@ -136,9 +154,14 @@ export class EntityExecutionService extends EntityStateManager {
     if (null != activeSoftwareApplication) {
       if (activeSoftwareApplication.status === Status.DRAFT || activeSoftwareApplication.status === Status.SUBMITTED) {
         this.loadingService.setShowSpinner(true);
+
+        // // need to specify the originator editorId to include in payload
+        let editorId = activeSoftwareApplication.editorId;
+
         this.apiService.endpoints[Entity.SOFTWARE_APPLICATION].update
           .call({
             ...activeSoftwareApplication,
+            editorId: editorId,
           })
           .then((data: SoftwareApplication) => {
             this.snackbarService.openSnackbar(
@@ -230,9 +253,13 @@ export class EntityExecutionService extends EntityStateManager {
     if (null != activeSoftwareSourceCode) {
       if (activeSoftwareSourceCode.status === Status.DRAFT || activeSoftwareSourceCode.status === Status.SUBMITTED) {
         this.loadingService.setShowSpinner(true);
+        // need to specify the originator editorId to include in payload
+        let editorId = activeSoftwareSourceCode.editorId;
+        
         this.apiService.endpoints[Entity.SOFTWARE_SOURCE_CODE].update
           .call({
             ...activeSoftwareSourceCode,
+            editorId: editorId,
           })
           .then((data: SoftwareSourceCode) => {
             this.snackbarService.openSnackbar(
@@ -327,11 +354,23 @@ export class EntityExecutionService extends EntityStateManager {
         activeWebservice.status = Status.DRAFT;
         activeWebservice.instanceChangedId = activeWebservice.instanceId;
       }
+
+      // read the DataProduct status before updating the WebService: if it's status DRAFT/SUBMITTED we need to specify the originator editorId 
+      let editorId = null;
+      if(this.dataProduct.getValue()?.status?.toUpperCase() === Status.DRAFT || this.dataProduct.getValue()?.status?.toUpperCase() === Status.SUBMITTED) {
+        editorId = this.dataProduct.getValue()?.editorId as string;
+        activeWebservice.editorId = editorId ? editorId : undefined;
+      }
+      
+      const payload = {
+        ...activeWebservice,
+        contactPoint: activeWebservice.contactPoint?.length ? activeWebservice.contactPoint : null,
+      };
       this.loadingService.setShowSpinner(true);
       this.apiService.endpoints[Entity.WEBSERVICE].update
         .call({
-          ...activeWebservice,
-        })
+          ...payload,
+        } as WebService)
         .then((data: WebService) => {
           this.snackbarService.openSnackbar('Successfully updated Webservice.', 'Close', SnackbarType.SUCCESS, 3000, [
             'snackbar',
@@ -375,12 +414,17 @@ export class EntityExecutionService extends EntityStateManager {
           activeDistribution.status = Status.DRAFT;
           activeDistribution.instanceChangedId = activeDistribution.instanceId;
         }
+
+        // read the DataProduct status before posting the Distribution: if it's status DRAFT/SUBMITTED we need to specify the originator editorId 
+        let editorId = null;
+        if(this.dataProduct.getValue()?.status?.toUpperCase() === Status.DRAFT || this.dataProduct.getValue()?.status?.toUpperCase() === Status.SUBMITTED) {
+          editorId = this.dataProduct.getValue()?.editorId as string;
+          activeDistribution.editorId = editorId ? editorId : undefined;
+        }
         this.loadingService.setShowSpinner(true);
         this.apiService.endpoints[Entity.DISTRIBUTION].update
           .call(
-            {
-              ...activeDistribution,
-            },
+            this.sanitizePayload(activeDistribution as unknown as Record<string, unknown>) as Distribution,
             false,
           )
           .then((data: Distribution) => {
@@ -431,11 +475,16 @@ export class EntityExecutionService extends EntityStateManager {
         operationData.status = Status.DRAFT;
         operationData.instanceChangedId = operationData.instanceId;
       }
+      // Check DataProduct status before updating the Operation, if DRAFT/SUBMITTED, pass the originator editorId
+      const dataProduct = this.getActiveDataProductValue();
+      let editorId = null;
+      if(dataProduct?.status?.toUpperCase() === Status.DRAFT || dataProduct?.status?.toUpperCase() === Status.SUBMITTED) {
+        editorId = dataProduct.editorId as string;
+        operationData.editorId = editorId ? editorId : undefined; 
+      }
       this.loadingService.setShowSpinner(true);
       this.apiService.endpoints[Entity.OPERATION].update
-        .call({
-          ...operationData,
-        })
+        .call(this.sanitizePayload(operationData as unknown as Record<string, unknown>) as Operation)
         .then((data: Operation) => {
           this.handleMappingArrSave();
           this.snackbarService.openSnackbar('Successfully updated Operation.', 'Close', SnackbarType.SUCCESS, 3000, [
@@ -464,10 +513,8 @@ export class EntityExecutionService extends EntityStateManager {
             // save the operation in the Distribution instance as well
             activeDistribution.supportedOperation = [];
             activeDistribution.supportedOperation.push(newOperation);
-            this.handleDistributionSave();
 
-            // activeDistribution?.accessURL?.push(newOperation);
-            this.setActiveDistribution(activeDistribution);
+            this.handleDistributionSave();
           }
         })
         .catch((err) => {

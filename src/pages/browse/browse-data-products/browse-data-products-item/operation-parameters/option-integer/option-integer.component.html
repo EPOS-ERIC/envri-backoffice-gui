@@ -43,43 +43,137 @@
       >
         Allows multiple selection
       </mat-slide-toggle>
-      <ng-container formArrayName="paramValue">
-        <div
-          *ngFor="let control of getControls('paramValue'); let i = index"
-          class="controlled-params"
-        >
-          <mat-form-field appearance="fill">
-            <mat-label>Value</mat-label>
-            <input
-              matInput
-              placeholder="Value"
-              [formControlName]="i"
-            />
-          </mat-form-field>
-          <mat-slide-toggle
-            [id]="i.toString()"
-            [checked]="isChecked(i)"
-            (change)="handleValueChange(i)"
-            [disabled]="form.disabled"
-          >
-            As default value
-          </mat-slide-toggle>
+      <div class="controlled-values-section">
+        <mat-form-field appearance="fill" class="filter-field">
+          <mat-icon matPrefix>search</mat-icon>
+          <mat-label>Filter values</mat-label>
+          <input
+            matInput
+            placeholder="Filter values"
+            [value]="filterText"
+            (input)="handleFilterChange($event)"
+          />
           <button
-            mat-mini-fab
-            color="warn"
-            aria-label="Remove Value"
-            matTooltip="Remove Value"
-            class="smaller"
-            (click)="removeItem(i)"
-            [disabled]="form.disabled"
+            *ngIf="filterText"
+            type="button"
+            mat-icon-button
+            matSuffix
+            aria-label="Clear filter"
+            (click)="clearFilter()"
           >
-            <mat-icon>delete</mat-icon>
+            <mat-icon>close</mat-icon>
           </button>
+        </mat-form-field>
+        <div class="controlled-values-table-wrap">
+          <table
+            mat-table
+            [dataSource]="dataSource"
+            class="controlled-values-table"
+            [trackBy]="trackByRow"
+          >
+          <ng-container matColumnDef="value">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+            >
+              Value
+            </th>
+            <td
+              mat-cell
+              *matCellDef="let row"
+            >
+              <mat-form-field appearance="fill" class="value-field" subscriptSizing="dynamic">
+                <input
+                  matInput
+                  placeholder="Value"
+                  [formControl]="row.control"
+                  (focus)="startEditing(row.control)"
+                  (blur)="stopEditing(row.control)"
+                />
+              </mat-form-field>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="default">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+            >
+              Default
+            </th>
+            <td
+              mat-cell
+              *matCellDef="let row"
+            >
+              <mat-slide-toggle
+                [id]="row.index.toString()"
+                [checked]="isChecked(row.control)"
+                (change)="handleValueChange(row.control, $event.checked)"
+                [disabled]="form.disabled"
+              >
+                As default value
+              </mat-slide-toggle>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+            >
+              Actions
+            </th>
+            <td
+              mat-cell
+              *matCellDef="let row"
+            >
+              <button
+                type="button"
+                mat-mini-fab
+                color="warn"
+                aria-label="Remove Value"
+                matTooltip="Remove Value"
+                class="smaller"
+                (click)="removeItem(row.index)"
+                [disabled]="form.disabled"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr
+            mat-header-row
+            *matHeaderRowDef="displayedColumns"
+          ></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns"
+          ></tr>
+          <tr
+            class="mat-row"
+            *matNoDataRow
+          >
+            <td
+              class="mat-cell empty-state"
+              [attr.colspan]="displayedColumns.length"
+            >
+              No values defined yet.
+            </td>
+          </tr>
+          </table>
+
+          <mat-paginator
+            [pageSize]="10"
+            [pageSizeOptions]="[10, 25, 50]"
+            showFirstLastButtons
+          ></mat-paginator>
         </div>
-      </ng-container>
+      </div>
       <button
         mat-raised-button
         color="primary"
+        type="button"
         (click)="handleAddNewValue()"
         [disabled]="form.disabled"
         [ngClass]="form.disabled ? 'hidden' : ''"

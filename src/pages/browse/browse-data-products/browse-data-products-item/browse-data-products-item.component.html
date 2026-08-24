@@ -47,7 +47,7 @@
         <app-spatial-coverage
           *ngIf="activeItem === entityFieldEnum.SPATIAL_COVERAGE"
           [mapId]="'dataproduct'"
-          [spatialExtentInput]="dataProduct.spatialExtent"
+          [spatialExtentInput]="activeDataProduct?.spatialExtent"
         ></app-spatial-coverage>
 
         <app-temporal-coverage
@@ -63,6 +63,7 @@
         <app-contact-point
           *ngIf="activeItem === entityFieldEnum.CONTACT_POINT"
           [contactPoint]="dataProduct.contactPoint"
+          [isDataProductParent]="true"
         ></app-contact-point>
        
 

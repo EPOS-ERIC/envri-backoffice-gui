@@ -15,12 +15,12 @@ import { DialogDataproductAddDistributionComponent } from './dialog-dataproduct-
 import { DialogDataproductAddWebserviceComponent } from './dialog-dataproduct-add-webservice/dialog-dataproduct-add-webservice.component';
 import { FormatRangePipe } from 'src/pipes/formatRange.pipe';
 import { DialogNewEntityComponent } from './dialog-new-entity/dialog-new-entity.component';
-import { DialogChangeCommentComponent } from './dialog-change-comment/dialog-change-comment.component';
 import { DialogSpatialCoverageHelpComponent } from './dialog-spatial-coverage-help/dialog-spatial-coverage-help.component';
 import { DialogSelectGroupComponent } from './dialog-select-group/dialog-select-group.component';
 import { DialogUserStatusComponent } from './dialog-user-status/dialog-user-status.component';
 import { DialogNewCategoryComponent } from './dialog-new-category/dialog-new-category.component';
 import { DialogNewCategorySchemeComponent } from './dialog-new-category-scheme/dialog-new-category-scheme.component';
+import { DialogAddNewMultiParamValuesComponent } from './dialog-add-new-multi-param-values/dialog-add-new-multi-param-values.component';
 
 @NgModule({
   declarations: [
@@ -31,12 +31,12 @@ import { DialogNewCategorySchemeComponent } from './dialog-new-category-scheme/d
     DialogUserPermissionsComponent,
     DialogWebserviceAddOperationComponent,
     DialogAddNewParameterComponent,
+    DialogAddNewMultiParamValuesComponent,
     DialogConfirmComponent,
     DialogDataproductAddDistributionComponent,
     DialogDataproductAddWebserviceComponent,
     FormatRangePipe,
     DialogNewEntityComponent,
-    DialogChangeCommentComponent,
     DialogSpatialCoverageHelpComponent,
     DialogSelectGroupComponent,
     DialogUserStatusComponent,

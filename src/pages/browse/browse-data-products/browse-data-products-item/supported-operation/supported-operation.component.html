@@ -1,4 +1,4 @@
-<ng-container *ngIf="supportedOperations; else empty">
+<ng-container *ngIf="supportedOperations && supportedOperations.length > 0; else empty">
   <form [formGroup]="form">
     <mat-form-field
       appearance="fill"
@@ -45,49 +45,31 @@
         formControlName="template"
       />
     </mat-form-field>
-    <mat-form-field
-      appearance="fill"
-      [style.width.%]="100"
-    >
-      <mat-label>Preview of the URI template with default values</mat-label>
-      <input
-        matInput
-        placeholder="Preview of the URI template with default values"
-        formControlName="preview"
-        readonly
-      />
-    </mat-form-field>
-
-    <button
-      type="button"
-      mat-stroked-button
-      color="primary"
-      class="uri-preview"
-      (click)="handleCreateURIPreview()"
-    >
-      Create URI preview
-    </button>
 
     <p>Parameters</p>
     <app-operation-parameters
       [supportedOperations]="supportedOperations"
       [templateInput]="this.form.get('template')?.value"
+      [groups]="groups"
       (template)="templateSrc.next($event)"
       (mappingVals)="mappingSrc.next($event)"
     ></app-operation-parameters>
 
-    <button
-      type="button"
-      mat-flat-button
-      color="primary"
-      (click)="handleAddOperation()"
-      *ngIf="supportedOperations.length === 0"
-      [disabled]="disableFeatures"
-    >
-      Add Operation
-    </button>
   </form>
 </ng-container>
+
+  <button
+    [(ngModel)]="supportedOperations"
+    type="button"
+    mat-flat-button
+    color="primary"
+    (click)="handleAddOperation()"
+    *ngIf="supportedOperations?.length === 0"
+    [disabled]="disableFeatures"  
+  >
+    Add Operation
+  </button>
+
 <ng-template #empty>
   <p class="notice">Couldn't fetch supported operations data.</p>
 </ng-template>

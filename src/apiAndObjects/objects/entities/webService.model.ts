@@ -16,6 +16,7 @@ export class WebService implements WebServiceType {
     public editorId?: string,
     public entryPoint?: string,
     public fileProvenance?: string,
+    public groups?: Array<string>,
     public identifier?: Array<LinkedEntity>,
     public instanceChangedId?: string,
     public instanceId?: string,

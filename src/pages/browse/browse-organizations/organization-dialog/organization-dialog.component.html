@@ -1,0 +1,142 @@
+<div class="dialog-wrapper" *ngIf="form">
+  <h1 mat-dialog-title>{{ isEditMode ? 'Edit Organization' : 'Add Organization' }}</h1>
+
+  <div mat-dialog-content>
+    <form [formGroup]="form" class="organization-form">
+      <mat-expansion-panel class="persistent-identifier-panel" [expanded]="!isEditMode">
+        <mat-expansion-panel-header>
+          <mat-panel-title>Persistent Identifier</mat-panel-title>
+        </mat-expansion-panel-header>
+        <div formArrayName="identifier">
+          <div class="identifier-row" *ngFor="let control of getIdentifierControls(); let i = index" [formGroupName]="i">
+            <mat-form-field appearance="fill">
+              <mat-label>Type</mat-label>
+              <input matInput placeholder="Type" formControlName="type" />
+              <mat-error *ngIf="control.controls['type'].hasError('required')">Type is required.</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>Identifier</mat-label>
+              <input matInput placeholder="Identifier" formControlName="identifier" />
+              <mat-error *ngIf="control.controls['identifier'].hasError('required')">Identifier is required.</mat-error>
+            </mat-form-field>
+            <button mat-mini-fab color="warn" class="smaller" type="button" matTooltip="Remove Identifier"
+              aria-label="Remove Persistent Identifier" [disabled]="identifierArray.length === 1"
+              (click)="removeIdentifier(i)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+        <button mat-stroked-button color="primary" type="button" (click)="addIdentifier()">Add identifier</button>
+      </mat-expansion-panel>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Legal Name</mat-label>
+        <input matInput formControlName="legalName" />
+        <mat-hint *ngIf="!form.controls['legalName'].value" class="recommendation-warning">
+          Legal Name is recommended.
+        </mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>LEI Code</mat-label>
+        <input matInput formControlName="leiCode" />
+        <mat-hint *ngIf="!form.controls['leiCode'].value" class="recommendation-warning">
+          LEI Code is recommended.
+        </mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <mat-chip-grid #emailGrid aria-label="Email addresses">
+          <mat-chip-row *ngFor="let email of emails" (removed)="removeValue(email, 'email')">
+            {{ email }}
+            <button matChipRemove type="button" [attr.aria-label]="'Remove ' + email"><mat-icon>cancel</mat-icon></button>
+          </mat-chip-row>
+          <input placeholder="Add email" [matChipInputFor]="emailGrid" [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            [matChipInputAddOnBlur]="true" (matChipInputTokenEnd)="addValue($event, 'email')" />
+        </mat-chip-grid>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Telephone</mat-label>
+        <mat-chip-grid #telephoneGrid aria-label="Telephone numbers">
+          <mat-chip-row *ngFor="let telephone of telephones" (removed)="removeValue(telephone, 'telephone')">
+            {{ telephone }}
+            <button matChipRemove type="button" [attr.aria-label]="'Remove ' + telephone"><mat-icon>cancel</mat-icon></button>
+          </mat-chip-row>
+          <input placeholder="Add telephone" [matChipInputFor]="telephoneGrid" [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            [matChipInputAddOnBlur]="true" (matChipInputTokenEnd)="addValue($event, 'telephone')" />
+        </mat-chip-grid>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Street</mat-label>
+        <input matInput formControlName="street" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Locality</mat-label>
+        <input matInput formControlName="locality" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Postal Code</mat-label>
+        <input matInput formControlName="postalCode" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Country</mat-label>
+        <input matInput formControlName="country" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Country Code</mat-label>
+        <input matInput formControlName="countryCode" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Logo URL</mat-label>
+        <input matInput type="url" formControlName="logo" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Contact Points</mat-label>
+        <mat-select formControlName="contactPoint" multiple
+          (selectionChange)="filterContactPoints(contactPointSearch)">
+          <div class="select-search" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+            <mat-icon>search</mat-icon>
+            <input placeholder="Search Contact Points"
+              [(ngModel)]="contactPointSearch" [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="filterContactPoints($event)" />
+          </div>
+          <mat-option *ngFor="let contactPoint of filteredContactPoints" [value]="contactPoint">
+            {{ getContactPointLabel(contactPoint) }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Member of</mat-label>
+        <mat-select formControlName="memberOf" multiple (selectionChange)="handleParentSelectionChange()">
+          <div class="select-search" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+            <mat-icon>search</mat-icon>
+            <input placeholder="Search Member of"
+              [(ngModel)]="memberOfSearch" [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="filterParentOrganizations($event)" />
+          </div>
+          <mat-option *ngFor="let organization of filteredParentOrganizations" [value]="organization">
+            {{ getOrganizationLabel(organization) }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="parentSelectionError">The selected parent organizations would create a cycle.</mat-error>
+      </mat-form-field>
+    </form>
+  </div>
+
+  <div mat-dialog-actions align="end">
+    <button mat-stroked-button type="button" (click)="handleCancel()">Cancel</button>
+    <button mat-flat-button color="primary" type="button" [disabled]="form.invalid" (click)="handleSave()">
+      {{ isEditMode ? 'Update' : 'Create and publish' }}
+    </button>
+  </div>
+</div>

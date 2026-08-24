@@ -175,7 +175,7 @@ export class ContactPointSearchSourceCodeComponent extends WithSubscription impl
     }
 
     const contactPointEntityDetail: LinkedEntity = {
-      entityType: Entity.CONTACT_POINT,
+      entityType: 'CONTACTPOINT',
       instanceId: selectedContactPoint.instanceId,
       uid: selectedContactPoint.uid,
       metaId: selectedContactPoint.metaId,

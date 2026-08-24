@@ -8,10 +8,11 @@ button {
 
 .button-wrapper {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  /* justify-content: space-between; */
   width: 99%;
-  .action {
+  /* .action {
     margin-top: 4em;
     margin-right: 1em;
-  }
+  } */
 }

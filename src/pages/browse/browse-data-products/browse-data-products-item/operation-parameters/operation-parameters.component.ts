@@ -28,6 +28,8 @@ export class OperationParametersComponent implements OnInit {
   @Output() template = new Subject<string>();
 
   @Input() templateInput = '';
+  
+  @Input() groups: string | undefined;
 
   @Output() mappingVals = new Subject<Mapping[]>();
 
@@ -45,7 +47,13 @@ export class OperationParametersComponent implements OnInit {
     private readonly activeUserService: ActiveUserService,
   ) {
     this.stateChangeService.currentDataProductStateObs.subscribe((state: DataProduct['status'] | null) => {
-      if (state == null || (state === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted()) || state === Status.PUBLISHED || state === Status.ARCHIVED || state === Status.DISCARDED) {
+      if (
+        state == null ||
+        (state === Status.SUBMITTED && !this.userHasEditPermissionsForSubmitted()) ||
+        state === Status.PUBLISHED ||
+        state === Status.ARCHIVED ||
+        state === Status.DISCARDED
+      ) {
         this.disabled = true;
       } else {
         this.disabled = false;
@@ -65,33 +73,33 @@ export class OperationParametersComponent implements OnInit {
 
   public disabled = false;
 
-  public userHasEditPermissionsForSubmitted(): boolean{
+  public expandedPanelInstanceId: string | null = null;
+
+  public userHasEditPermissionsForSubmitted(): boolean {
     // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
     const dataProduct = this.entityExecutionService.getActiveDataProductValue();
     const activeUser = this.activeUserService.getActiveUser();
-    if(activeUser){
+    if (activeUser) {
       const activeUserGroups = activeUser.groups;
-      if(activeUserGroups){
+      if (activeUserGroups) {
         // find group in UserGroups matching with current active loaded Entity
-        const groupMatch = activeUserGroups.find(group => group.groupId === dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
-        if(groupMatch){
+        const groupMatch = activeUserGroups.find(
+          (group) => group.groupId === dataProduct?.groups?.find((entityGroup) => entityGroup === group.groupId),
+        );
+        if (groupMatch) {
           const userRole = groupMatch.role;
-          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+          if (userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')) {
             return true;
-          }
-          else{
+          } else {
             return false;
           }
-        }
-        else{
+        } else {
           return false;
         }
-      }
-      else{
+      } else {
         return false;
       }
-    }
-    else{
+    } else {
       return false;
     }
   }
@@ -105,6 +113,7 @@ export class OperationParametersComponent implements OnInit {
       // if item exists in array then replace at index n
       this.paramsToUpdate[indexofExistingItem] = map;
     }
+    this.mapping = this.paramsToUpdate;
     // Update parent component with latest params to allow creation of URI template;
     this.mappingVals.next(this.paramsToUpdate);
 
@@ -170,9 +179,12 @@ export class OperationParametersComponent implements OnInit {
     this.getMappingDetails(this.operation.mapping).then((mapping: Array<Array<Mapping>>) => {
       if (mapping) {
         this.loading = false;
-        this.mapping = mapping.flat();
-        this.mappingVals.next(mapping.flat());
-        this.initForm(this.mapping);
+        const hydratedMapping = mapping.flat();
+        this.mapping = hydratedMapping;
+        this.paramsToUpdate = hydratedMapping;
+        this.entityExecutionService.setActiveMappingArr(this.paramsToUpdate);
+        this.mappingVals.next(this.paramsToUpdate);
+        this.initForm(this.paramsToUpdate);
       }
     });
   }
@@ -207,15 +219,6 @@ export class OperationParametersComponent implements OnInit {
     }
   }
 
-  private addMappingOnTemplate(mapping: Mapping) {
-    const groupParamsOnTemplate = this.foundListParametersOnTemplate();
-    if (groupParamsOnTemplate.length > 0) {
-      const newString = `${groupParamsOnTemplate[0]}, ${mapping.variable}`;
-      const template = this.templateInput;
-      this.template.next(template.replace(groupParamsOnTemplate[0], newString));
-    }
-  }
-
   public ngOnInit(): void {
     this.initData();
   }
@@ -232,7 +235,10 @@ export class OperationParametersComponent implements OnInit {
   }
 
   public handleAddParam(): void {
-    this.dialogService.openAddNewParameterDialog().then((data: DialogData) => {
+    // group to assign the new Parameter to
+    const groups = this.groups ? [this.groups] : undefined;
+
+    this.dialogService.openAddNewParameterDialog(groups).then((data: DialogData) => {
       const newMapping = data.dataOut as LinkedEntity;
       if (null != newMapping) {
         const linkedEntityParam: LinkedEntity = {
@@ -254,9 +260,13 @@ export class OperationParametersComponent implements OnInit {
           })
           .then((map: Array<Mapping>) => {
             const newParam = map.shift() as Mapping;
-            this.mapping.push(newParam);
-            this.addMappingOnTemplate(newParam);
-            this.initForm(this.mapping);
+            const nextMapping = [...this.paramsToUpdate, newParam];
+            this.mapping = nextMapping;
+            this.paramsToUpdate = nextMapping;
+            this.entityExecutionService.setActiveMappingArr(nextMapping);
+            this.mappingVals.next(nextMapping);
+            this.initForm(nextMapping);
+            this.expandedPanelInstanceId = newParam.instanceId ?? null;
           });
       }
     });
@@ -303,11 +313,12 @@ export class OperationParametersComponent implements OnInit {
               1,
             );
             this.entityExecutionService.setActiveOperation(activeOperation);
-            this.mapping.splice(
-              this.mapping.findIndex((e) => e.instanceId === instanceId),
-              1,
-            );
-            this.initForm(this.mapping);
+            const nextMapping = this.paramsToUpdate.filter((e) => e.instanceId !== instanceId);
+            this.mapping = nextMapping;
+            this.paramsToUpdate = nextMapping;
+            this.entityExecutionService.setActiveMappingArr(nextMapping);
+            this.mappingVals.next(nextMapping);
+            this.initForm(nextMapping);
           }
         }
       });

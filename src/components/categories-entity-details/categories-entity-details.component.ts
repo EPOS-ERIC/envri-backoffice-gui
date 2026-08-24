@@ -65,8 +65,29 @@ export class CategoriesEntityDetailsComponent implements OnInit {
   public loading = false;
 
   public disabled = false;
+  private selectedCategorySchemeUid: string | undefined;
 
-  public disableSchemeSelect = false;
+  private syncSelectedCategoriesForCurrentScheme(): void {
+    const selectedSchemeUid = this.selectedCategoryScheme?.uid;
+    const selectedCategoryUids = new Set((this.activeEntity?.category || []).map((category: LinkedEntity) => category.uid));
+    const sourceCategories = this.unfilteredCategories.length > 0 ? this.unfilteredCategories : this.categories;
+
+    this.selectedCategories = sourceCategories.filter((category: Category) => {
+      if (!selectedCategoryUids.has(category.uid)) {
+        return false;
+      }
+
+      if (!selectedSchemeUid) {
+        return true;
+      }
+
+      return category.inScheme?.uid === selectedSchemeUid;
+    });
+
+    if (this.form) {
+      this.form.controls['category'].setValue(this.selectedCategories, { emitEvent: false });
+    }
+  }
 
   private resolveEntityTypeFromInput(): Entity | null {
     if (!this.activeEntity) {
@@ -117,6 +138,15 @@ export class CategoriesEntityDetailsComponent implements OnInit {
     // Get all category schemes.
     this.apiService.endpoints.CategoryScheme.getAll.call().then((response: CategoryScheme[]) => {
       this.categorySchemes = response;
+
+      if (!this.selectedCategoryScheme && this.selectedCategories.length > 0) {
+        this.selectedCategoryScheme = this.categorySchemes.find(
+          (categoryScheme: CategoryScheme) => categoryScheme.uid === this.selectedCategories[0].inScheme?.uid,
+        );
+        this.syncSelectedCategoriesForCurrentScheme();
+      }
+
+      this.selectedCategorySchemeUid = this.selectedCategoryScheme?.uid;
     });
 
     if (this.categories.length === 0) {
@@ -129,7 +159,6 @@ export class CategoriesEntityDetailsComponent implements OnInit {
               return category.uid === value.uid;
             });
           });
-          this.selectedCategories.length > 0 ? (this.disableSchemeSelect = true) : (this.disableSchemeSelect = false);
 
           this.unfilteredCategories = response;
           if (this.selectedCategories.length > 0) {
@@ -140,13 +169,12 @@ export class CategoriesEntityDetailsComponent implements OnInit {
             this.selectedCategoryScheme = this.categorySchemes.find(
               (categoryScheme: CategoryScheme) => categoryScheme.uid === this.selectedCategories[0].inScheme?.uid,
             );
+            this.syncSelectedCategoriesForCurrentScheme();
             this.loading = false;
             // if there no selected categories, let user choose category scheme and subsequent category
           } else {
             this.updateCategories(this.unfilteredCategories);
           }
-
-          this.form.controls['category'].setValue(this.selectedCategories);
         })
         .catch(() => (this.loading = false));
     }
@@ -261,10 +289,45 @@ export class CategoriesEntityDetailsComponent implements OnInit {
       (category: Category) => category.inScheme?.uid === this.selectedCategoryScheme?.uid,
     );
     this.loading = false;
+    this.syncSelectedCategoriesForCurrentScheme();
+  }
+
+  public onCategorySchemeChange(): void {
+    const nextSchemeUid = this.selectedCategoryScheme?.uid;
+    const schemeChanged = this.selectedCategorySchemeUid !== nextSchemeUid;
+
+    this.updateCategories(this.unfilteredCategories);
+
+    if (schemeChanged) {
+      this.selectedCategories = [];
+      if (this.form) {
+        this.form.controls['category'].setValue([], { emitEvent: false });
+      }
+
+      let currentEntity: DataProduct | SoftwareApplication | SoftwareSourceCode | undefined;
+      if (this.activeEntity instanceof DataProductModel) {
+        currentEntity = this.entityExecutionService.getActiveDataProductValue() as DataProduct;
+      } else if (this.activeEntity instanceof SoftwareApplicationModel) {
+        currentEntity = this.entityExecutionService.getActiveSoftwareApplicationValue() as SoftwareApplication;
+      } else if (this.activeEntity instanceof SoftwareSourceCodeModel) {
+        currentEntity = this.entityExecutionService.getActiveSoftwareSourceCodeValue() as SoftwareSourceCode;
+      }
+
+      if (currentEntity) {
+        currentEntity.category = [];
+      }
+
+      if (this.activeEntity) {
+        this.activeEntity.category = [];
+      }
+
+      this.notifyChange();
+    }
+
+    this.selectedCategorySchemeUid = nextSchemeUid;
   }
 
   public notifyChange(): void {
-    this.selectedCategories.length > 0 ? (this.disableSchemeSelect = true) : (this.disableSchemeSelect = false);
     this.snackbarService.openSnackbar(`Please save.`, 'close', SnackbarType.WARNING, 3000, [
       'snackbar',
       'mat-toolbar',
@@ -300,27 +363,17 @@ export class CategoriesEntityDetailsComponent implements OnInit {
       entityType: Entity.CATEGORY,
     }));
 
-    // Get existing categories from the data product
-    const existingCategories = currentEntity.category || [];
+    this.selectedCategories = selectedCategories;
+    if (this.form) {
+      this.form.controls['category'].setValue(this.selectedCategories, { emitEvent: false });
+    }
 
-    // Get UIDs of categories from the current scheme (categories visible in current tree)
-    const currentSchemeUids = new Set(this.categories.map((cat: Category) => cat.uid));
-
-    // Filter out existing categories that belong to the current scheme
-    // (these will be replaced by the new selection from this scheme)
-    const categoriesFromOtherSchemes = existingCategories.filter(
-      (cat: LinkedEntity) => !currentSchemeUids.has(cat.uid),
-    );
-
-    // Merge: Keep categories from other schemes + new selections from current scheme
-    const mergedCategories = [...categoriesFromOtherSchemes, ...normalizedNewCategories];
-
-    // Update the data product with merged categories
-    currentEntity.category = mergedCategories;
+    // Replace the current category selection with the current scheme selection
+    currentEntity.category = normalizedNewCategories;
 
     // Also update the local dataProduct reference
     if (this.activeEntity) {
-      this.activeEntity.category = mergedCategories;
+      this.activeEntity.category = normalizedNewCategories;
     }
 
     this.notifyChange();

@@ -1,5 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ContactPoint, DataProduct, LinkedEntity } from 'generated/backofficeSchemas';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ContactPoint, DataProduct, LinkedEntity, WebService } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { WithSubscription } from 'src/helpers/subscription';
 import { ActiveUserService } from 'src/services/activeUser.service';
@@ -28,6 +28,12 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
   }
 
   @Input() contactPoint: Array<LinkedEntity> | undefined = undefined;
+
+  @Input() isDataProductParent = true;
+
+  @Input() webservice: WebService | null = null;
+
+  @Output() contactPointDetailsUpdated = new EventEmitter<Array<LinkedEntity>>();
 
   public entityEnum = Entity;
 
@@ -63,7 +69,7 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
 
   public ngOnInit(): void {
     this.initSubscriptions();
-    this.syncContactPointsFromActiveDataProduct();
+    this.syncContactPointsFromActiveEntity();
     this.getContactPointDetails();
   }
 
@@ -98,22 +104,38 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
     }
   }
 
-  private syncContactPointsFromActiveDataProduct(): void {
-    const activeDataProduct = this.entityExecutionService.getActiveDataProductValue();
-    if (!activeDataProduct?.contactPoint) {
+  private getActiveEntity(): DataProduct | WebService | null {
+    if (!this.isDataProductParent && this.webservice) {
+      return this.webservice;
+    }
+
+    return this.isDataProductParent
+      ? this.entityExecutionService.getActiveDataProductValue()
+      : this.entityExecutionService.getActiveWebServiceValue();
+  }
+
+  private syncContactPointsFromActiveEntity(): void {
+    const activeEntity = this.getActiveEntity();
+    if (!activeEntity?.contactPoint) {
       return;
     }
 
-    this.contactPoint = [...activeDataProduct.contactPoint];
+    this.contactPoint = [...activeEntity.contactPoint];
   }
 
   public updateContactPointArray(newContactPointDetails: Array<LinkedEntity>) {
-    const dataProduct = this.entityExecutionService.getActiveDataProductValue();
+    const activeEntity = this.getActiveEntity();
     this.contactPoint = newContactPointDetails;
-    if (null != dataProduct) {
-      dataProduct.contactPoint = this.contactPoint;
-      this.entityExecutionService.setActiveDataProduct(dataProduct);
+    if (null != activeEntity) {
+      activeEntity.contactPoint = this.contactPoint;
+      if (this.isDataProductParent) {
+        this.entityExecutionService.setActiveDataProduct(activeEntity as DataProduct);
+      } else {
+        this.entityExecutionService.setActiveWebService(activeEntity as WebService);
+      }
     }
+
+    this.contactPointDetailsUpdated.emit(newContactPointDetails);
   }
 
   public handleAddedContactPointDetail(contactPoint: ContactPoint): void {
@@ -127,18 +149,16 @@ export class ContactPointComponent extends WithSubscription implements OnInit {
       return;
     }
 
-    const dataProduct = this.entityExecutionService.getActiveDataProductValue();
-    if (dataProduct == null) {
+    const activeEntity = this.getActiveEntity();
+    if (activeEntity == null) {
       return;
     }
 
-    const updatedContactPoints = (dataProduct.contactPoint ?? []).filter(
+    const updatedContactPoints = (activeEntity.contactPoint ?? []).filter(
       (item: LinkedEntity) => item.instanceId !== removedInstanceId,
     );
 
-    dataProduct.contactPoint = updatedContactPoints;
-    this.entityExecutionService.setActiveDataProduct(dataProduct);
-    this.contactPoint = updatedContactPoints;
+    this.updateContactPointArray(updatedContactPoints);
 
     this.snackbarService.openSnackbar(`Please save.`, 'close', SnackbarType.WARNING, 3000, [
       'snackbar',

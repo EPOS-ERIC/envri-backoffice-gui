@@ -241,6 +241,79 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
       .trim();
   }
 
+  private normalizeForDiff(value: any): any {
+    if (value == null || typeof value !== 'object') {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => this.normalizeForDiff(item))
+        .sort((left, right) => this.compareForDiff(left, right));
+    }
+
+    return Object.keys(value)
+      .sort()
+      .reduce((normalized: Record<string, any>, key) => {
+        normalized[key] = this.normalizeForDiff(value[key]);
+        return normalized;
+      }, {});
+  }
+
+  private compareForDiff(left: any, right: any): number {
+    const leftKey = this.getDiffSortKey(left);
+    const rightKey = this.getDiffSortKey(right);
+
+    if (leftKey.rank !== rightKey.rank) {
+      return leftKey.rank - rightKey.rank;
+    }
+
+    if (typeof leftKey.value === 'number' && typeof rightKey.value === 'number') {
+      return leftKey.value - rightKey.value;
+    }
+
+    return String(leftKey.value).localeCompare(String(rightKey.value));
+  }
+
+  private getDiffSortKey(value: any): { rank: number; value: string | number } {
+    if (value == null) {
+      return { rank: 0, value: '' };
+    }
+
+    if (typeof value === 'boolean') {
+      return { rank: 1, value: value ? 1 : 0 };
+    }
+
+    if (typeof value === 'number') {
+      return { rank: 2, value };
+    }
+
+    if (typeof value === 'string') {
+      return { rank: 3, value };
+    }
+
+    const identityFields = ['uid', 'instanceId', 'metaId', 'id', 'name', 'title'];
+    for (const field of identityFields) {
+      if (value[field] != null && value[field] !== '') {
+        return { rank: 4 + identityFields.indexOf(field), value: this.stableDiffString(value[field]) };
+      }
+    }
+
+    return { rank: 10, value: this.stableDiffString(value) };
+  }
+
+  private stableDiffString(value: any): string {
+    if (value == null) {
+      return '';
+    }
+
+    if (typeof value !== 'object') {
+      return String(value);
+    }
+
+    return JSON.stringify(value);
+  }
+
   private getVisualDiff(): DiffSection[] {
     const sections: DiffSection[] = [];
     const processedKeys = new Set<string>();
@@ -258,6 +331,13 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
       oldRev = this.revisions[1];
       newRev = this.revisions[0];
     }
+
+    oldRev = this.normalizeForDiff(oldRev);
+    newRev = this.normalizeForDiff(newRev);
+    console.log('Normalized browse revisions comparison input:', {
+      oldRev,
+      newRev,
+    });
 
     SECTION_CONFIG.forEach((section) => {
       const leftSub: Record<string, any> = {};
@@ -1107,9 +1187,12 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
                                 }
                               }
                             }
-                            if (ws.supportedOperation && Array.isArray(ws.supportedOperation)) {
-                              console.warn('Found operations to hydrate for ws:', ws.instanceId, ws.supportedOperation);
-                              const opPromises = ws.supportedOperation.map(async (opItem: any) => {
+                            // HELLO: Keep in mind that:
+                            // even though we're in WebService section, we need to read Operations from Distribution !!! (due to issue with AH and many OPS in WebServ).
+                            // Template has been adapted to this as well.
+                            if (item.supportedOperation && Array.isArray(item.supportedOperation)) {
+                              console.warn('Found operations to hydrate for item:', item.instanceId, item.supportedOperation);
+                              const opPromises = item.supportedOperation.map(async (opItem: any) => {
                                 // 1. Hydrate operation if needed
                                 if (opItem.instanceId && opItem.metaId && !(opItem as any).template) {
                                   try {
@@ -1121,7 +1204,7 @@ export class BrowseRevisionsComponent implements OnInit, OnDestroy {
                                       Object.assign(opItem, opRes[0]);
                                     }
                                   } catch (e) {
-                                    console.warn('Failed to fetch ws operation', e);
+                                    console.warn('Failed to fetch item operation', e);
                                   }
                                 }
 

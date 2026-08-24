@@ -78,12 +78,16 @@ export class EposBackOfficeHttpResponseHandler {
     // console.debug('error message', errorMessage, returnValue, res);
 
     if (errorMessage) {
-      console.error('API access error - ', errorMessage);
+      console.error(this.withTimestamp('API access error - '), errorMessage);
       // this.notificationsService.sendNegative('API Error - ', 'A call to retrieve data failed');
       return Promise.reject(errorMessage);
     } else {
       // return Promise.resolve(returnValue);
       return Promise.resolve(null);
     }
+  }
+
+  private withTimestamp(message: string): string {
+    return `[${new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome', hour12: false })}] ${message}`;
   }
 }

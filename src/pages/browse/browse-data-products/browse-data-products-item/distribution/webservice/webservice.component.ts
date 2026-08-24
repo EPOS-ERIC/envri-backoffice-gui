@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormBuilder, FormControl, FormGroup, UntypedFormControl, Validators } from '@angular/forms';
 import {
   DataProduct,
@@ -27,11 +27,12 @@ import { ActiveUserService } from 'src/services/activeUser.service';
   templateUrl: './webservice.component.html',
   styleUrl: './webservice.component.scss',
 })
-export class DistributionWebserviceComponent extends WithSubscription implements OnInit {
+export class DistributionWebserviceComponent extends WithSubscription implements OnInit, OnChanges {
   @Input() accessService!: Distribution['accessService'];
   @Input() supportedOperations: WebService['supportedOperation'];
   @Input() distribution!: Distribution;
   @Input() distributionIndex!: number;
+  @Input() isActive = false;
 
   constructor(
     private readonly formBuilder: FormBuilder,
@@ -68,6 +69,9 @@ export class DistributionWebserviceComponent extends WithSubscription implements
 
   public pluginRequestForm!: FormGroup;
 
+  // this member holds the webService groups id, passed then to the params
+  public webservGroupId = '';
+
   public readonly pluginRequestTypes: Array<{ value: string; label: string }> = [
     { value: 'create_new', label: 'Create New' },
     { value: 'update_existing', label: 'Update existing' },
@@ -98,6 +102,8 @@ export class DistributionWebserviceComponent extends WithSubscription implements
             );
             this.handleServiceProviders(this.webservice);
             this.initForm();
+            // assign value to groups member (consumed by template)
+            this.webservGroupId = this.webservice.groups?.[0] ?? '';
             let userHasEditPermissionsForSubmitted: boolean | undefined = false;
             // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
             const activeUser = this.activeUserService.getActiveUser();
@@ -108,7 +114,6 @@ export class DistributionWebserviceComponent extends WithSubscription implements
                 const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
                 if(groupMatch){
                   const userRole = groupMatch.role;
-                  console.warn('userRole', userRole);
                   if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
                     userHasEditPermissionsForSubmitted = true;
                   }
@@ -135,9 +140,23 @@ export class DistributionWebserviceComponent extends WithSubscription implements
       .finally(() => this.loadingService.setShowSpinner(false));
   }
 
+  private syncActiveState(): void {
+    if (this.isActive && this.webservice) {
+      this.entityExecutionService.setActiveWebService(
+        this.entityExecutionService.convertToWebService(this.webservice),
+      );
+    }
+  }
+
   private initSubscriptions(): void {
     this.subscribe(this.entityExecutionService.dataProductObs, (dataProduct: DataProduct | null) => {
       this.dataProduct = dataProduct;
+    });
+
+    this.subscribe(this.entityExecutionService.webServiceObs, (webservice: WebService | null) => {
+      if (webservice && this.isCurrentWebservice(webservice)) {
+        this.webservice = webservice;
+      }
     });
   }
 
@@ -149,6 +168,7 @@ export class DistributionWebserviceComponent extends WithSubscription implements
           updatingObject.name = changes.name;
           updatingObject.description = changes.description;
           this.entityExecutionService.setActiveWebService(updatingObject);
+          this.webservice = updatingObject;
         }
       });
     }
@@ -250,6 +270,14 @@ export class DistributionWebserviceComponent extends WithSubscription implements
     });
   }
 
+  public ngOnChanges(changes: SimpleChanges): void {
+    // on switching Dist tabs
+    if (changes['isActive']) {
+      // update the active webservice
+      this.syncActiveState();
+    }
+  }
+
   public compareWithFn(optionOne: any, optionTwo: any): boolean {
     if (optionOne && optionTwo) {
       if (optionOne.metaId === optionTwo.metaId) {
@@ -271,7 +299,18 @@ export class DistributionWebserviceComponent extends WithSubscription implements
       };
       webservice.provider = serviceProviderEntityDetail;
       this.entityExecutionService.setActiveWebService(webservice);
+      this.webservice = webservice;
     }
+  }
+
+  private isCurrentWebservice(webservice: WebService): boolean {
+    const currentAccessService = this.accessService?.[0];
+
+    return Boolean(
+      currentAccessService &&
+        currentAccessService.instanceId === webservice.instanceId &&
+        currentAccessService.metaId === webservice.metaId,
+    );
   }
 
   private handleServiceProviders(webservice: WebService): void {

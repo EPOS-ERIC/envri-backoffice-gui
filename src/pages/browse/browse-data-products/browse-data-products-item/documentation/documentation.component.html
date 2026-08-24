@@ -1,64 +1,41 @@
 <ng-container *ngIf="form">
   <ng-container [formGroup]="form">
-    <mat-tab-group
-      [mat-stretch-tabs]="false"
-      [animationDuration]="0"
-      class="documentation"
-    >
+    <mat-tab-group [mat-stretch-tabs]="false" [animationDuration]="0" class="documentation">
       <div formArrayName="documentations">
-        <ng-container
-          *ngFor="let child of getControls('documentations'); let i = index"
-          [formGroupName]="i"
-        >
+        <ng-container *ngFor="let child of getControls('documentations'); let i = index" [formGroupName]="i">
           <mat-tab [label]="documentationEntities[i].title!">
             <ng-scrollbar>
               <mat-form-field appearance="fill">
                 <mat-label>Title</mat-label>
-                <input
-                  matInput
-                  formControlName="title"
-                  placeholder="title"
-                />
+                <input matInput formControlName="title" placeholder="title" />
               </mat-form-field>
+              <p class="form-note">
+                <mat-icon inline>info_outline</mat-icon>
+                The information above will not be displayed on the platform.
+              </p>
               <mat-form-field appearance="fill">
                 <mat-label>Description</mat-label>
-                <textarea
-                  matInput
-                  name="description"
-                  [ngStyle]="{ 'line-height': '1.4' }"
-                  formControlName="description"
-                ></textarea>
+                <textarea matInput name="description" [ngStyle]="{ 'line-height': '1.4' }"
+                  formControlName="description"></textarea>
               </mat-form-field>
+              <p class="form-note">
+                <mat-icon inline>info_outline</mat-icon>
+                The information above will not be displayed on the platform.
+              </p>
               <mat-form-field appearance="fill">
                 <mat-label>URI</mat-label>
-                <input
-                  matInput
-                  formControlName="uri"
-                  placeholder="Documentation URI"
-                />
+                <input matInput formControlName="uri" placeholder="Documentation URI" />
                 <mat-error *ngIf="child.get('uri')?.invalid"> URL is not valid. </mat-error>
               </mat-form-field>
 
               <div class="actions">
-                <button
-                  mat-mini-fab
-                  color="primary"
-                  aria-label="Save Documentation"
-                  matTooltip="Save Documentation"
-                  (click)="handleSave(i)"
-                  [disabled]="disabled"
-                >
+                <button mat-mini-fab color="primary" aria-label="Save Documentation" matTooltip="Save Documentation"
+                  (click)="handleSave(i)" [disabled]="disabled">
                   <mat-icon>save</mat-icon>
                 </button>
 
-                <button
-                  mat-mini-fab
-                  color="warn"
-                  aria-label="Remove Documentation"
-                  matTooltip="Remove Documentation"
-                  [disabled]="disabled"
-                  (click)="handleDelete(i)"
-                >
+                <button mat-mini-fab color="warn" aria-label="Remove Documentation" matTooltip="Remove Documentation"
+                  [disabled]="disabled" (click)="handleDelete(i)">
                   <mat-icon>delete</mat-icon>
                 </button>
               </div>
@@ -69,12 +46,7 @@
     </mat-tab-group>
   </ng-container>
 </ng-container>
-<button
-  mat-stroked-button
-  color="primary"
-  (click)="handleCreate()"
-  [disabled]="disabled"
-  [hidden]="getControls('documentations').length >= 1"
->
+<button mat-stroked-button color="primary" (click)="handleCreate()" [disabled]="disabled"
+  [hidden]="form && getControls('documentations').length >= 1">
   Add Documentation
 </button>

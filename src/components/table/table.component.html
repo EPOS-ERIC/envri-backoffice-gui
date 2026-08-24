@@ -7,6 +7,9 @@
 </div>
 <ng-container *ngIf="!loading">
   <app-table-filter
+    [sectionName]="sectionName"
+    [editorIdsMapping]="editorIdsMapping"
+    [groupFilterOptions]="groupFilterOptions"
     (onFilter)="handleFilter($event)"
     (onClear)="handleClear()"
   ></app-table-filter>
@@ -22,24 +25,6 @@
     class="resizable"
   >
     <!-- UID column -->
-    <ng-container matColumnDef="changeComment">
-      <th
-        sortingCache
-        mat-header-cell
-        *matHeaderCellDef
-        mat-sort-header
-        [resizeColumn]="true"
-      >
-        Save Comment
-      </th>
-      <td
-        mat-cell
-        *matCellDef="let row"
-        matTooltip="{{ row.changeComment }}"
-      >
-        {{ row.changeComment }}
-      </td>
-    </ng-container>
 
     <!-- title column -->
     <ng-container matColumnDef="title">

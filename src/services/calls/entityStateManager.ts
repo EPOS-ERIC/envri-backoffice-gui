@@ -114,7 +114,7 @@ export class EntityStateManager {
   /**
    * Sets active WebService
    */
-  public setActiveWebService(webService: WebService): void {
+  public setActiveWebService(webService: WebService | null): void {
     this.webService.next(webService);
   }
 
@@ -419,6 +419,7 @@ export class EntityStateManager {
       initial.editorId,
       initial.entryPoint,
       initial.fileProvenance,
+      initial.groups,
       initial.identifier,
       initial.instanceChangedId,
       initial.instanceId,

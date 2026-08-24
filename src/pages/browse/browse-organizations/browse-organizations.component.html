@@ -1,0 +1,119 @@
+<ng-scrollbar class="scroll-container">
+  <div class="page-container">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Organizations</h1>
+        <p class="page-subtitle">Manage Organizations: Create, Edit or Delete Organizations</p>
+      </div>
+      <button mat-flat-button color="primary" [disabled]="loading" (click)="handleAdd()">
+        <mat-icon>add</mat-icon>
+        Add Organization
+      </button>
+    </header>
+
+    <div class="filters">
+      <mat-form-field appearance="outline" class="search-filter">
+        <mat-label>Search Organizations</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="filters.search" (ngModelChange)="applyFilters()" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select [(ngModel)]="filters.status" (selectionChange)="applyFilters()">
+          <mat-option value="">All statuses</mat-option>
+          <mat-option *ngFor="let status of statusOptions" [value]="status">{{ status }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Group</mat-label>
+        <mat-select [(ngModel)]="filters.group" (selectionChange)="applyFilters()">
+          <mat-option value="">All groups</mat-option>
+          <mat-option *ngFor="let group of groups" [value]="group.id">{{ group.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="table-wrapper">
+      <table mat-table matSort multiTemplateDataRows [dataSource]="dataSource">
+        <ng-container matColumnDef="expand">
+          <th mat-header-cell *matHeaderCellDef aria-label="Expand"></th>
+          <td mat-cell *matCellDef="let organization">
+            <button mat-icon-button type="button" aria-label="Toggle Organization details"
+              (click)="toggleRow(organization); $event.stopPropagation()">
+              <mat-icon>{{ expandedOrganization === organization ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="legalName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Legal Name</th>
+          <td mat-cell *matCellDef="let organization">{{ getOrganizationLabel(organization) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="logo">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Logo</th>
+          <td mat-cell *matCellDef="let organization">
+            <div *ngIf="organization.logo && !hasLogoLoadError(organization.logo); else logoFallback" class="logo-preview-frame">
+              <img class="logo-preview" [src]="organization.logo" [alt]="getOrganizationLabel(organization) + ' logo'"
+                (error)="handleLogoError(organization.logo)" />
+            </div>
+            <ng-template #logoFallback>
+              <span *ngIf="organization.logo; else noLogo" class="logo-placeholder" aria-label="Logo unavailable">?</span>
+              <ng-template #noLogo>-</ng-template>
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let organization"><span class="status-badge">{{ organization.status || '-' }}</span></td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let organization" class="actions-cell">
+            <button mat-icon-button color="primary" matTooltip="Edit Organization" [disabled]="loading"
+              (click)="handleEdit(organization); $event.stopPropagation()">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" matTooltip="Delete Organization"
+              (click)="handleDelete(organization); $event.stopPropagation()">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="expandedDetail">
+          <td mat-cell *matCellDef="let organization" [attr.colspan]="columnsToDisplayWithExpand.length">
+            <div class="organization-details" [@detailExpand]="organization === expandedOrganization ? 'expanded' : 'collapsed'">
+              <div class="detail-grid">
+                <div><span>Identifier</span>{{ getIdentifierLabels(organization.identifier) }}</div>
+                <div><span>Email</span>{{ organization.email?.join(', ') || '-' }}</div>
+                <div><span>Telephone</span>{{ organization.telephone?.join(', ') || '-' }}</div>
+                <div><span>LEI Code</span>{{ organization.leiCode || '-' }}</div>
+                <div><span>Logo</span>{{ organization.logo || '-' }}</div>
+                <div><span>Address</span>{{ getAddressLabel(organization.address) }}</div>
+                <div><span>Contact Points</span>{{ getContactPointLabels(organization.contactPoint) }}</div>
+                <div><span>Member of</span>{{ getParentLabels(organization.memberOf) }}</div>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columnsToDisplayWithExpand"></tr>
+        <tr mat-row *matRowDef="let organization; columns: columnsToDisplayWithExpand" class="organization-row"
+          [class.expanded-row]="expandedOrganization === organization" (click)="toggleRow(organization)"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data-cell" [attr.colspan]="columnsToDisplayWithExpand.length">
+            {{ loading ? 'Loading Organizations...' : 'No Organizations found.' }}
+          </td>
+        </tr>
+      </table>
+
+      <mat-paginator [pageSize]="25" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>
+    </div>
+  </div>
+</ng-scrollbar>

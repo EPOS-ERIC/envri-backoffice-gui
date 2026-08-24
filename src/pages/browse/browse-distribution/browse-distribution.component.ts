@@ -45,15 +45,6 @@ export class BrowseDistributionComponent {
           'snackbar-success',
         ]);
         this.actionsService.saveCurrentEdit(value.instanceId as string);
-        this.apiService.endpoints.Group.addEntityToGroup
-          .call({ groupid: group.id!, metaId: value.metaId! })
-          .then(() => {
-            this.snackbarService.openSnackbar(`Added entity to ${group.name}`, 'close', SnackbarType.SUCCESS, 6000, [
-              'snackbar',
-              'mat-toolbar',
-              'snackbar-success',
-            ]);
-          });
       })
       .catch(() =>
         this.snackbarService.openSnackbar(

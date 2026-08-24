@@ -41,3 +41,46 @@ button {
   align-items: center;
   gap: 1em;
 }
+
+:host {
+  display: block;
+
+  .filter-field {
+    width: 50%;
+  }
+
+  .controlled-values-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+  }
+
+  .controlled-values-table-wrap {
+    margin: 0;
+    overflow-x: auto;
+  }
+
+  .controlled-values-table {
+    width: 100%;
+  }
+
+  .controlled-values-table .mat-column-value {
+    padding-left: 0 !important;
+  }
+
+  .controlled-values-table tbody .mat-mdc-row:nth-child(even) {
+    background-color: transparent !important;
+  }
+
+  .value-field {
+    width: 100%;
+    min-width: 18rem;
+    padding: 0.25rem 0;
+  }
+
+  .empty-state {
+    padding: 1rem 0.5rem;
+    text-align: center;
+  }
+}

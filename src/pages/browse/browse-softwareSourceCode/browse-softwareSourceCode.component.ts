@@ -62,15 +62,11 @@ export class BrowseSoftwareSourceCodeComponent {
   }
 
   public rowClicked(row: Record<string, unknown>): void {
-    const dataProduct = row['dataProduct'] as SoftwareSourceCode; // TODO: change to softwareSourceCode ? CHECK (NO dataProduct field in SoftwareSourceCode)
-    if (dataProduct === undefined) {
-      this.entityService.setFocusedDistribution(row['instanceId'] as string); // TODO: change to softwareSourceCode ? CHECK (NO distribution field in SoftwareSourceCode)
-      this.router.navigate([
-        `/browse/${EntityEndpointValue.SOFTWARE_SOURCE_CODE}/details`,
-        row['metaId'],
-        row['instanceId'],
-      ]);
-    }
+    this.router.navigate([
+      `/browse/${EntityEndpointValue.SOFTWARE_SOURCE_CODE}/details`,
+      row['metaId'],
+      row['instanceId'],
+    ]);
   }
 
   public createAsset(): void {

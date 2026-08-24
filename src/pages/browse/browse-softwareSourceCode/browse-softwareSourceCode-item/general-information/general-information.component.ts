@@ -111,7 +111,7 @@ export class GeneralInformationSourceCodeComponent implements OnInit {
         mainEntityofPage: changes.mainEntityofPage,
         licenseURL: changes.licenseURL,
         softwareVersion: changes.softwareVersion,
-        downloadURL: changes.downloadURL,
+        codeRepository: changes.downloadURL,
         programmingLanguage: changes.programmingLanguage,
         softwareRequirements: changes.softwareRequirements,
         runtimePlatform: changes.runtimePlatform,

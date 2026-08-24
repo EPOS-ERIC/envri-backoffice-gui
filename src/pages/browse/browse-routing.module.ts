@@ -16,6 +16,8 @@ import { BrowseSoftwareSourceCodeComponent } from './browse-softwareSourceCode/b
 import { BrowseSoftwareSourceCodeItemComponent } from './browse-softwareSourceCode/browse-softwareSourceCode-item/browse-softwareSourceCode-item.component';
 import { BrowseCategoriesComponent } from './browse-categories/browse-categories.component';
 import { BrowseCategorySchemesComponent } from './browse-category-schemes/browse-category-schemes.component';
+import { BrowseContactPointsComponent } from './browse-contact-points/browse-contact-points.component';
+import { BrowseOrganizationsComponent } from './browse-organizations/browse-organizations.component';
 
 const routes: Routes = [
   {
@@ -78,6 +80,16 @@ const routes: Routes = [
     path: EntityEndpointValue.CATEGORY_SCHEME,
     component: LayoutComponent,
     children: [{ path: '', component: BrowseCategorySchemesComponent }],
+  },
+  {
+    path: EntityEndpointValue.CONTACT_POINT,
+    component: LayoutComponent,
+    children: [{ path: '', component: BrowseContactPointsComponent }],
+  },
+  {
+    path: EntityEndpointValue.ORGANIZATION,
+    component: LayoutComponent,
+    children: [{ path: '', component: BrowseOrganizationsComponent }],
   },
 ];
 

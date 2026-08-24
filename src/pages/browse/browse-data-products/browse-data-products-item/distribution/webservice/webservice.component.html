@@ -108,7 +108,11 @@
             </mat-panel-title>
           </mat-expansion-panel-header>
           @defer (when mepContacts.expanded) {
-          <app-contact-point [contactPoint]="webservice.contactPoint"></app-contact-point>
+          <app-contact-point
+            [contactPoint]="webservice.contactPoint"
+            [webservice]="webservice"
+            [isDataProductParent]="false"
+          ></app-contact-point>
           }
         </mat-expansion-panel>
       </div>
@@ -121,8 +125,9 @@
           </mat-expansion-panel-header>
           @defer (when mepOperations.expanded) {
           <app-supported-operation
-            [supportedOperations]="webservice.supportedOperation"
+            [supportedOperations]="distribution.supportedOperation"
             [webservice]="webservice"
+            [groups]="webservGroupId"
             [disableFeatures]="disabled"
           ></app-supported-operation>
           }

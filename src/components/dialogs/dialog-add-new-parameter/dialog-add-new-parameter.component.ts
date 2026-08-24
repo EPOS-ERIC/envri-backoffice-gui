@@ -5,9 +5,9 @@ import { OperationParamsRange } from 'src/utility/enums/operationParamsRange.enu
 // import { Mapping } from 'src/apiAndObjects/objects/types/mapping.type';
 import { FormBuilder, FormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
-import { Operation } from 'src/apiAndObjects/objects/entities/operation.model';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { LinkedEntity, Mapping } from 'generated/backofficeSchemas';
+import { Status } from 'src/utility/enums/status.enum';
 
 @Component({
   selector: 'app-dialog-add-new-parameter',
@@ -18,9 +18,8 @@ export class DialogAddNewParameterComponent implements OnInit {
   public ranges = Object.values(OperationParamsRange);
   public form!: UntypedFormGroup;
   public duplicateName = false;
-  public forbiddenName = '';
   private activeMappingArr: Array<string> = [];
-  private mapping: Pick<Mapping, 'range' | 'variable' | 'required'> = { range: '', variable: '', required: '' };
+  private mapping: any = { range: '', variable: '', required: '', groups: undefined };
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: DialogData<unknown, LinkedEntity | null>,
@@ -28,14 +27,18 @@ export class DialogAddNewParameterComponent implements OnInit {
     private operationService: EntityExecutionService,
     private apiService: ApiService,
   ) {
-    this.operationService.operationObs.subscribe((operation: Operation | null) => {
-      if (operation?.mapping) {
-        this.activeMappingArr = operation.mapping.map((mapping: Mapping) => mapping.variable ?? '');
+    this.refreshMappingNames(this.operationService.getActiveMappingArrValue());
+    this.operationService.mappingObs.subscribe((mapping: Array<any>) => {
+      this.refreshMappingNames(mapping);
+      if (this.form) {
+        this.syncDuplicateName(this.form.get('variable')?.value ?? '');
       }
     });
   }
 
   public ngOnInit(): void {
+    // assign group
+    this.mapping.groups = this.data.dataIn;
     this.createForm();
   }
 
@@ -46,11 +49,14 @@ export class DialogAddNewParameterComponent implements OnInit {
       required: new FormControl(false),
     });
     this.form.valueChanges.subscribe((changes) => {
-      this.checkForSameVariableName(changes['variable']);
+      this.syncDuplicateName(changes.variable);
+
       this.mapping.variable = changes['variable'];
       this.mapping.range = changes['range'];
       this.mapping.required = changes['required'].toString();
     });
+
+    this.syncDuplicateName(this.form.get('variable')?.value ?? '');
   }
 
   public handleCancel(): void {
@@ -59,11 +65,23 @@ export class DialogAddNewParameterComponent implements OnInit {
   }
 
   public handleAdd(): void {
+    if (this.duplicateName) {
+      return;
+    }
+
     this.form.disable();
+    // read the operation status before posting the Mapping: if it's status DRAFT we need to specify the originator editorId 
+    const dataProduct = this.operationService.getActiveDataProductValue();
+    let editorId = undefined;
+    if(dataProduct?.status?.toUpperCase() === Status.DRAFT || dataProduct?.status?.toUpperCase() === Status.SUBMITTED) {
+      editorId = dataProduct.editorId as string;
+    }
     const newParam: Mapping = {
       range: this.mapping.range,
       required: this.mapping.required,
       variable: this.mapping.variable,
+      groups: this.mapping.groups,
+      editorId: editorId,
     };
     this.apiService.endpoints.Mapping.create.call(newParam).then((data: LinkedEntity) => {
       this.data.dataOut = data;
@@ -71,7 +89,33 @@ export class DialogAddNewParameterComponent implements OnInit {
     });
   }
 
-  public checkForSameVariableName(value: string): void {
-    this.duplicateName = this.activeMappingArr.includes(value);
+  public checkForSameVariableName(value: string) {
+    const normalizedValue = value.trim();
+    return (this.duplicateName = this.activeMappingArr.some((item) => item === normalizedValue));
+  }
+
+  private refreshMappingNames(mapping: Array<any>): void {
+    this.activeMappingArr = mapping
+      .map((item) => item?.variable)
+      .filter((variable): variable is string => typeof variable === 'string' && variable.trim().length > 0);
+  }
+
+  private syncDuplicateName(value: string): void {
+    const isDuplicate = this.checkForSameVariableName(value);
+    const variableControl = this.form.get('variable');
+    if (!variableControl) {
+      return;
+    }
+
+    const errors = { ...(variableControl.errors ?? {}) } as Record<string, unknown>;
+    if (isDuplicate) {
+      variableControl.setErrors({ ...errors, duplicateName: true });
+      return;
+    }
+
+    if (variableControl.hasError('duplicateName')) {
+      delete errors['duplicateName'];
+      variableControl.setErrors(Object.keys(errors).length > 0 ? errors : null);
+    }
   }
 }

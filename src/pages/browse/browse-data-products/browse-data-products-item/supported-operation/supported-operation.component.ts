@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { LinkedEntity, Mapping, Operation, WebService } from 'generated/backofficeSchemas';
+import { Distribution, LinkedEntity, Mapping, Operation, WebService } from 'generated/backofficeSchemas';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { Subject, Subscription } from 'rxjs';
 import { DialogService } from 'src/components/dialogs/dialog.service';
@@ -9,6 +9,8 @@ import { EntityExecutionService } from 'src/services/calls/entity-execution.serv
 import { SnackbarService, SnackbarType } from 'src/services/snackbar.service';
 import { Entity } from 'src/utility/enums/entity.enum';
 import { OperationParamsRange } from 'src/utility/enums/operationParamsRange.enum';
+import { ApiService } from 'src/apiAndObjects/api/api.service';
+import { Status } from 'src/utility/enums/status.enum';
 
 @Component({
   selector: 'app-supported-operation',
@@ -18,7 +20,9 @@ import { OperationParamsRange } from 'src/utility/enums/operationParamsRange.enu
 export class SupportedOperationComponent implements OnInit {
   @Input() supportedOperations!: LinkedEntity[] | undefined;
   @Input() webservice: WebService | undefined;
+  @Input() distribution: Distribution | undefined;
   @Input() disableFeatures!: boolean;
+  @Input() groups!: string; 
 
   public mappingSrc = new Subject<Array<Mapping>>();
   public templateSrc = new Subject<string>();
@@ -31,6 +35,7 @@ export class SupportedOperationComponent implements OnInit {
     private entityExecutionService: EntityExecutionService,
     private dialogService: DialogService,
     private snackbarService: SnackbarService,
+    private apiService: ApiService,
   ) {
     this.initSubscriptions();
   }
@@ -132,28 +137,6 @@ export class SupportedOperationComponent implements OnInit {
     this.form.get('template')?.valueChanges.subscribe((changes: string) => this.updateTemplate(changes));
   }
 
-  public handleCreateURIPreview(): void {
-    const template = this.form.get('template')?.value;
-    const templateWhiteSpaceRemove = template.replace(/\s/g, '');
-    if (templateWhiteSpaceRemove) {
-      const templateParams = templateWhiteSpaceRemove.match(/\{(.*?)\}/);
-
-      let submatch = templateParams[1];
-      const paramsArr = submatch.replace('?', '').split(',');
-      if (paramsArr.length > 0 && this.mapping.length > 0) {
-        paramsArr.forEach((paramName: string) => {
-          const checkNullValue = this.mapParams(submatch, paramName);
-          if (checkNullValue) {
-            submatch = this.mapParams(submatch, paramName);
-          }
-        });
-        submatch = submatch.replace(/,/g, '&');
-        const finalTemplateURI = templateWhiteSpaceRemove.split('{').shift() + `${submatch}`;
-        this.form.get('preview')?.setValue(finalTemplateURI);
-      }
-    }
-  }
-
   public handleAddOperation(): void {
     const webserviceEtityDetail: LinkedEntity = {
       entityType: Entity.WEBSERVICE,
@@ -161,7 +144,14 @@ export class SupportedOperationComponent implements OnInit {
       uid: this.webservice?.uid ?? '',
       metaId: this.webservice?.metaId ?? '',
     };
-    this.dialogService.handleAddWebserviceOperation(webserviceEtityDetail).then((result: Operation | unknown) => {
+    let editorId: string | undefined = undefined;
+    
+    // Check dataProd status before creating the Operation: if status is DRAFT/SUBMITTED, we need to include editorId in the payload
+    const dp = this.entityExecutionService.getActiveDataProductValue();
+    if(dp?.status?.toUpperCase() === Status.DRAFT || dp?.status?.toUpperCase() === Status.SUBMITTED){
+      editorId = dp.editorId as string;
+    }
+    this.dialogService.handleAddWebserviceOperation(webserviceEtityDetail, [this.groups], editorId).then((result: Operation | unknown) => {
       // put result on supportedOperation array (first position and focused)
       const newOperation = result as Operation;
       this.entityExecutionService.setActiveOperation(newOperation);
@@ -173,13 +163,31 @@ export class SupportedOperationComponent implements OnInit {
       };
       // Sets 'accessURL' on Distribution to newly created Operation.
       const activeDistribution = this.entityExecutionService.getActiveDistributionValue();
-      // activeDistribution?.accessURL?.push(operation);
+
       if (activeDistribution != null) {
         this.entityExecutionService.setActiveDistribution(activeDistribution);
         // this.actionsService.showSaveDistributionMessage(true);
+        
+        // update both the activeDistribtion locally and PUT the entity
+        activeDistribution.supportedOperation = [operation];
+        this.apiService.endpoints.Distribution.update.call(
+          this.entityExecutionService.sanitizePayload(activeDistribution as unknown as Record<string, unknown>) as Distribution,
+        )
+        .then(()=> { 
+        })
+        .catch(() => {
+          console.error('Failed to update Distribution.');
+        })
+
       }
       this.entityExecutionService.getActiveWebServiceValue();
+      // since the source is the Dist and not the Webserv anymore for SuppOper, keeping this line just in case switching back to webServ
       this.webservice?.supportedOperation?.unshift(operation);
+      
+      // update the template with added operation
+      activeDistribution?.supportedOperation?.unshift(operation);
+      // save the distribution
+      this.entityExecutionService.handleDistributionSave();
       // this.entityExecutionService.handleWebserviceSave();
       // this.supportedOperationFocusFirstRow = true;
     });
@@ -199,20 +207,20 @@ export class SupportedOperationComponent implements OnInit {
 
   public supportedOperationSearch(event: any): void {
     void event;
-    // const value = event.target.value;
-    // if (value.length > 1) {
-    //   const supportedOperation = this.webservice?.supportedOperation ?? [];
-    //   const foundIndex = supportedOperation.findIndex((operation) =>
-    //     operation.uid?.toUpperCase().includes(value.toUpperCase()),
-    //   );
-    //   if (foundIndex > -1) {
-    //     this.supportedOperationFocusFirstRow = true;
-    //     supportedOperation.push(...supportedOperation.splice(0, foundIndex));
-    //   } else {
-    //     this.supportedOperationFocusFirstRow = false;
-    //   }
-    // } else {
-    //   this.supportedOperationFocusFirstRow = false;
-    // }
+     /* const value = event.target.value;
+     if (value.length > 1) {
+       const supportedOperation = this.webservice?.supportedOperation ?? [];
+       const foundIndex = supportedOperation.findIndex((operation) =>
+         operation.uid?.toUpperCase().includes(value.toUpperCase()),
+       );
+       if (foundIndex > -1) {
+         this.supportedOperationFocusFirstRow = true;
+         supportedOperation.push(...supportedOperation.splice(0, foundIndex));
+       } else {
+         this.supportedOperationFocusFirstRow = false;
+       }
+     } else {
+       this.supportedOperationFocusFirstRow = false;
+     } */
   }
 }

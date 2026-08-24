@@ -3,6 +3,9 @@
 <mat-chip-set aria-label="Category Selection">
   <mat-chip *ngFor="let category of selectedCategories">{{ category }}</mat-chip>
 </mat-chip-set>
+<p *ngIf="selectedCategoryScheme != null && selectedCategories.length === 0 && canManageCategories === false" class="select-category-warn">
+  At least 1 category must be specified.
+<p>
 
 <mat-tree
   [dataSource]="dataSource"

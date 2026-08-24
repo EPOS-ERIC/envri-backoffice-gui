@@ -200,8 +200,11 @@ export class TemporalCoverageComponent {
 
   public createNewTemporalExtent() {
     this.loadingService.setShowSpinner(true);
+    // group to assign the new Temporal Coverage (the to which the DP belongs to)
+    const group = this.activeDataproduct.groups?.[0] || []; // Assuming groups Array has only 1 item
+
     this.apiService.endpoints.PeriodOfTime.create
-      .call()
+      .call({groups: [group as string]})
       .then((temporalCoverage: PeriodOfTime) => {
         const newEntity: LinkedEntity = {
           entityType: Entity.PERIOD_OF_TIME,

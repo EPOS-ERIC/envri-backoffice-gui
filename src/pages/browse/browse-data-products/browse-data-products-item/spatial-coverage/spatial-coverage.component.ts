@@ -116,8 +116,19 @@ export class SpatialCoverageComponent implements OnInit {
   }
 
   public newSpatialCoverage() {
+    // group to assign the new Spatial Coverage (the to which the DP belongs to)
+    const group = this.dataProduct.groups?.[0] || ''; // Assuming groups Array has only 1 item
+
+    // Check the DataProduct status before POSTING: if DRAFT/SUBMITTED need to pass the originator editorId
+    let editorId = undefined;
+    if(this.dataProduct?.status === Status.DRAFT || this.dataProduct?.status === Status.SUBMITTED){
+      editorId = this.dataProduct?.editorId;
+    }
+
     const newSpatialCoverage: Location = {
       location: 'POINT(0 0)',
+      groups: [group as string],
+      editorId: editorId,
     };
     this.apiService.endpoints.Location.create.call(newSpatialCoverage).then((newLocation) => {
       this.spatialExtents.push(newLocation);
@@ -169,7 +180,6 @@ export class SpatialCoverageComponent implements OnInit {
               this.entityExecutionService.setActiveDataProduct(
                 this.entityExecutionService.convertToDataProduct(this.dataProduct),
               );
-              this.entityExecutionService.handleDataProductSave();
             }
           } else {
             // Update Global Webservice
@@ -179,7 +189,6 @@ export class SpatialCoverageComponent implements OnInit {
               this.entityExecutionService.setActiveWebService(
                 this.entityExecutionService.convertToWebService(activeWebService),
               );
-              this.entityExecutionService.handleWebserviceSave();
             }
           }
         }

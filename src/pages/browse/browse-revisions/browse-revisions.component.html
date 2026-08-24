@@ -388,12 +388,13 @@
     </div>
 
     <!-- SUPPORTED OPERATIONS & PARAMETERS -->
-    <div *ngIf="item?.accessService?.length > 0 || item?.mapping?.length > 0">
-      <div class="dist-section-spacer" style="margin-top: 1.5rem;"></div>
-      <div class="dist-section-title">SUPPORTED OPERATIONS</div>
+    <div *ngIf="item?.supportedOperation?.length > 0 || item?.mapping?.length > 0">
+      <!-- PAY ATTENTION This section is being commented out because we now need the supported Operations from Distribution, however might be switching back to WebService in the future -->
+      <!-- <div class="dist-section-spacer" style="margin-top: 1.5rem;"></div>
+      <div class="dist-section-title">SUPPORTED OPERATIONS</div> -->
 
-      <!-- Operations from Access Services -->
-      <div *ngFor="let ws of item.accessService">
+      <!-- PAY ATTENTION: Operations from Access Services - This section is being commented out because we now need the supported Operations from Distribution, however might be switching back to WebService in the future -->
+      <!--<div *ngFor="let ws of item.accessService">
         <div *ngFor="let op of ws.supportedOperation"
           style="margin-bottom: 0.5rem; padding-left: 0.5rem; border-left: 2px solid #ddd;">
           <div class="dist-field"
@@ -403,10 +404,10 @@
               >
         <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(op?.template, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.template, side) }"></ng-container>
       </span>
-          </div>
+          </div> -->
 
-          <!-- MAPPED PARAMETERS FROM OPERATION -->
-          <div *ngIf="op?.mapping?.length > 0" style="margin-top: 1rem; padding-left: 1rem;">
+          <!--PAY ATTENTION !!!!: MAPPED PARAMETERS FROM OPERATION - This section is being commented out because we now need the supported Operations from Distribution, however might be switching back to WebService in the future -->
+        <!--  <div *ngIf="op?.mapping?.length > 0" style="margin-top: 1rem; padding-left: 1rem;">
             <div
               style="font-weight: bold; font-size: 0.9em; text-transform: uppercase; margin-bottom: 0.5rem; color: #666;">
               OPERATION PARAMETERS</div>
@@ -473,6 +474,85 @@
                   >
         <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(map?.multipleValues ?? false, findMatch(map, findMatch(op, findMatch(ws, other?.accessService)?.supportedOperation)?.mapping)?.multipleValues ?? false, side) }"></ng-container>
       </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- PAY ATTENTION !!!!: Operations from Distribution - We are now reading Operations from Distribution (not Webservice), might switch back in the future (see 2 commented WS blocks above) -->
+      <div *ngIf="item?.supportedOperation?.length > 0">
+        <div class="dist-section-spacer" style="margin-top: 1.5rem;"></div>
+        <div class="dist-section-title"> SUPPORTED OPERATIONS</div>
+
+        <div *ngFor="let op of item.supportedOperation"
+          style="margin-bottom: 0.5rem; padding-left: 0.5rem; border-left: 2px solid #ddd;">
+          <div class="dist-field"
+            *ngIf="op?.template || findMatch(op, other?.supportedOperation)?.template">
+            <span class="dist-field-label">SERVICE URI TEMPLATE:</span>
+            <span class="dist-field-value">
+              <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(op?.template, findMatch(op, other?.supportedOperation)?.template, side) }"></ng-container>
+            </span>
+          </div>
+
+          <div *ngIf="op?.mapping?.length > 0" style="margin-top: 1rem; padding-left: 1rem;">
+            <div style="font-weight: bold; font-size: 0.9em; text-transform: uppercase; margin-bottom: 0.5rem; color: #666;">
+              OPERATION PARAMETERS</div>
+            <div *ngFor="let map of toArray(op.mapping)" class="mapping-card">
+              <div class="mapping-card-header"
+                *ngIf="map?.variable || findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.variable">
+                <span class="mapping-card-title">Variable: <span>
+                  <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(map?.variable, findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.variable, side) }"></ng-container>
+                </span></span>
+              </div>
+              <div class="dist-field"
+                *ngIf="map?.range || findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.range">
+                <span class="dist-field-label">RANGE:</span>
+                <span class="dist-field-value">
+                  <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(map?.range, findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.range, side) }"></ng-container>
+                </span>
+              </div>
+              <div class="dist-field"
+                *ngIf="map?.label || findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.label">
+                <span class="dist-field-label">LABEL:</span>
+                <span class="dist-field-value">
+                  <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(map?.label, findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.label, side) }"></ng-container>
+                </span>
+              </div>
+              <div class="dist-field"
+                *ngIf="map?.paramValue || findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.paramValue">
+                <span class="dist-field-label">PARAM VALUE:</span>
+                <span class="dist-field-value">
+                  <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(formatInlineValue(map?.paramValue), formatInlineValue(findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.paramValue), side) }"></ng-container>
+                </span>
+              </div>
+              <div class="dist-field"
+                *ngIf="map?.defaultValue || findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.defaultValue">
+                <span class="dist-field-label">DEFAULT VALUE:</span>
+                <span class="dist-field-value">
+                  <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(map?.defaultValue, findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.defaultValue, side) }"></ng-container>
+                </span>
+              </div>
+              <div class="dist-field"
+                *ngIf="map?.readOnlyValue != null || findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.readOnlyValue != null">
+                <span class="dist-field-label">READ ONLY:</span>
+                <span class="dist-field-value">
+                  <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(map?.readOnlyValue ?? false, findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.readOnlyValue ?? false, side) }"></ng-container>
+                </span>
+              </div>
+              <div class="dist-field"
+                *ngIf="map?.required != null || findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.required != null">
+                <span class="dist-field-label">REQUIRED:</span>
+                <span class="dist-field-value">
+                  <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(map?.required ?? false, findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.required ?? false, side) }"></ng-container>
+                </span>
+              </div>
+              <div class="dist-field"
+                *ngIf="map?.multipleValues != null || findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.multipleValues != null">
+                <span class="dist-field-label">MULTIPLE VALUES:</span>
+                <span class="dist-field-value">
+                  <ng-container *ngTemplateOutlet="diffView; context: { chunks: getDiff(map?.multipleValues ?? false, findMatch(map, findMatch(op, other?.supportedOperation)?.mapping)?.multipleValues ?? false, side) }"></ng-container>
+                </span>
               </div>
             </div>
           </div>

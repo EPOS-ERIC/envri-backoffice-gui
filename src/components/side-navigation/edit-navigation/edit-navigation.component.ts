@@ -36,7 +36,7 @@ export class EditNavigationComponent implements OnInit, OnDestroy {
     private stateChangeService: StateChangeService,
     private helpersService: HelpersService,
     private activeUserService: ActiveUserService,
-  ) {}
+  ) { }
 
   public ngOnInit(): void {
     this.actionsService.initEditedItems();
@@ -145,7 +145,7 @@ export class EditNavigationComponent implements OnInit, OnDestroy {
         return undefined;
     }
   }
-  
+
   // just to mention it out: 'Entity' here referring to "SoftwareApplication", "SoftwareSourceCode" or "DataProduct"
   get activeEntityStatus(): string | undefined {
     switch (this.activeEntity) {
@@ -162,34 +162,60 @@ export class EditNavigationComponent implements OnInit, OnDestroy {
 
   get userCanPublish(): boolean {
     const activeUser = this.activeUserService.getActiveUser();
-    if(activeUser){
+    if (activeUser) {
       // if user is a "SuperAdmin", allow, no need for further check on role
-      if(activeUser.isAdmin){
+      if (activeUser.isAdmin) {
         return true;
       }
 
       const activeUserGroups = activeUser.groups;
-      if(activeUserGroups){
+      if (activeUserGroups) {
         // find group in UserGroups matching with current active loaded Entity
         const groupMatch = activeUserGroups.find(group => group.groupId === this.activeEntityGroups?.find(entityGroup => entityGroup === group.groupId));
-        if(groupMatch){
+        if (groupMatch) {
           const userRole = groupMatch.role;
-          if(userRole === 'ADMIN' || userRole === 'REVIEWER'){
+          if (userRole === 'ADMIN' || userRole === 'REVIEWER') {
             return true;
           }
-          else{
+          else {
             return false
           }
         }
-        else{
+        else {
           return false;
         }
       }
-      else{
+      else {
         return false;
-      } 
+      }
     }
-    else{
+    else {
+      return false;
+    }
+  }
+
+  get userCanEdit(): boolean {
+    const activeUser = this.activeUserService.getActiveUser();
+    if (activeUser) {
+      if (activeUser.isAdmin) {
+        return true;
+      }
+
+      const activeUserGroups = activeUser.groups;
+      if (activeUserGroups) {
+        const groupMatch = activeUserGroups.find(group => group.groupId === this.activeEntityGroups?.find(entityGroup => entityGroup === group.groupId));
+        if (groupMatch) {
+          return groupMatch.role !== 'VIEWER';
+        }
+        else {
+          return false;
+        }
+      }
+      else {
+        return false;
+      }
+    }
+    else {
       return false;
     }
   }

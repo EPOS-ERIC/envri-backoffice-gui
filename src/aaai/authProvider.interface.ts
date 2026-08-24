@@ -19,6 +19,7 @@ export interface AuthenticationProvider {
   watchForUserChange(): Observable<null | AAAIUser>;
   getUser(): null | AAAIUser;
   isAuthenticated(): boolean;
+  getAccessTokenExpiration(): null | number;
 
   getManageUrl(): string;
 }

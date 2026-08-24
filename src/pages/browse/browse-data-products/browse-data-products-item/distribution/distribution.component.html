@@ -19,6 +19,7 @@
       [mat-stretch-tabs]="true"
       [animationDuration]="0"
       [selectedIndex]="selectedDistributionTabIndex"
+      (selectedTabChange)="handleTabChange($event)"
       class="distribution"
     >
       <div formArrayName="distributions">
@@ -132,6 +133,7 @@
         [supportedOperations]="distributionObj.accessService.supportedOperation"
         [distribution]="distributionObj"
         [distributionIndex]="index ? index : ''"
+        [isActive]="selectedDistributionTabIndex === (index ? index : 0)"
       ></app-distribution-webservice>
     }
   </ng-container>

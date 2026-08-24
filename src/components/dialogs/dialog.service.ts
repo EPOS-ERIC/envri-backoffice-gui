@@ -15,10 +15,10 @@ import { DialogWebserviceAddOperationComponent } from './dialog-webservice-add-o
 import { DialogAddNewParameterComponent } from './dialog-add-new-parameter/dialog-add-new-parameter.component';
 import { DialogConfirmComponent, ConfirmationDataIn } from './dialog-confirm/dialog-confirm.component';
 import { LoadingService } from 'src/services/loading.service';
-import { DialogChangeCommentComponent } from './dialog-change-comment/dialog-change-comment.component';
 import { DialogSpatialCoverageHelpComponent } from './dialog-spatial-coverage-help/dialog-spatial-coverage-help.component';
 import { LinkedEntity, User, Operation, Group } from 'generated/backofficeSchemas';
 import { DialogUserStatusComponent } from './dialog-user-status/dialog-user-status.component';
+import { DialogAddNewMultiParamValuesComponent } from './dialog-add-new-multi-param-values/dialog-add-new-multi-param-values.component';
 
 @Injectable({
   providedIn: 'root',
@@ -97,8 +97,12 @@ export class DialogService extends BaseDialogService {
     );
   }
 
-  public openAddNewParameterDialog(): Promise<DialogData> {
-    return this.openDialog('addNewParam', DialogAddNewParameterComponent, false, null, {});
+  public openAddNewParameterDialog(groups: string[] | undefined): Promise<DialogData> {
+    return this.openDialog('addNewParam', DialogAddNewParameterComponent, false, groups, {});
+  }
+  
+  public openAddNewMultiParamValuesDialog(currentValues: Array<string>): Promise<DialogData> {
+    return this.openDialog('addNewMultiParamValues', DialogAddNewMultiParamValuesComponent, false, {width: '400px', currentValues: currentValues});
   }
 
   public openSpatialCoverageHelpDialog(): Promise<DialogData> {
@@ -189,7 +193,7 @@ export class DialogService extends BaseDialogService {
    * passed as a property to the `WebserviceAddOperationComponent` component.
    * @returns a Promise that resolves to either an Operation object or an unknown value.
    */
-  public handleAddWebserviceOperation(webserviceEntityDetail: LinkedEntity): Promise<Operation | unknown> {
+  public handleAddWebserviceOperation(webserviceEntityDetail: LinkedEntity, groups: Array<string> | undefined, editorId: string | undefined = undefined): Promise<Operation | unknown> {
     const promise = new Promise((resolve) => {
       this.openDialog('addWebserviceOperation', DialogWebserviceAddOperationComponent, false, {
         webservice: webserviceEntityDetail,
@@ -197,7 +201,7 @@ export class DialogService extends BaseDialogService {
         if (response.dataOut.action === 'add') {
           this.loadingService.setShowSpinner(true);
           this.apiService.endpoints.Operation.create
-            .call()
+            .call({groups: groups, editorId: editorId})
             .then((value: Operation) => {
               this.snackbarService.openSnackbar(
                 `Please click 'Save Distribution' to complete this action.`,
@@ -224,17 +228,6 @@ export class DialogService extends BaseDialogService {
       });
     });
     return promise;
-  }
-
-  public handleUpdateChangeComment(changeComment: string): Promise<DialogData> {
-    return this.openDialog(
-      'changeCommentDialog',
-      DialogChangeCommentComponent,
-      false,
-      changeComment,
-      {},
-      'user-permissions',
-    );
   }
 
   public openUpdateStatusDialog(currentStatus: string): Promise<DialogData<string, string | undefined>> {

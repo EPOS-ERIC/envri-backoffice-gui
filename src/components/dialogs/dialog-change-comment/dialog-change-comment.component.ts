@@ -8,6 +8,7 @@ import { DialogData } from '../baseDialogService.abstract';
   templateUrl: './dialog-change-comment.component.html',
   styleUrls: ['./dialog-change-comment.component.scss'],
 })
+// This component is not in use anymore, however keeping it for possible future use
 export class DialogChangeCommentComponent implements OnInit {
   public currentComment = '';
   public newChangeComment = '';

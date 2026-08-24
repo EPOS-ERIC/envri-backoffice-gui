@@ -24,6 +24,9 @@ export interface CategoryNode extends Category {
   styleUrl: './categoryTree.component.scss',
 })
 export class CategoryTreeDetailsComponent implements OnInit {
+  private _selectedCategoryScheme: CategoryScheme | undefined;
+  private _entitySelectedCategoriesInput: Array<Category> = [];
+
   @Input() set categories(categories: Array<Category>) {
     if (categories && categories.length > 0) {
       this._categories = categories;
@@ -41,19 +44,18 @@ export class CategoryTreeDetailsComponent implements OnInit {
 
   // the selected categories received directly from Data Product response
   @Input() set entitySelectedCategories(dpSelectedCategories: Array<Category>) {
-    dpSelectedCategories.forEach((cat) => {
-      if (cat.name && cat.name !== '') {
-        this.selectedCategories.push(cat.name);
-      }
-      // Also populate the object array so it's included when emitting updates
-      if (!this.selectedCategoriesObjArr.some((existing) => existing.uid === cat.uid)) {
-        this.selectedCategoriesObjArr.push(cat);
-      }
-    });
+    this._entitySelectedCategoriesInput = dpSelectedCategories ?? [];
+    this.syncSelectedCategoriesFromInput();
   }
 
   // the selected category scheme from parent component
-  @Input() selectedCategoryScheme: CategoryScheme | undefined;
+  @Input() set selectedCategoryScheme(value: CategoryScheme | undefined) {
+    this._selectedCategoryScheme = value;
+    this.syncSelectedCategoriesFromInput();
+  }
+  get selectedCategoryScheme(): CategoryScheme | undefined {
+    return this._selectedCategoryScheme;
+  }
   @Input() canManageCategories: boolean = false;
 
   @Input() activeEntity: DataProduct | SoftwareApplication | SoftwareSourceCode | undefined;
@@ -97,6 +99,22 @@ export class CategoryTreeDetailsComponent implements OnInit {
   }
 
   public hasChild = (_: number, node: CategoryNode) => !!node.children && node.children.length > 0;
+
+  private syncSelectedCategoriesFromInput(): void {
+    const selectedSchemeUid = this._selectedCategoryScheme?.uid;
+    const selectedCategories = this._entitySelectedCategoriesInput.filter((cat) => {
+      if (!selectedSchemeUid) {
+        return true;
+      }
+
+      return cat.inScheme?.uid === selectedSchemeUid;
+    });
+
+    this.selectedCategoriesObjArr = selectedCategories.filter(
+      (cat, index, array) => array.findIndex((candidate) => candidate.uid === cat.uid) === index,
+    );
+    this.selectedCategories = this.selectedCategoriesObjArr.map((cat) => cat.name).filter((name): name is string => !!name);
+  }
 
   public buildCategoryTree(categories: Category[]): CategoryNode[] {
     const map = new Map<string, CategoryNode>();
@@ -152,6 +170,13 @@ export class CategoryTreeDetailsComponent implements OnInit {
   public onAddCategory(node: CategoryNode | null = null): void {
     this.dialogService.openDialogForComponent(DialogNewCategoryComponent, node || {}, '30vw').then((dialogData) => {
       if (dialogData.dataOut.create === true) {
+
+        // check status of active entity: if it's DRAFT or SUBMITTED, we need to specify the originator editorId
+        let editorId = undefined;
+        if(this.activeEntity?.status?.toUpperCase() === Status.DRAFT || this.activeEntity?.status?.toUpperCase() === Status.SUBMITTED){
+          editorId = this.activeEntity?.editorId;
+        }
+
         //create category
         const category: Category = {
           name: dialogData.dataOut.categoryName,
@@ -162,6 +187,7 @@ export class CategoryTreeDetailsComponent implements OnInit {
           uid: `category:${dialogData.dataOut.categoryName}`,
           status: 'DRAFT',
           inScheme: node ? node.inScheme : this.selectedCategoryScheme,
+          editorId: editorId,
         };
 
         this.apiService.endpoints.Category.create
@@ -348,20 +374,21 @@ export class CategoryTreeDetailsComponent implements OnInit {
 
   public toggleSelectedCategory(event: MatCheckboxChange, node: CategoryNode) {
     if (event.checked) {
-      //add to selected, chips
-      this.selectedCategories.push(node.name || '');
-      this.selectedCategoriesObjArr.push(node);
+      // add to selected, chips
+      if (!this.selectedCategoriesObjArr.some((cat) => cat.uid === node.uid)) {
+        this.selectedCategoriesObjArr = [...this.selectedCategoriesObjArr, node];
+      }
     } else {
-      //remove from selected, chips
-      this.selectedCategories = this.selectedCategories.filter((name) => name !== node.name);
-      this.selectedCategoriesObjArr = this.selectedCategoriesObjArr.filter((cat) => cat.name !== node.name);
+      // remove from selected, chips
+      this.selectedCategoriesObjArr = this.selectedCategoriesObjArr.filter((cat) => cat.uid !== node.uid);
     }
+    this.selectedCategories = this.selectedCategoriesObjArr.map((cat) => cat.name).filter((name): name is string => !!name);
     // emits the Array of selected categories to parent, which updates the Data Product with current selection
     this.updateSelectedCategories.emit(this.selectedCategoriesObjArr);
   }
 
   public isCategorySelected(node: CategoryNode): boolean {
-    return this.selectedCategories.includes(node.name as string);
+    return this.selectedCategoriesObjArr.some((cat) => cat.uid === node.uid);
   }
 
   public userHasEditPermissionsForSubmitted(): boolean {
@@ -440,18 +467,17 @@ export class CategoryTreeDetailsComponent implements OnInit {
             });
 
             // Update selected categories if the edited node is selected
-            const oldName = node.name;
             const newName = dialogData.dataOut.categoryName;
 
-            if (oldName && this.selectedCategories.includes(oldName)) {
-              this.selectedCategories = this.selectedCategories.map((name) => (name === oldName ? newName : name));
-
+            if (this.selectedCategoriesObjArr.some((cat) => cat.uid === node.uid)) {
               this.selectedCategoriesObjArr = this.selectedCategoriesObjArr.map((cat) => {
                 if (cat.uid === node.uid) {
                   return { ...cat, name: newName, description: dialogData.dataOut.categoryDescription || undefined };
                 }
                 return cat;
               });
+
+              this.selectedCategories = this.selectedCategoriesObjArr.map((cat) => cat.name).filter((name): name is string => !!name);
 
               this.updateSelectedCategories.emit(this.selectedCategoriesObjArr);
             }

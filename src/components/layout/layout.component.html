@@ -39,7 +39,7 @@
       *ngIf="null != userInfo"
     >
       <div class="flex">
-        <p>{{ userInfo.firstName }} {{ userInfo.lastName }}</p>
+        <p (click)="handleUserNameClick()">{{ userInfo.firstName }} {{ userInfo.lastName }}</p>
         <p *ngIf="userInfo.isAdmin">(Admin)</p>
       </div>
       <!-- <p class="group-name">Group name</p> -->

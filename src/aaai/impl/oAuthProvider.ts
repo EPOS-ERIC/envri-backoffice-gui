@@ -17,6 +17,7 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
   private static readonly AUTH_ISSUER = OAuthAuthenticationProvider.AUTH_ROOT + '';
   private static readonly AUTH_REVOKE_ENDPOINT = OAuthAuthenticationProvider.AUTH_ISSUER + '/revoke';
   private static readonly REDIRECTION_PAGE = '/last-page-redirect';
+  private static readonly SILENT_REFRESH_PAGE = '/silent-token-refresh.html';
 
   private readonly http: HttpClient;
   private readonly logger: LogService;
@@ -29,7 +30,7 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
 
   constructor(injector: Injector, private readonly oAuthService: OAuthService) {
     this.http = injector.get(HttpClient);
-    this.logger = injector.get(LogService);
+    this.logger = injector.get(LogService)
   }
 
   public initializeAuth(): Promise<void> {
@@ -52,6 +53,11 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
     return this.userProfileSource.getValue();
   }
 
+  public getAccessTokenExpiration(): null | number {
+    const expiration = this.oAuthService.getAccessTokenExpiration();
+    return expiration ? expiration : null;
+  }
+
   // TODO: angular-oauth2-oidc suggests that "Code Flow" rather than "Implicit Flow" should be favoured.
   // SHould we adopt that? https://www.npmjs.com/package/angular-oauth2-oidc
   public login(): void {
@@ -72,10 +78,10 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
 
   private makeAuthConfig(): AuthConfig {
     const redirectUri = new URL(OAuthAuthenticationProvider.REDIRECTION_PAGE.slice(1), document.baseURI).toString();
-    const silentRefreshRedirectUri = new URL('silent-token-refresh.html', document.baseURI).toString();
-
-    this.logger.info('baseURI', document.baseURI);
-    this.logger.info('redirectUri', redirectUri);
+    const silentRefreshRedirectUri = new URL(
+      OAuthAuthenticationProvider.SILENT_REFRESH_PAGE.slice(1),
+      document.baseURI,
+    ).toString();
 
     const authConfig: AuthConfig = {
       // Url of the Identity Provider
@@ -83,14 +89,10 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
 
       // URL of the SPA to redirect the user to after login
       redirectUri,
+      silentRefreshRedirectUri,
 
       // The SPA's id. The SPA is registerd with this id at the auth-server
       clientId: environment.authClientId,
-
-      // URL of the SPA to redirect the user after silent refresh
-      silentRefreshRedirectUri,
-
-      timeoutFactor: 0.75,
 
       responseType: 'code',
 
@@ -130,6 +132,7 @@ export class OAuthAuthenticationProvider implements AuthenticationProvider {
       }
     });
   }
+
 
   private updateUserProfile(): void {
     console.warn('Update User Profile called');

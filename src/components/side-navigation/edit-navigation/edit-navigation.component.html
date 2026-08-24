@@ -4,7 +4,8 @@
       <button
         *ngIf="
           (activeDataProduct || activeSoftwareApplication || activeSoftwareSourceCode) &&
-          activeEntityStatus === status.DRAFT
+          activeEntityStatus === status.DRAFT &&
+          userCanEdit
         "
         mat-stroked-button
         color="primary"
@@ -20,7 +21,8 @@
       <button
         *ngIf="
           (activeDataProduct || activeSoftwareApplication || activeSoftwareSourceCode) &&
-          (activeEntityStatus === status.PUBLISHED || activeEntityStatus === status.ARCHIVED)
+          (activeEntityStatus === status.PUBLISHED || activeEntityStatus === status.ARCHIVED) &&
+          userCanEdit
         "
         mat-raised-button
         color="primary"
@@ -32,7 +34,8 @@
       <button
         *ngIf="
           (activeDataProduct || activeSoftwareApplication || activeSoftwareSourceCode) &&
-          activeEntityStatus === status.DRAFT
+          activeEntityStatus === status.DRAFT &&
+          userCanEdit
         "
         mat-flat-button
         color="primary"
@@ -69,7 +72,8 @@
       <button
         *ngIf="
           (activeDataProduct || activeSoftwareApplication || activeSoftwareSourceCode) &&
-          activeEntityStatus === status.DISCARDED
+          activeEntityStatus === status.DISCARDED &&
+          userCanEdit
         "
         mat-flat-button
         color="primary"
@@ -81,7 +85,8 @@
       <button
         *ngIf="
           (activeDataProduct || activeSoftwareApplication || activeSoftwareSourceCode) &&
-          activeEntityStatus === status.PUBLISHED
+          activeEntityStatus === status.PUBLISHED &&
+          userCanEdit
         "
         mat-flat-button
         color="warn"

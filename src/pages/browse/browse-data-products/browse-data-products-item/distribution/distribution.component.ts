@@ -1,10 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, UntypedFormControl, Validators } from '@angular/forms';
+import { MatTabChangeEvent } from '@angular/material/tabs';
 import { DataProduct, Distribution, LinkedEntity } from 'generated/backofficeSchemas';
 import { ApiService } from 'src/apiAndObjects/api/api.service';
 import { DistributionDetailDataSource } from 'src/apiAndObjects/objects/data-source/distributionDetailDataSource';
 import { WebserviceDetailDataSource } from 'src/apiAndObjects/objects/data-source/webserviceDetailDataSource';
-import { DialogData } from 'src/components/dialogs/baseDialogService.abstract';
 import { DialogService } from 'src/components/dialogs/dialog.service';
 import { ActiveUserService } from 'src/services/activeUser.service';
 import { EntityExecutionService } from 'src/services/calls/entity-execution.service';
@@ -37,7 +37,7 @@ export class DistributionComponent implements OnInit {
     private loadingService: LoadingService,
     private helpersService: HelpersService,
     private activeUserService: ActiveUserService,
-  ) {}
+  ) { }
 
   public form!: FormGroup;
 
@@ -83,18 +83,18 @@ export class DistributionComponent implements OnInit {
     let userHasEditPermissionsForSubmitted: boolean | undefined = false;
     // check for User Role - if user not an ADMIN or REVIEWER can see the SUBMITTED, but can't edit them
     const activeUser = this.activeUserService.getActiveUser();
-    if(activeUser){
+    if (activeUser) {
       const activeUserGroups = activeUser.groups;
-      if(activeUserGroups){
+      if (activeUserGroups) {
         // find group in UserGroups matching with current active loaded Entity
         const groupMatch = activeUserGroups.find(group => group.groupId === this.dataProduct?.groups?.find(entityGroup => entityGroup === group.groupId));
-        if(groupMatch){
+        if (groupMatch) {
           const userRole = groupMatch.role;
           console.warn('userRole', userRole);
-          if(userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')){
+          if (userRole && (userRole === 'ADMIN' || userRole === 'REVIEWER')) {
             userHasEditPermissionsForSubmitted = true;
           }
-          else{
+          else {
             userHasEditPermissionsForSubmitted = false;
           }
         }
@@ -120,6 +120,10 @@ export class DistributionComponent implements OnInit {
 
   private bindDataAccessChanges(group: FormGroup, distribution: Distribution): void {
     const dataAccessControl = group.get('dataAccess');
+    const titleControl = group.get('title');
+    const descriptionControl = group.get('description');
+    const licenceControl = group.get('licence');
+
     if (!dataAccessControl) {
       return;
     }
@@ -127,6 +131,8 @@ export class DistributionComponent implements OnInit {
     dataAccessControl.valueChanges.subscribe((dataAccess: 'download' | 'webservice') => {
       if (dataAccess === 'download') {
         distribution.type = DistributionComponent.DISTRIBUTION_TYPE.DOWNLOAD;
+        // clean supported operation
+        distribution.supportedOperation = [];
         distribution.accessService = [];
         return;
       }
@@ -134,6 +140,9 @@ export class DistributionComponent implements OnInit {
       distribution.type = DistributionComponent.DISTRIBUTION_TYPE.WEBSERVICE;
       distribution.downloadURL = [];
       distribution.accessService = distribution.accessService ?? [];
+      distribution.title = this.helpersService.formatArrayVal(titleControl?.value);
+      distribution.description = this.helpersService.formatArrayVal(descriptionControl?.value);
+      distribution.licence = (licenceControl?.value);
     });
   }
 
@@ -154,6 +163,12 @@ export class DistributionComponent implements OnInit {
     Promise.all(requests).then((value: Distribution[][]) => {
       const flattened = value.flat();
       this.distributionDetails = flattened;
+      if (flattened.length > 0) {
+        // now that we have the Distributions, set the first as active
+        this.entityExecutionService.setActiveDistribution(flattened[0]);
+        // initialize the WebServ as null (if any, will get set byt the WebServ component itself)
+        this.entityExecutionService.setActiveWebService(null);
+      }
       this.initForm();
       this.loadingService.setShowSpinner(false);
     });
@@ -167,44 +182,51 @@ export class DistributionComponent implements OnInit {
     this.getDistributionDetails();
   }
 
+  // handles switching between Distribution tabs
+  public handleTabChange(event: MatTabChangeEvent): void {
+    const index = event.index;
+    this.selectedDistributionTabIndex = index;
+
+    const activeDistribution = this.distributionDetails[index];
+    if (!activeDistribution) {
+      return;
+    }
+    // set the newly selected Dist as active
+    this.entityExecutionService.setActiveDistribution(activeDistribution);
+    // clean up the old webService value (if any, it will get set in the WebServ component itself)
+    this.entityExecutionService.setActiveWebService(null);
+  }
+
   public handleSave(index: number): void {
-    const changeComment = this.distributionDetails[index].changeComment
-      ? this.distributionDetails[index].changeComment!
-      : '';
 
     const activeDistForm = this.form.get('distributions')?.value[index] as Distribution & {
       dataAccess: 'download' | 'webservice';
     };
 
-    this.dialogService.handleUpdateChangeComment(changeComment).then((data: DialogData) => {
-      if (data.dataOut != null) {
-        const changeComment = data.dataOut;
-        const activeDistribution = this.distributionDetails[index];
-        if (null != activeDistribution) {
-          const dataAccess = activeDistForm.dataAccess as 'download' | 'webservice';
+    const activeDistribution = this.distributionDetails[index];
+    if (null != activeDistribution) {
+      const dataAccess = activeDistForm.dataAccess as 'download' | 'webservice';
 
-          if (dataAccess === 'download') {
-            activeDistribution.type = DistributionComponent.DISTRIBUTION_TYPE.DOWNLOAD;
-            activeDistribution.accessService = [];
-          } else {
-            activeDistribution.type = DistributionComponent.DISTRIBUTION_TYPE.WEBSERVICE;
-            activeDistribution.downloadURL = [];
-            activeDistribution.accessService = activeDistribution.accessService ?? [];
-          }
-
-          activeDistribution.changeComment = changeComment;
-          activeDistribution.title = this.helpersService.formatArrayVal(activeDistForm.title);
-          activeDistribution.description = this.helpersService.formatArrayVal(activeDistForm.description);
-          activeDistribution.licence = activeDistForm.licence;
-          this.entityExecutionService.setActiveDistribution(activeDistribution);
-          this.entityExecutionService.handleDistributionSave().then((success: boolean) => {
-            if (success && activeDistribution.accessService && activeDistribution.accessService.length > 0) {
-              this.entityExecutionService.handleWebserviceSave();
-            }
-          });
-        }
+      if (dataAccess === 'download') {
+        activeDistribution.type = DistributionComponent.DISTRIBUTION_TYPE.DOWNLOAD;
+        activeDistribution.accessService = [];
+      } else {
+        activeDistribution.type = DistributionComponent.DISTRIBUTION_TYPE.WEBSERVICE;
+        activeDistribution.downloadURL = [];
+        activeDistribution.accessService = activeDistribution.accessService ?? [];
       }
-    });
+
+      activeDistribution.title = this.helpersService.formatArrayVal(activeDistForm.title);
+      activeDistribution.description = this.helpersService.formatArrayVal(activeDistForm.description);
+      activeDistribution.licence = activeDistForm.licence;
+      this.entityExecutionService.setActiveDistribution(activeDistribution);
+      this.entityExecutionService.handleDistributionSave()
+        .then((success: boolean) => {
+          if (success && activeDistribution.accessService && activeDistribution.accessService.length > 0) {
+            this.entityExecutionService.handleWebserviceSave();
+          }
+        });
+    }
   }
 
   public handleDelete(index: number): void {
@@ -233,31 +255,52 @@ export class DistributionComponent implements OnInit {
   }
 
   public handleAddDistribution(): void {
-    this.apiService.endpoints[Entity.DISTRIBUTION].create.call().then((dist: DistributionDetailDataSource) => {
-      this.distributionDetails.push(dist);
-      this.selectedDistributionTabIndex = this.distributionDetails.length - 1;
-      this.initForm();
+    // groups to which assign the Distribution to
+    const groups = this.dataProduct?.groups?.[0] ?? '';
 
-      const newDistributionEntity: LinkedEntity = {
-        entityType: Entity.DISTRIBUTION,
-        instanceId: dist.instanceId,
-        metaId: dist.metaId,
-        uid: dist.uid,
-      };
+     // read the DataProduct status before posting the Distribution: if it's status DRAFT we need to specify the originator editorId 
+     const dataProduct = this.entityExecutionService.getActiveDataProductValue();
+     let editorId = undefined;
+     if(dataProduct?.status?.toUpperCase() === Status.DRAFT || dataProduct?.status?.toUpperCase() === Status.SUBMITTED) {
+       editorId = dataProduct.editorId as string;
+     }
 
-      const activeDataProduct = this.entityExecutionService.getActiveDataProductValue();
-      if (null != activeDataProduct) {
-        activeDataProduct.distribution?.push(newDistributionEntity);
-        this.entityExecutionService.setActiveDataProduct(
-          this.entityExecutionService.convertToDataProduct(activeDataProduct),
-        );
-        this.entityExecutionService.handleDataProductSave();
-      }
-    });
+    this.apiService.endpoints[Entity.DISTRIBUTION].create.call({ groups: [groups], editorId: editorId })
+      .then((dist: DistributionDetailDataSource) => {
+        this.distributionDetails.push(dist);
+        this.selectedDistributionTabIndex = this.distributionDetails.length - 1;
+        this.initForm();
+
+        const newDistributionEntity: LinkedEntity = {
+          entityType: Entity.DISTRIBUTION,
+          instanceId: dist.instanceId,
+          metaId: dist.metaId,
+          uid: dist.uid,
+        };
+
+        const activeDataProduct = this.entityExecutionService.getActiveDataProductValue();
+        if (null != activeDataProduct) {
+          activeDataProduct.distribution?.push(newDistributionEntity);
+          this.entityExecutionService.setActiveDataProduct(
+            this.entityExecutionService.convertToDataProduct(activeDataProduct),
+          );
+          this.entityExecutionService.handleDataProductSave();
+        }
+      });
   }
 
   public handleAddWebservice(index: number) {
-    this.apiService.endpoints[Entity.WEBSERVICE].create.call().then((webservice: WebserviceDetailDataSource) => {
+    // the groups to which assign the webService to
+    const groups = this.dataProduct?.groups?.[0] ?? '';
+
+    // read the DataProduct status before posting the WebService: if it's status DRAFT we need to specify the originator editorId 
+    const dataProduct = this.entityExecutionService.getActiveDataProductValue();
+    let editorId = null;
+    if(dataProduct?.status?.toUpperCase() === Status.DRAFT || dataProduct?.status?.toUpperCase() === Status.SUBMITTED) {
+      editorId = dataProduct.editorId as string;
+    }
+
+    this.apiService.endpoints[Entity.WEBSERVICE].create.call({ groups: [groups], editorId: editorId ? editorId : undefined }).then((webservice: WebserviceDetailDataSource) => {
       const newWebserviceEntity: LinkedEntity = {
         entityType: Entity.WEBSERVICE,
         instanceId: webservice.instanceId,
