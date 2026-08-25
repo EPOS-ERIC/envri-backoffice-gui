@@ -35,14 +35,17 @@
 
     <div class="ecv-row">
       <mat-form-field>
-        <mat-label>Select ECV</mat-label>
+        <mat-label>Select Official ECV</mat-label>
         <mat-select
           [value]="selectedVariableMeasured"
-          [disabled]="disabled"
+          [disabled]="disabled || ecvsLoading"
           (selectionChange)="onEcvSelectionChange($event.value)"
         >
+          <mat-option *ngIf="ecvsLoading" disabled>
+            Loading ECVs...
+          </mat-option>
           <mat-option
-            *ngFor="let ecv of allECVs"
+            *ngFor="let ecv of ecvOptions"
             [value]="ecv.uri"
           >
             {{ ecv.name }}
