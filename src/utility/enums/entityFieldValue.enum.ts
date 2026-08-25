@@ -7,5 +7,4 @@ export enum EntityFieldValue {
   CONTACT_POINT = 'contactpoint',
   DISTRIBUTION = 'distribution',
   CATEGORIES = 'categories',
-  ECV = 'ecv',
 }
