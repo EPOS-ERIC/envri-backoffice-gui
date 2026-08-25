@@ -97,7 +97,6 @@ import { DeleteDistributionPlugins } from './distribution-plugin/deleteDistribut
 import { GetAllAddresses } from './address/getAllAddresses';
 import { PostAddress } from './address/postAddress';
 import { PutAddress } from './address/putAddress';
-import { GetAllECV } from './ECV/getAllECV';
 
 @Injectable()
 export class ApiService extends BaseApi {
@@ -238,10 +237,6 @@ export class ApiService extends BaseApi {
       create: new PostPeriodOfTime(ApiService.USE_LIVE_API),
       update: new PutPeriodOfTime(ApiService.USE_LIVE_API),
     },
-
-    ECV: {
-      getAll: new GetAllECV(ApiService.USE_LIVE_API),
-    }
   };
 
   constructor(httpClient: HttpClient, injector: Injector, private persistorService: PersistorService) {

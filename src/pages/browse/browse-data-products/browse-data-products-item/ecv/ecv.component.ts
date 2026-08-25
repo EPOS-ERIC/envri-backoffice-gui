@@ -1,6 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
 import { DataProduct } from 'generated/backofficeSchemas';
 import { WithSubscription } from 'src/helpers/subscription';
 import { ActiveUserService } from 'src/services/activeUser.service';
@@ -11,24 +9,11 @@ import { DataproductService } from '../../dataproduct.service';
 import { ActionsService } from 'src/services/actions.service';
 import { Entity } from 'src/utility/enums/entity.enum';
 import { Status } from 'src/utility/enums/status.enum';
+import { EcvCatalogService } from 'src/services/ecvCatalog.service';
 
 interface EcvListItem {
   uri: string;
   name: string;
-}
-
-interface EcvLResponse {
-  '@context': object;
-  '@graph': Array<{
-    '@id': string;
-    '@type': string;
-    'skos:prefLabel': skosPrefLabel;
-  }>;
-}
-
-interface skosPrefLabel {
-  '@language': string;
-  '@value': string;
 }
 
 const normalizeEcvUri = (value: string): string => value.trim().replace(/^http:\/\//i, 'https://').replace(/\/$/, '');
@@ -51,18 +36,16 @@ export class ECVComponent extends WithSubscription implements OnInit {
 
   public allECVs = new Map<string, string>();
 
-  public ecvsLoaded = false;
-
-  public ecvsLoading = false;
+  public ecvOptions: EcvListItem[] = [];
 
   constructor(
     private readonly entityExecutionService: EntityExecutionService,
     private readonly stateChangeService: StateChangeService,
-    private readonly http: HttpClient,
     private readonly loadingService: LoadingService,
     private readonly activeUserService: ActiveUserService,
     private readonly dataProductService: DataproductService,
     private readonly actionsService: ActionsService,
+    private readonly ecvCatalogService: EcvCatalogService,
   ) {
     super();
   }
@@ -81,37 +64,14 @@ export class ECVComponent extends WithSubscription implements OnInit {
 
   public ngOnInit(): void {
     this.initSubscriptions();
-    void this.fetchECVs();
-  }
 
-  public async fetchECVs(): Promise<void> {
-    if (this.ecvsLoaded) {
-      return;
-    }
+    this.subscribe(this.ecvCatalogService.catalogObs, (catalog) => {
+      this.allECVs = new Map(catalog);
+      this.ecvOptions = [...catalog.entries()].map(([uri, name]) => ({ uri, name }));
+    });
 
-    this.ecvsLoading = true;
-
-    try {
-      const callResponse = await firstValueFrom(
-        this.http.get<EcvLResponse>('https://vocab.nerc.ac.uk/collection/EXV/current/?_profile=nvs&_mediatype=application/ld+json'),
-      );
-
-      const nextMap = new Map<string, string>();
-      if (Array.isArray(callResponse?.['@graph'])) {
-        callResponse['@graph'].forEach((item) => {
-          const uri = item['@id'];
-          const name = item['skos:prefLabel']?.['@value'];
-          if (uri && name) {
-            nextMap.set(normalizeEcvUri(uri), name);
-          }
-        });
-      }
-
-      this.allECVs = nextMap;
-      this.ecvsLoaded = true;
-    } finally {
-      this.ecvsLoading = false;
-    }
+    this.allECVs = this.ecvCatalogService.getCatalog();
+    this.ecvOptions = [...this.allECVs.entries()].map(([uri, name]) => ({ uri, name }));
   }
 
   public onEcvSelectionChange(selectedValue: string): void {
@@ -148,10 +108,6 @@ export class ECVComponent extends WithSubscription implements OnInit {
       uri,
       name: this.allECVs.get(normalizedUri) ?? 'Custom URI',
     };
-  }
-
-  public get ecvOptions(): EcvListItem[] {
-    return [...this.allECVs.entries()].map(([uri, name]) => ({ uri, name }));
   }
 
   public isManualVariableMeasuredValid(value = this.manualVariableMeasured): boolean {

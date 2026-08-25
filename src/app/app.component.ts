@@ -8,6 +8,7 @@ import { EntityEndpointValue } from 'src/utility/enums/entityEndpointValue.enum'
 import { Subscription } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { LoadingService } from 'src/services/loading.service';
+import { EcvCatalogService } from 'src/services/ecvCatalog.service';
 
 @Component({
   selector: 'app-root',
@@ -24,6 +25,7 @@ export class AppComponent implements OnInit {
     private actionsService: ActionsService,
     private routeService: RouteService,
     private loadingService: LoadingService,
+    private ecvCatalogService: EcvCatalogService,
     private cdr: ChangeDetectorRef,
   ) {
     this.router.events.subscribe((e) => {
@@ -59,6 +61,9 @@ argument. This triggers the @BackButtonComponent to return a user to either @Bro
 
   ngOnInit() {
     this.updateBranding();
+    setTimeout(() => {
+      void this.ecvCatalogService.loadECVs();
+    }, 0);
     Chart.register(BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
     this.subscriptions.add(
       this.loadingService.showSpinnerObs.subscribe((show: boolean) => {
